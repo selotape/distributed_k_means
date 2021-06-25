@@ -41,18 +41,18 @@ def EstProc(P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int,
     calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
     Emits the cluster and the ~risk.
     """
-    pass
+    raise NotImplementedError
 
 
 def A(N, k):
     """
     The blackbox clustering algorithm
     """
-    pass
+    raise NotImplementedError
 
 
 def risk(N, C):
     """
     Sum of distances of samples to their closest cluster center.
     """
-    pass
+    raise NotImplementedError
