@@ -22,7 +22,7 @@ ep = choice(epsilons)
 full_data = pd.read_csv(DATASET_FILE, nrows=SUBSET_SIZE)
 N = full_data.select_dtypes([np.number])
 
-kmedoids = KMedoids(n_clusters=k, random_state=0).fit(N)
+kmedoids = KMedoids(n_clusters=k).fit(N)
 print(f'the kmedoids.inertia is {kmedoids.inertia_}')
 
 C = hess_clustering(N, k, ep, dt, m)

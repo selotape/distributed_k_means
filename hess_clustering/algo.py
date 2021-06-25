@@ -28,13 +28,13 @@ class Coordinator:
         P1 = pd.concat(P1s)
         P2 = pd.concat(P2s)
         v, Ctmp = EstProc(P1, P2, alpha, 0, 0, 0)
-        self.C.append(Ctmp)
+        self.C = pd.concat([self.C, Ctmp], ignore_index=True)
         return v, Ctmp
 
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
         N_remaining = pd.concat(Nis)
         Ctmp = A(N_remaining, self._k)
-        self.C.append(Ctmp)
+        self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
 
 def hess_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
