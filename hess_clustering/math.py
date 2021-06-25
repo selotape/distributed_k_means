@@ -1,34 +1,31 @@
 import pandas as pd
 import numpy as np
+from math import log, pow
 from typing import Tuple
 
 
 def kplus_formula(k: int, dt: float):
     """
     The allowed size of the "k+" clusters group
-
-    k+38log(32k/delta)
     """
-    return k + 10
+    return int(k + 38 * log(32 * k / dt))  # TODO - ask Tom if round up or down
 
 
-def max_subset_size_formula(k: int, ep: float, dt: float):
+def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
     """
     The size above which data doesn't fit inside a single machine,
     so clustering must be distributed.
-
-    10k n^ep log(8k/dt)
     """
-    return k + ep + dt
+    return 10 * k * pow(n, ep) * log(8 * k / dt)
 
 
-def alpha_formula(k, ep, dt, N_size):
+def alpha_formula(n, k, ep, dt, N_size):
     """
     The probability to draw a datum into P1/P2 samples
 
     10k n^ep log(8k/dt) / |N|
     """
-    return max_subset_size_formula(k, ep, dt) / N_size
+    return max_subset_size_formula(n, k, ep, dt) / N_size
 
 
 def distance(x: np.array, y: np.array):
