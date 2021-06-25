@@ -1,3 +1,5 @@
+import pandas as pd
+
 from hess_clustering.math import *
 from typing import List, Iterable
 
@@ -8,7 +10,7 @@ class Reducer:
         self.Ni = Ni
 
     def sample_P1_P2(self, alpha) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        return sample_P1_P2(alpha, self.Ni)
+        return self.Ni.sample(frac=alpha), self.Ni.sample(frac=alpha)
 
     def remove_handled_points(self, Ctmp: pd.DataFrame, v: float) -> int:
         """
@@ -16,9 +18,6 @@ class Reducer:
         returns the number of remaining elements.
         """
         pass
-
-    def size_of_Ni(self) -> int:
-        return len(self.Ni)
 
 
 class Coordinator:
@@ -41,7 +40,7 @@ class Coordinator:
 
 
 def hess_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
-    Ns = split(N, m)
+    Ns = np.array_split(N, m)
     reducers = [Reducer(Ni) for Ni in Ns]
     coordinator = Coordinator(k)
 
