@@ -3,21 +3,6 @@ import numpy as np
 from typing import Tuple
 
 
-def sample_P1_P2(alpha: float, N: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Samples two independent subsets P1 & P2 where each member of N has
-    probability alpha to appear in P1/P2.
-    """
-    return N, pd.DataFrame()
-
-
-def split(N, m):
-    """
-    Takes all data N and returns N/m equasized subsets of all data
-    """
-    return [N] + [pd.DataFrame()] * (m - 1)
-
-
 def kplus_formula(k: int, dt: float):
     """
     The allowed size of the "k+" clusters group
@@ -67,7 +52,6 @@ def A(N, k):
     The blackbox clustering algorithm
     """
     pass
-
 
 
 def risk(N, C):
