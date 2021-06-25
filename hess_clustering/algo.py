@@ -1,5 +1,3 @@
-import pandas as pd
-
 from hess_clustering.math import *
 from typing import List, Iterable
 
@@ -40,14 +38,15 @@ class Coordinator:
 
 
 def hess_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
+    n = len(N)
     Ns = np.array_split(N, m)
     reducers = [Reducer(Ni) for Ni in Ns]
     coordinator = Coordinator(k)
 
     remaining_elements_count = len(N)
 
-    while remaining_elements_count > max_subset_size_formula(k, ep, dt):
-        alpha = alpha_formula(k, ep, dt, len(N))
+    while remaining_elements_count > max_subset_size_formula(n, k, ep, dt):
+        alpha = alpha_formula(n, k, ep, dt, len(N))
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
 
         P1s = [p1p2[0] for p1p2 in P1s_and_P2s]

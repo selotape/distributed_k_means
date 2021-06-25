@@ -6,7 +6,7 @@ from random import choice
 
 from hess_clustering.algo import hess_clustering, risk
 
-DATASET_FILE = "/data_samples/kddcup99/kddcup.data_10_percent_corrected.csv"
+DATASET_FILE = "/home/ronvis/private/distributed_k_median/data_samples/kddcup99/kddcup.data_10_percent_corrected.csv"
 SUBSET_SIZE = 100
 
 Ks = [20, 50, 100]
