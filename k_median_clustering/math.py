@@ -46,18 +46,25 @@ def A(N: pd.DataFrame, k: int) -> pd.DataFrame:
     """
     return pd.DataFrame(KMedoids(n_clusters=k).fit(N).cluster_centers_)
 
-
-def EstProc(P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
-    """
-    calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
-    Emits the cluster and the ~risk.
-    """
-    raise NotImplementedError
-
-
 def risk(N: pd.DataFrame, C: pd.DataFrame, n_jobs=None):
     """
     Sum of distances of samples to their closest cluster center.
     """
     _, distances = pairwise_distances_argmin_min(N, C, metric=distance)  # TODO - use n_jobs to make concurrent
     return np.sum(distances)  # TODO - ask hess: the dimensions aren't normalized. So wouldn't the "wider" dimension dominate the pairwise distances?
+
+
+def phi_alpha(alpha: float, k: int, dt: float):
+    """
+    The size of the already-handled clusters
+    """
+    return (10/alpha) * log(8*k/dt)
+
+
+def EstProc(P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
+    """
+    calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
+    Emits the cluster and the ~risk.
+    """
+    Ta = A(P1, kp)
+    raise NotImplementedError

@@ -4,7 +4,8 @@ from sklearn_extra.cluster import KMedoids
 
 from random import choice
 
-from hess_clustering.algo import hess_clustering, risk
+from k_median_clustering.algo import k_median_clustering
+from k_median_clustering.math import risk
 
 DATASET_FILE = "/home/ronvis/private/distributed_k_median/data_samples/kddcup99/kddcup.data_10_percent_corrected.csv"
 SUBSET_SIZE = 5000
@@ -22,9 +23,9 @@ m = choice(Ms)
 ep = choice(epsilons)
 
 
-C = hess_clustering(N, k, ep, dt, m)
-hess_risk = risk(N, C)
-print(f'the hess_clustering risk is {hess_risk}')
+C = k_median_clustering(N, k, ep, dt, m)
+k_median_risk = risk(N, C)
+print(f'the k_median_clustering risk is {k_median_risk}')
 
 
 kmedoids = KMedoids(n_clusters=k).fit(N)

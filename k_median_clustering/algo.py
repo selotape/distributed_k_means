@@ -1,4 +1,4 @@
-from hess_clustering.math import *
+from k_median_clustering.math import *
 from typing import List, Iterable
 
 
@@ -37,7 +37,7 @@ class Coordinator:
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
 
-def hess_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
+def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
     n = len(N)
     Ns = np.array_split(N, m)
     reducers = [Reducer(Ni) for Ni in Ns]
