@@ -1,5 +1,6 @@
-from k_median_clustering.math import *
 from typing import List, Iterable
+
+from k_median_clustering.math import *
 
 
 class Reducer:
@@ -20,14 +21,17 @@ class Reducer:
 
 class Coordinator:
 
-    def __init__(self, k):
+    def __init__(self, k, kp, dt):
         self.C = pd.DataFrame()
         self._k = k
+        self._kp = kp
+        self._dt = dt
 
     def iterate(self, P1s: List[pd.DataFrame], P2s: List[pd.DataFrame], alpha) -> Tuple[float, pd.DataFrame]:
         P1 = pd.concat(P1s)
         P2 = pd.concat(P2s)
-        v, Ctmp = EstProc(P1, P2, alpha, 0, 0, 0)
+
+        v, Ctmp = EstProc(P1, P2, alpha, self._dt, self._k, self._kp)
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
         return v, Ctmp
 
@@ -41,10 +45,11 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
     n = len(N)
     Ns = np.array_split(N, m)
     reducers = [Reducer(Ni) for Ni in Ns]
-    coordinator = Coordinator(k)
+    kp = kplus_formula(k, dt)
+    coordinator = Coordinator(k, kp, dt)
 
     remaining_elements_count = len(N)
-
+    loop_count = 0
     while remaining_elements_count > max_subset_size_formula(n, k, ep, dt):
         alpha = alpha_formula(n, k, ep, dt, len(N))
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
@@ -55,6 +60,9 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
 
         remaining_elements_count = sum(r.remove_handled_points(Ctmp, v) for r in reducers)
+        loop_count += 1
+
+    print(f'loop_count: {loop_count}')
 
     coordinator.last_iteration(r.Ni for r in reducers)
 
