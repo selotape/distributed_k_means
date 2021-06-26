@@ -8,6 +8,8 @@ from hess_clustering.algo import hess_clustering, risk
 
 DATASET_FILE = "/home/ronvis/private/distributed_k_median/data_samples/kddcup99/kddcup.data_10_percent_corrected.csv"
 SUBSET_SIZE = 100
+full_data = pd.read_csv(DATASET_FILE, nrows=SUBSET_SIZE)
+N = full_data.select_dtypes([np.number])
 
 Ks = [20, 50, 100]
 Deltas = [0.1, 0.01]
@@ -19,8 +21,6 @@ dt = choice(Deltas)
 m = choice(Ms)
 ep = choice(epsilons)
 
-full_data = pd.read_csv(DATASET_FILE, nrows=SUBSET_SIZE)
-N = full_data.select_dtypes([np.number])
 
 kmedoids = KMedoids(n_clusters=k).fit(N)
 print(f'the kmedoids.inertia is {kmedoids.inertia_}')

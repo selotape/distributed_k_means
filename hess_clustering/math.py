@@ -1,6 +1,8 @@
 from math import log, pow
 from typing import Tuple
 
+from sklearn.metrics.pairwise import pairwise_distances, pairwise_distances_argmin, pairwise_distances_argmin_min
+
 import numpy as np
 import pandas as pd
 from sklearn_extra.cluster import KMedoids
@@ -10,7 +12,7 @@ def kplus_formula(k: int, dt: float):
     """
     The allowed size of the "k+" clusters group
     """
-    return int(k + 38 * log(32 * k / dt))  # TODO - ask Tom if round up or down
+    return int(k + 38 * log(32 * k / dt))
 
 
 def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
@@ -21,13 +23,13 @@ def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
     return 10 * k * pow(n, ep) * log(8 * k / dt)
 
 
-def alpha_formula(n, k, ep, dt, N_size):
+def alpha_formula(n, k, ep, dt, N_current_size):
     """
     The probability to draw a datum into P1/P2 samples
 
     10k n^ep log(8k/dt) / |N|
     """
-    return max_subset_size_formula(n, k, ep, dt) / N_size
+    return max_subset_size_formula(n, k, ep, dt) / N_current_size
 
 
 def distance(x: np.array, y: np.array):
@@ -53,8 +55,9 @@ def EstProc(P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int,
     raise NotImplementedError
 
 
-def risk(N, C):
+def risk(N: pd.DataFrame, C: pd.DataFrame, n_jobs=None):
     """
     Sum of distances of samples to their closest cluster center.
     """
-    raise NotImplementedError
+    _, distances = pairwise_distances_argmin_min(N, C, metric=distance)  # TODO - use n_jobs to make concurrent
+    return np.sum(distances)  # TODO - ask hess: the dimensions aren't normalized. So wouldn't the "wider" dimension dominate the pairwise distances?
