@@ -16,7 +16,11 @@ class Reducer:
         removes from _Ni all points further than v from Ctmp.
         returns the number of remaining elements.
         """
-        pass
+        _, distances = pairwise_distances_argmin_min(self.Ni, Ctmp)
+        remaining_points = distances > v
+        self.Ni = self.Ni[remaining_points]
+        return len(self.Ni)
+
 
 
 class Coordinator:
