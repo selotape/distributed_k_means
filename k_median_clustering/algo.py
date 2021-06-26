@@ -6,10 +6,10 @@ from k_median_clustering.math import *
 class Reducer:
 
     def __init__(self, Ni):
-        self.Ni = Ni
+        self.Ni: pd.DataFrame = Ni
 
     def sample_P1_P2(self, alpha) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        return self.Ni.sample(frac=alpha), self.Ni.sample(frac=alpha)
+        return self.Ni.sample(frac=alpha), self.Ni.sample(frac=alpha)  # TODO - figure out why this always returns exactly alpha
 
     def remove_handled_points(self, Ctmp: pd.DataFrame, v: float) -> int:
         """
@@ -22,7 +22,6 @@ class Reducer:
         return len(self.Ni)
 
 
-
 class Coordinator:
 
     def __init__(self, k, kp, dt):
@@ -33,7 +32,7 @@ class Coordinator:
 
     def iterate(self, P1s: List[pd.DataFrame], P2s: List[pd.DataFrame], alpha) -> Tuple[float, pd.DataFrame]:
         P1 = pd.concat(P1s)
-        P2 = pd.concat(P2s)
+        P2 = pd.concat(P2s) # TODO - do these copy the data? if so, avoid it
 
         v, Ctmp = EstProc(P1, P2, alpha, self._dt, self._k, self._kp)
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
@@ -59,7 +58,7 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
 
         P1s = [p1p2[0] for p1p2 in P1s_and_P2s]
-        P2s = [p1p2[1] for p1p2 in P1s_and_P2s]
+        P2s = [p1p2[1] for p1p2 in P1s_and_P2s] # TODO - test if this is wasteful for some reason
 
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
 
