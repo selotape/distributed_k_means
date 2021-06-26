@@ -11,7 +11,7 @@ def kplus_formula(k: int, dt: float):
     """
     The allowed size of the "k+" clusters group
     """
-    return int(k + 38 * log(32 * k / dt))
+    return int(k + 10 * log(8 * k / dt))
 
 
 def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
