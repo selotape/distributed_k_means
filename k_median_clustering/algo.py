@@ -65,7 +65,7 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
     logging.info(f"max_subset_size:{max_subset_size}")
 
-    while remaining_elements_count > 4 * max_subset_size or max_subset_size > 10 * r_formula(alpha, k, phi_alpha_formula(alpha, k, dt)):
+    while remaining_elements_count > 4 * max_subset_size and max_subset_size > 10 * r_formula(alpha, k, phi_alpha_formula(alpha, k, dt)):
         logging.info(f"============ Starting LOOP {loop_count} ============")
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
 
@@ -75,7 +75,6 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
 
         remaining_elements_count = sum(r.remove_handled_points(Ctmp, v) for r in reducers)
-        loop_count += 1
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
         logging.info(f"============ END OF LOOP {loop_count}. "
                      f"remaining_elements_count:{remaining_elements_count}."
@@ -83,6 +82,7 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
                      f" len(P2s):{sum(len(P2) for P2 in P2s)}. max_subset_size:{max_subset_size}"
                      f" r:{r_formula(alpha, k, phi_alpha_formula(alpha, k, dt))}"
                      f"  ============")
+        loop_count += 1
 
     coordinator.last_iteration([r.Ni for r in reducers])
 
