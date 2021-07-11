@@ -2,3 +2,5 @@
 .idea
 *.iml
 docs/Distributed.pdf
+*.gz
+kddcup.data.corrected
