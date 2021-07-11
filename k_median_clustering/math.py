@@ -3,6 +3,7 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
+from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min
 from sklearn_extra.cluster import KMedoids
 
@@ -31,31 +32,43 @@ def alpha_formula(n, k, ep, dt, N_current_size):
     return max_subset_size_formula(n, k, ep, dt) / N_current_size
 
 
-distance = 'euclidean'  # 'l2'
+distance = 'euclidean'
+Blackbox = [KMeans, KMedoids][0]
 
 
 def A(N: pd.DataFrame, k: int) -> pd.DataFrame:
     """
     The blackbox offline clustering algorithm. Returns the k chosen clusters
     """
-    return pd.DataFrame(KMedoids(n_clusters=k)
+    return pd.DataFrame(Blackbox(n_clusters=k)
                         .fit(N)
                         .cluster_centers_)
 
 
-def risk(N: pd.DataFrame, C: pd.DataFrame):
+def risk_kmedian(N: pd.DataFrame, C: pd.DataFrame):
     """
     Sum of distances of samples to their closest cluster center.
     """
     _, distances = pairwise_distances_argmin_min(N, C, metric=distance)
-    return np.sum(distances)  # TODO - ask hess: the dimensions aren't normalized. So wouldn't the "wider" dimension dominate the pairwise distances?
+
+    return _risk_of_distances(distances)
 
 
-# def risk(N: pd.DataFrame, C: pd.DataFrame):
-#     """
-#     Sum of distances of samples to their closest cluster center.
-#     """
-#     return np.sqrt(((N - C[:, np.newaxis])**2).sum(axis=2))
+def risk_truncated(P2, C, r):
+    _, distances = pairwise_distances_argmin_min(P2, C, metric=distance)
+    distances.sort()
+
+    if r >= len(P2):
+        return 0  # The "trivial risk"
+
+    return _risk_of_distances(distances[:len(distances) - r])
+
+
+def _risk_of_distances(distances):
+    return np.sum(np.square(distances))
+
+
+risk = risk_kmedian
 
 
 def phi_alpha_formula(alpha: float, k: int, dt: float):
@@ -67,16 +80,6 @@ def phi_alpha_formula(alpha: float, k: int, dt: float):
 
 def r_formula(alpha: float, k: int, phi_alpha: float) -> int:
     return int(2 * alpha * (k + 1) * phi_alpha)
-
-
-def risk_truncated(P2, C, r):
-    _, distances = pairwise_distances_argmin_min(P2, C, metric=distance)
-    distances.sort()
-
-    if r >= len(P2):
-        return 0  # The "trivial risk"
-
-    return np.sum(distances[:len(distances) - r])
 
 
 def v_formula(psi: float, k: int, phi_alpha: float):
