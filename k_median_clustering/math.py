@@ -31,27 +31,31 @@ def alpha_formula(n, k, ep, dt, N_current_size):
     return max_subset_size_formula(n, k, ep, dt) / N_current_size
 
 
-def distance(x: np.array, y: np.array):
-    """
-    the distance func for any two points in the space.
-    For now, it's a simple euclidean distance.
-    """
-    return np.linalg.norm(x - y)
+distance = 'euclidean'  # 'l2'
 
 
 def A(N: pd.DataFrame, k: int) -> pd.DataFrame:
     """
     The blackbox offline clustering algorithm. Returns the k chosen clusters
     """
-    return pd.DataFrame(KMedoids(n_clusters=k).fit(N).cluster_centers_)
+    return pd.DataFrame(KMedoids(n_clusters=k)
+                        .fit(N)
+                        .cluster_centers_)
 
 
-def risk(N: pd.DataFrame, C: pd.DataFrame, n_jobs=None):
+def risk(N: pd.DataFrame, C: pd.DataFrame):
     """
     Sum of distances of samples to their closest cluster center.
     """
-    _, distances = pairwise_distances_argmin_min(N, C, metric=distance)  # TODO - use n_jobs to make concurrent
+    _, distances = pairwise_distances_argmin_min(N, C, metric=distance)
     return np.sum(distances)  # TODO - ask hess: the dimensions aren't normalized. So wouldn't the "wider" dimension dominate the pairwise distances?
+
+
+# def risk(N: pd.DataFrame, C: pd.DataFrame):
+#     """
+#     Sum of distances of samples to their closest cluster center.
+#     """
+#     return np.sqrt(((N - C[:, np.newaxis])**2).sum(axis=2))
 
 
 def phi_alpha_formula(alpha: float, k: int, dt: float):
