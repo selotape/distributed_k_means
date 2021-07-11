@@ -1,5 +1,4 @@
 import logging
-from random import choice
 
 from k_median_clustering.algo import k_median_clustering
 from k_median_clustering.math import risk, Blackbox
@@ -14,15 +13,10 @@ full_data = pd.read_csv(DATASET_FILE, nrows=SUBSET_SIZE)
 N = full_data.select_dtypes([np.number])
 logging.info(f"Data size: {len(full_data):,}")
 
-Ks = [50]  # , 50, 100]
-Deltas = [0.1]  # , 0.01]
-Ms = [50]  # , 200]
-epsilons = [0.2]  # , 0.15, 0.2]
-
-k = choice(Ks)
-dt = choice(Deltas)
-m = choice(Ms)
-ep = choice(epsilons)
+k = 50
+dt = 0.1
+m = 50
+ep = 0.2
 
 logging.info(f"Starting distributed k median")
 C = k_median_clustering(N, k, ep, dt, m)
