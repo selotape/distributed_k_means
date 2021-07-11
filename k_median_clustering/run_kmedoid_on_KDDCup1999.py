@@ -1,6 +1,7 @@
 import logging
 
 from k_median_clustering.algo import k_median_clustering
+from k_median_clustering import competitors
 from k_median_clustering.math import risk, Blackbox
 import numpy as np
 import pandas as pd
@@ -25,7 +26,10 @@ logging.info(f"Final size of C:{len(C)} (where k:{k})")
 k_median_risk = risk(N, C)
 logging.info(f'The k_median_clustering risk is {k_median_risk:,}')
 
-logging.info(f"Starting Blackbox")
-kmeans = Blackbox(n_clusters=k, n_jobs=-1).fit(N)
-kmeans_risk = risk(N, kmeans.cluster_centers_)
-logging.info(f'The {Blackbox.__name__} risk is {kmeans_risk:,}')
+logging.info(f"Starting {Blackbox.__name__}")
+blackbox_risk = competitors.blackbox(N, k, risk)
+logging.info(f'The {Blackbox.__name__} risk is {blackbox_risk:,}')
+
+logging.info(f"Starting Spark KMeans")
+blackbox_risk = competitors.spark_kmeans(N, k)
+logging.info(f'The {Blackbox.__name__} risk is {blackbox_risk:,}')
