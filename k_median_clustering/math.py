@@ -45,7 +45,7 @@ def A(N: pd.DataFrame, k: int) -> pd.DataFrame:
                         .cluster_centers_)
 
 
-def risk_kmedian(N: pd.DataFrame, C: pd.DataFrame):
+def risk_kmeans(N: pd.DataFrame, C: pd.DataFrame):
     """
     Sum of distances of samples to their closest cluster center.
     """
@@ -68,7 +68,7 @@ def _risk_of_distances(distances):
     return np.sum(np.square(distances))
 
 
-risk = risk_kmedian
+risk = risk_kmeans
 
 
 def phi_alpha_formula(alpha: float, k: int, dt: float):
