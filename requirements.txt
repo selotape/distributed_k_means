@@ -3,3 +3,4 @@ scikit-learn-extra
 numpy
 pandas
 pyspark
+jupyter

@@ -1,3 +1,4 @@
+import logging
 from math import log, pow
 from typing import Tuple
 
@@ -49,23 +50,19 @@ def risk_kmeans(N: pd.DataFrame, C: pd.DataFrame):
     """
     Sum of distances of samples to their closest cluster center.
     """
-    _, distances = pairwise_distances_argmin_min(N, C, metric=distance)
+    distances = pairwise_distances_argmin_min_squared(N, C)
 
-    return _risk_of_distances(distances)
+    return np.sum(distances)
 
 
 def risk_truncated(P2, C, r):
-    _, distances = pairwise_distances_argmin_min(P2, C, metric=distance)
+    distances = pairwise_distances_argmin_min_squared(P2, C)
     distances.sort()
 
     if r >= len(P2):
         return 0  # The "trivial risk"
 
-    return _risk_of_distances(distances[:len(distances) - r])
-
-
-def _risk_of_distances(distances):
-    return np.sum(np.square(distances))
+    return np.sum(distances[:len(distances) - r])
 
 
 risk = risk_kmeans
@@ -99,3 +96,31 @@ def EstProc(P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int,
 
     psi = (1 / (3 * alpha)) * Rr
     return v_formula(psi, k, phi_alpha), Ta
+
+
+def pairwise_distances_argmin_min_squared(X, Y):
+    logging.info(f"============ pairwise_distances_argmin_min_squared start ============")
+    linear_dists = pairwise_distances_argmin_min(X, Y, metric=distance)[1]
+    square_dists = np.square(linear_dists)
+    logging.info(f"============ pairwise_distances_argmin_min_squared end ============")
+    return square_dists
+
+
+def alpha_s_formula(k, n, ep, len_R):
+    return 9 * k * (n ** ep) * log(n) / len_R
+
+
+def alpha_h_formula(n, ep, len_R):
+    return 4 * (n ** ep) * log(n) / len_R
+
+
+
+def Select(S, H, n):
+    dists: np.ndarray = pairwise_distances_argmin_min_squared(H, S)
+    dists.sort()
+
+    if len(dists) < 8 * log(n):
+        logging.warning("len(dists) < 8*log(n) ☹️💔")
+        return dists[0]
+
+    return dists[int(-8 * log(n))]
