@@ -12,14 +12,14 @@ class Reducer:
     def sample_P1_P2(self, alpha) -> Tuple[pd.DataFrame, pd.DataFrame]:
         return self.Ni.sample(frac=alpha), self.Ni.sample(frac=alpha)  # TODO - figure out why this always returns exactly alpha
 
-    def remove_handled_points(self, Ctmp: pd.DataFrame, v: float) -> int:
+    def remove_handled_points_and_return_remaining(self, Ctmp: pd.DataFrame, v: float) -> int:
         """
         removes from _Ni all points further than v from Ctmp.
         returns the number of remaining elements.
         """
         if len(self.Ni) == 0:
             return 0
-        _, distances = pairwise_distances_argmin_min(self.Ni, Ctmp)
+        distances = pairwise_distances_argmin_min_squared(self.Ni, Ctmp)
         remaining_points = distances > v
         self.Ni = self.Ni[remaining_points]
         return len(self.Ni)
@@ -74,7 +74,7 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
 
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
 
-        remaining_elements_count = sum(r.remove_handled_points(Ctmp, v) for r in reducers)
+        remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(Ctmp, v) for r in reducers)
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
         logging.info(f"============ END OF LOOP {loop_count}. "
                      f"remaining_elements_count:{remaining_elements_count}."
