@@ -4,3 +4,4 @@
 docs/Distributed.pdf
 *.gz
 kddcup.data.corrected
+*.log
