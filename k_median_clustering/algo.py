@@ -1,4 +1,3 @@
-import logging
 from typing import List, Iterable
 
 from k_median_clustering.math import *
@@ -50,7 +49,7 @@ class Coordinator:
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
 
-def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
+def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int) -> Tuple[pd.DataFrame, int]:
     n = len(N)
     logging.info("starting to split")
     Ns = np.array_split(N, m)
@@ -61,12 +60,12 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
     alpha = alpha_formula(n, k, ep, dt, len(N))
 
     remaining_elements_count = len(N)
-    loop_count = 0
+    iteration = 0
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
     logging.info(f"max_subset_size:{max_subset_size}")
 
     while remaining_elements_count > 4 * max_subset_size and max_subset_size > 10 * r_formula(alpha, k, phi_alpha_formula(alpha, k, dt)):
-        logging.info(f"============ Starting LOOP {loop_count} ============")
+        logging.info(f"============ Starting LOOP {iteration} ============")
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
 
         P1s = [p1p2[0] for p1p2 in P1s_and_P2s]
@@ -76,15 +75,16 @@ def k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int):
 
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(Ctmp, v) for r in reducers)
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
-        logging.info(f"============ END OF LOOP {loop_count}. "
+        logging.info(f"============ END OF LOOP {iteration}. "
                      f"remaining_elements_count:{remaining_elements_count}."
                      f" alpha:{alpha}. v:{v}. len(Ctmp):{len(Ctmp)}. "
                      f" len(P2s):{sum(len(P2) for P2 in P2s)}. max_subset_size:{max_subset_size}"
                      f" r:{r_formula(alpha, k, phi_alpha_formula(alpha, k, dt))}"
                      f"  ============")
-        loop_count += 1
+        iteration += 1
 
     coordinator.last_iteration([r.Ni for r in reducers])
+    iteration += 1
 
-    logging.info(f'loop_count: {loop_count}. len(C):{len(coordinator.C)}')
-    return coordinator.C
+    logging.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}')
+    return coordinator.C, iteration

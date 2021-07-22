@@ -99,10 +99,8 @@ def EstProc(P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int,
 
 
 def pairwise_distances_argmin_min_squared(X, Y):
-    logging.info(f"============ pairwise_distances_argmin_min_squared start ============")
     linear_dists = pairwise_distances_argmin_min(X, Y, metric=distance)[1]
     square_dists = np.square(linear_dists)
-    logging.info(f"============ pairwise_distances_argmin_min_squared end ============")
     return square_dists
 
 
