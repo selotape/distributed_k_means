@@ -24,15 +24,34 @@ ms = [50]
 
 for k, dt, m, ep in product(ks, deltas, ms, epsilons):
     logging.info(f'===============================================')
-    logging.info(f"======== Starting distributed k median ========")
+    logging.info(f"======== Starting distributed k median with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
     logging.info(f'===============================================')
     C, iterations = distributed_k_median_clustering(N, k, ep, dt, m)
     dist_k_median_risk = risk(N, C)
-    logging.info(f'The k_median_clustering risk is {dist_k_median_risk:,} and the size of C is {len(C)} (where k:{k}')
+    logging.info(f'The k_median_clustering risk is {dist_k_median_risk:,}. the size of C is {len(C)} (where k:{k} after {iterations} iterations')
     logging.info(f'=============================================================================================')
 
-    logging.info(f"Starting scalable_k_mean")
     l = int(len(C) / iterations)
+
+    logging.info(f"1. Starting scalable_k_mean with {iterations} iterations and l=={l}")
+    scalable_k_means_C = competitors.scalable_k_means_clustering(N, iterations, l)
+    scalable_k_means_risk = risk(N, scalable_k_means_C)
+    logging.info(f'The scalable_k_means risk is {scalable_k_means_risk:,} and size of C is {len(scalable_k_means_C)}')
+    logging.info(f'=============================================================================================')
+    logging.info(f'The ratio (dist_k_median_risk / scalable_k_means) is {dist_k_median_risk / scalable_k_means_risk:,}')
+    logging.info(f'=============================================================================================')
+
+    iterations *= 2
+    logging.info(f"2. Starting scalable_k_mean with {iterations} iterations and l=={l}")
+    scalable_k_means_C = competitors.scalable_k_means_clustering(N, iterations, l)
+    scalable_k_means_risk = risk(N, scalable_k_means_C)
+    logging.info(f'The scalable_k_means risk is {scalable_k_means_risk:,} and size of C is {len(scalable_k_means_C)}')
+    logging.info(f'=============================================================================================')
+    logging.info(f'The ratio (dist_k_median_risk / scalable_k_means) is {dist_k_median_risk / scalable_k_means_risk:,}')
+    logging.info(f'=============================================================================================')
+
+    iterations *= 2
+    logging.info(f"3. Starting scalable_k_mean with {iterations} iterations and l=={l}")
     scalable_k_means_C = competitors.scalable_k_means_clustering(N, iterations, l)
     scalable_k_means_risk = risk(N, scalable_k_means_C)
     logging.info(f'The scalable_k_means risk is {scalable_k_means_risk:,} and size of C is {len(scalable_k_means_C)}')
