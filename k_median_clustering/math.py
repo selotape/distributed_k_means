@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min
-from sklearn_extra.cluster import KMedoids
 
 
 def kplus_formula(k: int, dt: float):
@@ -34,15 +33,15 @@ def alpha_formula(n, k, ep, dt, N_current_size):
 
 
 distance = 'euclidean'
-Blackbox = [KMeans, KMedoids][0]
+Blackbox = KMeans
 
 
-def A(N: pd.DataFrame, k: int) -> pd.DataFrame:
+def A(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
     """
     The blackbox offline clustering algorithm. Returns the k chosen clusters
     """
     return pd.DataFrame(Blackbox(n_clusters=k)
-                        .fit(N)
+                        .fit(N, sample_weight=sample_weight)
                         .cluster_centers_)
 
 

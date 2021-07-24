@@ -1,5 +1,7 @@
 from typing import List, Iterable
 
+from sklearn.metrics import pairwise_distances_argmin
+
 from k_median_clustering.math import *
 from k_median_clustering.utils import keep_time, LAST_RUNTIME
 
@@ -7,6 +9,7 @@ from k_median_clustering.utils import keep_time, LAST_RUNTIME
 class Reducer:
 
     def __init__(self, Ni):
+        self.Ni_orig: pd.DataFrame = Ni
         self.Ni: pd.DataFrame = Ni
 
     @keep_time
@@ -19,7 +22,7 @@ class Reducer:
         removes from _Ni all points further than v from C.
         returns the number of remaining elements.
 
-        Using Ctmp instead of C will might improve runtime but harm number of removed elemens (and thus num interations)
+        Using Ctmp instead of C might improve runtime but harm number of removed elements (and thus num interations)
         """
         if len(self.Ni) == 0:
             return 0
@@ -27,6 +30,15 @@ class Reducer:
         remaining_points = distances > v
         self.Ni = self.Ni[remaining_points]
         return len(self.Ni)
+
+    @keep_time
+    def measure_weights(self, C):
+        chosen_centers = pairwise_distances_argmin(self.Ni_orig, C)
+        center_weights = np.zeros((len(C),), dtype=np.intc)
+        for cc in chosen_centers:
+            center_weights[cc] += 1
+        return center_weights
+
 
 
 class Coordinator:
@@ -46,7 +58,7 @@ class Coordinator:
         if v == 0.0:
             logging.error("Bad! v == 0.0")
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
-        return v
+        return v, Ctmp
 
     @keep_time
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
@@ -56,7 +68,7 @@ class Coordinator:
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
 
-def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int) -> Tuple[pd.DataFrame, int]:
+def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int) -> Tuple[pd.DataFrame, pd.DataFrame, int]:
     n = len(N)
     logging.info("starting to split")
     Ns = np.array_split(N, m)
@@ -78,7 +90,7 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
         P1s = [p1p2[0] for p1p2 in P1s_and_P2s]
         P2s = [p1p2[1] for p1p2 in P1s_and_P2s]
 
-        v = coordinator.iterate(P1s, P2s, alpha)
+        v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
 
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(coordinator.C, v) for r in reducers)
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
@@ -92,7 +104,16 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
 
     coordinator.last_iteration([r.Ni for r in reducers])
 
+    C_weights = calculate_center_weights(coordinator, reducers)
+
+    C_final = A(coordinator.C, k, C_weights)
+
     iteration += 1
 
-    logging.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}')
-    return coordinator.C, iteration
+    logging.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
+    return coordinator.C, C_final, iteration
+
+
+def calculate_center_weights(coordinator, reducers: Iterable[Reducer]):
+    return np.sum([r.measure_weights(coordinator.C) for r in reducers], axis=0)
+
