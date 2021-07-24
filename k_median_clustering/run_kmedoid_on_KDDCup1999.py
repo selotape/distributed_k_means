@@ -30,15 +30,17 @@ def summarize(i, name, k, dt, m, ep, len_dkm_C, iters, l, len_skm_C, dkm_risk, s
 
 def main():
     for i, (k, dt, m, ep) in enumerate(product(ks, deltas, ms, epsilons)):
-        logger.info(f'===============================================')
+        logger.info(f'=============================================================================================')
         logger.info(f"======== Starting distributed k median with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
-        logger.info(f'===============================================')
+        logger.info(f'=============================================================================================')
         results.info('Starting...\n')
-        dkm_C, iters = distributed_k_median_clustering(N, k, ep, dt, m)
+        dkm_C, dkm_C_final, iters = distributed_k_median_clustering(N, k, ep, dt, m)
         dkm_risk = risk(N, dkm_C)
+        dkm_risk_final = risk(N, dkm_C_final)
         logger.info(f'=============================================================================================')
         logger.info(f'=============================================================================================')
         logger.info(f'=============================================================================================')
+        results.info(f'len(N):{len(N)}. dkm_risk:{dkm_risk:,}. dkm_risk_final:{dkm_risk_final:,}. len(dkm_C):{len(dkm_C)}. len(dkm_C_final):{len(dkm_C_final)}')
 
         l = int(len(dkm_C) / iters)
 
