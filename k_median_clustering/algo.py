@@ -64,7 +64,7 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
     logging.info(f"max_subset_size:{max_subset_size}")
 
-    while remaining_elements_count > 4 * max_subset_size and max_subset_size > 10 * r_formula(alpha, k, phi_alpha_formula(alpha, k, dt)):
+    while remaining_elements_count > 4 * max_subset_size and max_subset_size > 5 * r_formula(alpha, k, phi_alpha_formula(alpha, k, dt)):
         logging.info(f"============ Starting LOOP {iteration} ============")
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
 
@@ -84,6 +84,7 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
         iteration += 1
 
     coordinator.last_iteration([r.Ni for r in reducers])
+
     iteration += 1
 
     logging.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}')
