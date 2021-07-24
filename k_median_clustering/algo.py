@@ -1,6 +1,7 @@
 from typing import List, Iterable
 
 from k_median_clustering.math import *
+from k_median_clustering.utils import keep_time, LAST_RUNTIME
 
 
 class Reducer:
@@ -8,9 +9,11 @@ class Reducer:
     def __init__(self, Ni):
         self.Ni: pd.DataFrame = Ni
 
+    @keep_time
     def sample_P1_P2(self, alpha) -> Tuple[pd.DataFrame, pd.DataFrame]:
         return self.Ni.sample(frac=alpha), self.Ni.sample(frac=alpha)  # TODO - figure out why this always returns exactly alpha
 
+    @keep_time
     def remove_handled_points_and_return_remaining(self, Ctmp: pd.DataFrame, v: float) -> int:
         """
         removes from _Ni all points further than v from Ctmp.
@@ -32,6 +35,7 @@ class Coordinator:
         self._kp = kp
         self._dt = dt
 
+    @keep_time
     def iterate(self, P1s: List[pd.DataFrame], P2s: List[pd.DataFrame], alpha) -> Tuple[float, pd.DataFrame]:
         P1 = pd.concat(P1s)
         P2 = pd.concat(P2s)  # TODO - do these copy the data? if so, avoid it
@@ -42,6 +46,7 @@ class Coordinator:
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
         return v, Ctmp
 
+    @keep_time
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
         logging.info('starting last iteration...')
         N_remaining = pd.concat(Nis)
