@@ -5,7 +5,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
-from sklearn.metrics.pairwise import pairwise_distances_argmin_min
+from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
 
 
 def kplus_formula(k: int, dt: float):
@@ -120,3 +120,11 @@ def Select(S, H, n):
         return dists[0]
 
     return dists[int(-8 * log(n))]
+
+
+def measure_weights(N, C):
+    chosen_centers = pairwise_distances_argmin(N, C)
+    center_weights = np.zeros((len(C),), dtype=np.intc)
+    for cc in chosen_centers:
+        center_weights[cc] += 1
+    return center_weights

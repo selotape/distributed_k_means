@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from random import choice
 
-from k_median_clustering.math import Blackbox, risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula
+from k_median_clustering.math import Blackbox, risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, A
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
 
@@ -29,7 +29,7 @@ def blackbox(N, k):
     return risk(N, kmeans.cluster_centers_)
 
 
-def scalable_k_means_clustering(N: pd.DataFrame, iterations: int, l: int):
+def scalable_k_means_clustering(N: pd.DataFrame, iterations: int, l: int, k: int):
     C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
     psii = risk(N, C)
     for i in range(iterations):
@@ -42,7 +42,12 @@ def scalable_k_means_clustering(N: pd.DataFrame, iterations: int, l: int):
         C = C.append(N.iloc[draws])
         psii = risk(N, C)
 
-    return C
+
+    C_weights = measure_weights(N, C)
+
+    C_final = A(C, k, C_weights)
+
+    return C, C_final
 
 
 class _FastClusteringReducer:

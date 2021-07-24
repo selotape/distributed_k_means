@@ -33,11 +33,7 @@ class Reducer:
 
     @keep_time
     def measure_weights(self, C):
-        chosen_centers = pairwise_distances_argmin(self.Ni_orig, C)
-        center_weights = np.zeros((len(C),), dtype=np.intc)
-        for cc in chosen_centers:
-            center_weights[cc] += 1
-        return center_weights
+        return measure_weights(self.Ni_orig, C)
 
 
 
