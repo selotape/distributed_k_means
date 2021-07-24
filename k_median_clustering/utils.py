@@ -1,6 +1,10 @@
 import logging
 import sys
 
+import time
+
+
+
 formatter = logging.Formatter('%(asctime)s %(message)s')
 
 
@@ -19,3 +23,19 @@ def setup_logger(name, log_file, with_console=False, level=logging.INFO):
         logger.addHandler(console)
 
     return logger
+
+
+LAST_RUNTIME = '_last_runtime'
+
+def keep_time(func):
+    '''Instance-Method decorator that saves the methods last execution time on the instance.'''
+
+    def wrap(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+
+        args[0].__dict__[func.__name__ + LAST_RUNTIME] = end - start
+        return result
+
+    return wrap

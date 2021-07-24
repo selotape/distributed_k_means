@@ -13,7 +13,7 @@ def kplus_formula(k: int, dt: float):
     """
     The allowed size of the "k+" clusters group
     """
-    return int(k + 10 * log(8 * k / dt))
+    return int(k + 8 * log(1.1 * k / dt))
 
 
 def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
@@ -21,7 +21,7 @@ def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
     The size above which data doesn't fit inside a single machine,
     so clustering must be distributed.
     """
-    return 10 * k * pow(n, ep) * log(8 * k / dt)
+    return 8 * k * pow(n, ep) * log(1.1 * k / dt)
 
 
 def alpha_formula(n, k, ep, dt, N_current_size):
@@ -72,11 +72,11 @@ def phi_alpha_formula(alpha: float, k: int, dt: float):
     """
     The size of the already-handled clusters
     """
-    return (10 / alpha) * log(8 * k / dt)
+    return (5 / alpha) * log(1.1 * k / dt)
 
 
 def r_formula(alpha: float, k: int, phi_alpha: float) -> int:
-    return int(2 * alpha * (k + 1) * phi_alpha)
+    return int(1.6 * alpha * k * phi_alpha)
 
 
 def v_formula(psi: float, k: int, phi_alpha: float):
@@ -110,7 +110,6 @@ def alpha_s_formula(k, n, ep, len_R):
 
 def alpha_h_formula(n, ep, len_R):
     return 4 * (n ** ep) * log(n) / len_R
-
 
 
 def Select(S, H, n):
