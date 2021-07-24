@@ -14,14 +14,16 @@ class Reducer:
         return self.Ni.sample(frac=alpha), self.Ni.sample(frac=alpha)  # TODO - figure out why this always returns exactly alpha
 
     @keep_time
-    def remove_handled_points_and_return_remaining(self, Ctmp: pd.DataFrame, v: float) -> int:
+    def remove_handled_points_and_return_remaining(self, C: pd.DataFrame, v: float) -> int:
         """
-        removes from _Ni all points further than v from Ctmp.
+        removes from _Ni all points further than v from C.
         returns the number of remaining elements.
+
+        Using Ctmp instead of C will might improve runtime but harm number of removed elemens (and thus num interations)
         """
         if len(self.Ni) == 0:
             return 0
-        distances = pairwise_distances_argmin_min_squared(self.Ni, Ctmp)
+        distances = pairwise_distances_argmin_min_squared(self.Ni, C)
         remaining_points = distances > v
         self.Ni = self.Ni[remaining_points]
         return len(self.Ni)
@@ -44,7 +46,7 @@ class Coordinator:
         if v == 0.0:
             logging.error("Bad! v == 0.0")
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
-        return v, Ctmp
+        return v
 
     @keep_time
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
@@ -76,9 +78,9 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
         P1s = [p1p2[0] for p1p2 in P1s_and_P2s]
         P2s = [p1p2[1] for p1p2 in P1s_and_P2s]
 
-        v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
+        v = coordinator.iterate(P1s, P2s, alpha)
 
-        remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(Ctmp, v) for r in reducers)
+        remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(coordinator.C, v) for r in reducers)
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
         logging.info(f"============ END OF LOOP {iteration}. "
                      f"remaining_elements_count:{remaining_elements_count}."
