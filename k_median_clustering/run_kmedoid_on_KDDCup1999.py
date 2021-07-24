@@ -18,24 +18,19 @@ full_data = pd.read_csv(DATASET_FILE, nrows=SUBSET_SIZE)
 N = full_data.select_dtypes([np.number])
 logger.info(f"Data size: {len(full_data):,}")
 
-ks = [500, ]
-epsilons = [0.2]
+ks = [10, 50, 100, 500]
+epsilons = [0.15, 0.2]
 deltas = [0.1]
 ms = [50]
 
 
-def summarize(i, name, k, dt, m, ep, len_dkm_C, iters, l, len_skm_C, dkm_risk, skm_risk, dkm_risk_final, skm_risk_final):
-    return f'{i}, {name}, k={k}, dt={dt}, m={m}, ep={ep}, len(dkm_C)={len_dkm_C}, iters={iters}, l={l}, len(skm_C)={len_skm_C},' \
-           f' (dkm_risk/skm_risk)={dkm_risk / skm_risk:,}, (dkm_risk_final/skm_risk_final)={dkm_risk_final / skm_risk_final:,}\n'
-
-
 def main():
-    for i, (k, dt, m, ep) in enumerate(product(ks, deltas, ms, epsilons)):
+    for k, dt, m, ep in product(ks, deltas, ms, epsilons):
         logger.info(f'=============================================================================================')
         logger.info(f"======== Starting distributed k median with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
         logger.info(f'=============================================================================================')
         results.info('Starting...\n')
-        dkm_C, dkm_C_final, iters = distributed_k_median_clustering(N, k, ep, dt, m)
+        dkm_C, dkm_C_final, dkm_iters = distributed_k_median_clustering(N, k, ep, dt, m)
         dkm_risk = risk(N, dkm_C)
         dkm_risk_f = risk(N, dkm_C_final)
         logger.info(f'=============================================================================================')
@@ -43,46 +38,23 @@ def main():
         logger.info(f'=============================================================================================')
         results.info(f'len(N):{len(N)}. dkm_risk:{dkm_risk:,}. dkm_risk_final:{dkm_risk_f:,}. len(dkm_C):{len(dkm_C)}. len(dkm_C_final):{len(dkm_C_final)}')
 
-        l = int(len(dkm_C) / iters)
+        l = int(len(dkm_C) / dkm_iters)
 
-        logger.info(f"1. Starting scalable_k_mean with {iters} iterations and l=={l}")
-        skm_C, skm_C_final = competitors.scalable_k_means_clustering(N, iters, l, k)
-        skm_risk = risk(N, skm_C)
-        skm_risk_f = risk(N, skm_C_final)
-        logger.info(f'The scalable_k_means risk is {skm_risk:,} and size of C is {len(skm_C)}')
-        logger.info(f'=============================================================================================')
-        test_summary = summarize(i, 'skm 1', k, dt, m, ep, len(dkm_C), iters, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f)
-        logger.info(test_summary)
-        results.info(test_summary)
-        logger.info(f'=============================================================================================')
-        logger.info(f'=============================================================================================')
-        logger.info(f'=============================================================================================')
+        for i in range(4):
+            skm_iters = dkm_iters + i
+            logger.info(f"{i}. Starting scalable_k_mean with {skm_iters} iterations and l=={l}")
+            skm_C, skm_C_final = competitors.scalable_k_means_clustering(N, skm_iters, l, k)
+            skm_risk = risk(N, skm_C)
+            skm_risk_f = risk(N, skm_C_final)
+            logger.info(f'The scalable_k_means risk is {skm_risk:,} and size of C is {len(skm_C)}')
+            logger.info(f'=============================================================================================')
+            test_summary = summarize(i, 'skm 1', k, dt, m, ep, len(dkm_C), dkm_iters, skm_iters, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f)
+            logger.info(test_summary)
+            results.info(test_summary)
+            logger.info(f'=============================================================================================')
+            logger.info(f'=============================================================================================')
+            logger.info(f'=============================================================================================')
 
-        iters *= 2
-        logger.info(f"2. Starting scalable_k_mean with {iters} iterations and l=={l}")
-        skm_C, skm_C_final = competitors.scalable_k_means_clustering(N, iters, l, k)
-        skm_risk = risk(N, skm_C)
-        skm_risk_f = risk(N, skm_C_final)
-        logger.info(f'The scalable_k_means risk is {skm_risk:,} and size of C is {len(skm_C)}')
-        logger.info(f'=============================================================================================')
-        test_summary = summarize(i, 'skm 1', k, dt, m, ep, len(dkm_C), iters, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f)
-        logger.info(test_summary)
-        results.info(test_summary)
-        logger.info(f'=============================================================================================')
-        logger.info(f'=============================================================================================')
-        logger.info(f'=============================================================================================')
-
-        iters *= 2
-        logger.info(f"3. Starting scalable_k_mean with {iters} iterations and l=={l}")
-        skm_C, skm_C_final = competitors.scalable_k_means_clustering(N, iters, l, k)
-        skm_risk = risk(N, skm_C)
-        skm_risk_f = risk(N, skm_C_final)
-        logger.info(f'The scalable_k_means risk is {skm_risk:,} and size of C is {len(skm_C)}')
-        logger.info(f'=============================================================================================')
-        test_summary = summarize(i, 'skm 1', k, dt, m, ep, len(dkm_C), iters, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f)
-        logger.info(test_summary)
-        results.info(test_summary)
-        logger.info(f'=============================================================================================')
         #
         # logger.info(f'=============================================================================================')
         # logger.info(f'=============================================================================================')
@@ -107,6 +79,11 @@ def main():
         #     logger.info(f'The {Blackbox.__name__} risk is {blackbox_risk:,}')
         # except Exception as e:
         #     logger.error(e)
+
+
+def summarize(i, name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, skm_risk, dkm_risk_final, skm_risk_final):
+    return f'{i}, {name}, k={k}, dt={dt}, m={m}, ep={ep}, len(dkm_C)={len_dkm_C}, dkm_iters={dkm_iters}, skm_iters={skm_iters}, l={l}, len(skm_C)={len_skm_C},' \
+           f' (dkm_risk/skm_risk)={dkm_risk / skm_risk:,}, (dkm_risk_final/skm_risk_final)={dkm_risk_final / skm_risk_final:,}\n'
 
 
 if __name__ == "__main__":
