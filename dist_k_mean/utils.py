@@ -39,3 +39,7 @@ def keep_time(func):
         return result
 
     return wrap
+
+
+def get_kept_time(obj, func_name):
+    return obj.__dict__[func_name + LAST_RUNTIME]
