@@ -1,7 +1,8 @@
 **/kddcup.data_10_percent_corrected.csv
 .idea
 *.iml
-docs/Distributed.pdf
 *.gz
+docs/Distributed.pdf
 kddcup.data.corrected
 *.log
+*.csv

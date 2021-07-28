@@ -20,7 +20,7 @@ class Reducer:
         removes from _Ni all points further than v from C.
         returns the number of remaining elements.
 
-        Using Ctmp instead of C might improve runtime but harm number of removed elements (and thus num interations)
+        Using Ctmp instead of C might improve runtime but harm number of removed elements (and thus num iterations)
         """
         if len(self.Ni) == 0:
             return 0
@@ -62,7 +62,7 @@ class Coordinator:
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
 
-def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger, results: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int]:
+def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int]:
     n = len(N)
     logger.info("starting to split")
     Ns = np.array_split(N, m)
@@ -100,7 +100,7 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
                       f" len(P2s):{sum(len(P2) for P2 in P2s)}. max_subset_size:{max_subset_size}" + \
                       f" r:{r_formula(alpha, k, phi_alpha_formula(alpha, k, dt))}" + \
                       f"  ============"
-        results.info(end_of_loop)
+        logger.info(end_of_loop)
         iteration += 1
 
     logger.info(f"Finished while-loop after {iteration-1} iterations")
