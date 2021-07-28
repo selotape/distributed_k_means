@@ -1,7 +1,18 @@
+from dataclasses import dataclass, field
+import time
 from typing import List, Iterable
 
-from k_median_clustering.math import *
-from k_median_clustering.utils import keep_time
+from dist_k_mean.math import *
+from dist_k_mean.utils import keep_time, get_kept_time
+
+
+@dataclass
+class DkmTiming:
+    sample_times: List[float] = field(default_factory=list)
+    iterate_times: List[float] = field(default_factory=list)
+    remove_handled_times: List[float] = field(default_factory=list)
+    final_iter_time: float = 0.0
+    finalization_time: float = 0.0
 
 
 class Reducer:
@@ -62,7 +73,7 @@ class Coordinator:
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
 
-def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int]:
+def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int, DkmTiming]:
     n = len(N)
     logger.info("starting to split")
     Ns = np.array_split(N, m)
@@ -71,7 +82,7 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
     kp = kplus_formula(k, dt)
     coordinator = Coordinator(k, kp, dt, logger)
     alpha = alpha_formula(n, k, ep, dt, len(N))
-
+    timing = DkmTiming()
     remaining_elements_count = len(N)
     iteration = 0
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
@@ -86,13 +97,17 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
     while remaining_elements_count > max_subset_size:
         logger.info(f"============ Starting LOOP {iteration} ============")
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
+        timing.sample_times.append(max(get_kept_time(r, 'sample_P1_P2') for r in reducers))
 
         P1s = [p1p2[0] for p1p2 in P1s_and_P2s]
         P2s = [p1p2[1] for p1p2 in P1s_and_P2s]
 
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
+        timing.iterate_times.append(get_kept_time(coordinator, 'iterate'))
 
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(coordinator.C, v) for r in reducers)
+        timing.remove_handled_times.append(max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers))
+
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
         end_of_loop = f"============ END OF LOOP {iteration}. " + \
                       f"remaining_elements_count:{remaining_elements_count}." + \
@@ -101,20 +116,24 @@ def distributed_k_median_clustering(N: pd.DataFrame, k: int, ep: float, dt: floa
                       f" r:{r_formula(alpha, k, phi_alpha_formula(alpha, k, dt))}" + \
                       f"  ============"
         logger.info(end_of_loop)
+
         iteration += 1
 
-    logger.info(f"Finished while-loop after {iteration-1} iterations")
+    logger.info(f"Finished while-loop after {iteration - 1} iterations")
     coordinator.last_iteration([r.Ni for r in reducers])
+    timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
 
-    logger.info(f"Calculating center-weights")
+    start = time.time()
+    logger.info(f"Calculating center-weights...")
     C_weights = calculate_center_weights(coordinator, reducers)
     logger.info(f"Calculating C_final")
     C_final = A(coordinator.C, k, C_weights)
+    timing.finalization_time = time.time() - start
 
     iteration += 1
 
     logger.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
-    return coordinator.C, C_final, iteration
+    return coordinator.C, C_final, iteration, timing
 
 
 def calculate_center_weights(coordinator, reducers: Iterable[Reducer]):

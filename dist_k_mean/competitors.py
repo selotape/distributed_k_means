@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from random import choice
 
-from k_median_clustering.math import Blackbox, risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, A
+from dist_k_mean.math import Blackbox, risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, A
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
 
