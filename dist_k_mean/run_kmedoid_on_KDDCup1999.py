@@ -12,17 +12,21 @@ from dist_k_mean.utils import setup_logger
 
 # 1. avg of ratio of risks & risk_f DONE
 # 2. results as CSV DONE
-# 4. new data set
-# 2. sum/avg_iters(  max(sample_phase) + bb_phase + max(trim_phase))
-# 3. make skm ""distributed"". measure sum+avg like above
+# 3. new data set DONE
+# 4. sum/avg_iters(  max(sample_phase) + bb_phase + max(trim_phase)) DONE
+# 5. Timing for skm (total_time/num_machines)
+# 6. super-comfortable config for running tests: gaussian params. l as param.
+# 7. run on Server
+# 8. find another BB
+# 9. fast_clustering
 
 
-ks = [50]
-epsilons = [0.15, 0.2]
+ks = [10, 50, 100]
+epsilons = [0.1, 0.2]
 deltas = [0.1]
 ms = [50]
-repetitions = [0]
 skm_runs = 3
+repetitions = [0, 1, 2, 3]
 
 label = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode("utf-8")
 log_time = strftime('%Y%m%d%H%M')
@@ -72,7 +76,7 @@ def main(kdd=True):
                 test_summary = format_as_csv(f'{skm_run}th_skm_run_in_rep_{rep}', k, dt, m, ep, len(dkm_C), dkm_iters, skm_iters, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f, risks,
                                              skm_run)
                 csv.write(test_summary + '\n')
-                logger.info(HEADER + '\n' + test_summary)
+                logger.info('\n' + HEADER + '\n' + test_summary)
                 logger.info(f'===========================================================================================')
 
         except Exception:
