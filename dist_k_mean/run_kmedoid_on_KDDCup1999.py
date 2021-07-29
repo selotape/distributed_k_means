@@ -6,37 +6,9 @@ from time import strftime
 
 from dist_k_mean import competitors
 from dist_k_mean.algo import distributed_k_means
+from dist_k_mean.datasets import generate_k_gaussians, read_and_prep_kdd
 from dist_k_mean.math import risk
 from dist_k_mean.utils import setup_logger
-import numpy as np
-import pandas as pd
-
-label = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode("utf-8")
-log_time = strftime('%Y%m%d%H%M')
-run_name = f'dist_k_mean_{log_time}_git{label}'
-logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
-
-DATASET_FILE = "/home/ronvis/private/distributed_k_median/data_samples/kddcup99/kddcup.data.corrected"
-SUBSET_SIZE = 6000000
-full_data = pd.read_csv(DATASET_FILE, nrows=SUBSET_SIZE)
-N = full_data.select_dtypes([np.number])
-logger.info(f"Data size: {len(full_data):,}")
-
-ks = [10, 50, 100, 200]
-# ks = [10, 50, 100, 500]
-epsilons = [0.15, 0.2]
-deltas = [0.1]
-ms = [50]
-repetitions = [0, 1, 2, 3, 4]
-skm_runs = 3
-
-HEADER = 'test_name,k,dt,m,ep,len(dkm_C),dkm_iters,skm_iters,l,len(skm_C),(dkm_r/skm_r),(dkm_r_f/skm_r_f),avg(dkm_r/skm_r),avg(dkm_r_f/skm_r_f),avg(len(dkm_C)),avg(dkm_iters)\n'
-
-
-def format_as_csv(test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, skm_risk, dkm_risk_final, skm_risk_final, risks, skm_run):
-    return ','.join(str(s) for s in
-                    [test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, (dkm_risk / skm_risk), (dkm_risk_final / skm_risk_final), avg_r(risks, skm_run), avg_r_f(risks, skm_run)])
-
 
 # 1. avg of ratio of risks & risk_f DONE
 # 2. results as CSV DONE
@@ -44,7 +16,32 @@ def format_as_csv(test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, l
 # 2. sum/avg_iters(  max(sample_phase) + bb_phase + max(trim_phase))
 # 3. make skm ""distributed"". measure sum+avg like above
 
-def main():
+
+ks = [50]
+epsilons = [0.15, 0.2]
+deltas = [0.1]
+ms = [50]
+repetitions = [0]
+skm_runs = 3
+
+label = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode("utf-8")
+log_time = strftime('%Y%m%d%H%M')
+run_name = f'dist_k_mean_{log_time}_git{label}'
+logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
+
+HEADER = 'test_name,k,dt,m,ep,len(dkm_C),dkm_iters,skm_iters,l,len(skm_C),(dkm_r/skm_r),(dkm_r_f/skm_r_f),avg(dkm_r/skm_r),avg(dkm_r_f/skm_r_f)'
+
+
+def format_as_csv(test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, skm_risk, dkm_risk_final, skm_risk_final, risks, skm_run):
+    return ','.join(str(s) for s in
+                    [test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, (dkm_risk / skm_risk), (dkm_risk_final / skm_risk_final), avg_r(risks, skm_run), avg_r_f(risks, skm_run)])
+
+
+def main(kdd=True):
+    logger.info("Loading Data...")
+    N = read_and_prep_kdd() if kdd else generate_k_gaussians()
+    logger.info(f"len(N)={len(N)}")
+
     risks = defaultdict(list)
     csv = open(f"{run_name}_results.csv", "a")
     csv.write(HEADER)
@@ -92,4 +89,4 @@ def avg_r_f(risks, skm_run):
 
 
 if __name__ == "__main__":
-    main()
+    main(kdd=False)
