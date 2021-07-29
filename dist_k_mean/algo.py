@@ -88,8 +88,8 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
     logger.info(f"max_subset_size:{max_subset_size}")
 
-    if n ** ep < 8:
-        err_msg = f"n ** ep < 8 !! n:{n}. ep:{ep}"
+    if n ** ep < 4:
+        err_msg = f"n ** ep < 4 !! n:{n}. ep:{ep}"
         logging.error(err_msg)
         raise RuntimeError(err_msg)
 
@@ -108,6 +108,10 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(coordinator.C, v) for r in reducers)
         timing.remove_handled_times.append(max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers))
 
+        if remaining_elements_count == 0:
+            logger.info("remaining_elements_count == 0!!")
+            break
+
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
         end_of_loop = f"============ END OF LOOP {iteration}. " + \
                       f"remaining_elements_count:{remaining_elements_count}." + \
@@ -120,8 +124,9 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
         iteration += 1
 
     logger.info(f"Finished while-loop after {iteration - 1} iterations")
-    coordinator.last_iteration([r.Ni for r in reducers])
-    timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
+    if remaining_elements_count > 0:
+        coordinator.last_iteration([r.Ni for r in reducers])
+        timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
 
     start = time.time()
     logger.info(f"Calculating center-weights...")
