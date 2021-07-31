@@ -18,8 +18,9 @@ from config import *
 # 6. super-comfortable config for running tests: gaussian params. l as param.
 # 7. run on Server
 # 8. calculate distances to Ctmp...
-# 9. find another BB
-# 10. fast_clustering
+# 9. find another BB DONE
+# 10. split internal BB & finalization BB
+# 11. fast_clustering
 
 
 label = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode("utf-8")
