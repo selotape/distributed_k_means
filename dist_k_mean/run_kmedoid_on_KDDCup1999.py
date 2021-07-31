@@ -53,7 +53,7 @@ def main(kdd=True):
         try:
             logger.info(f"======== Starting distributed k means with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
             dkm_C, dkm_C_final, dkm_iters, dkm_timing = distributed_k_means(N, k, ep, dt, m, logger)
-            logger.info(str(dkm_timing))
+            logger.info(f'dkm_timing:{dkm_timing}')
 
             dkm_risk = risk(N, dkm_C)
             dkm_risk_f = risk(N, dkm_C_final)
@@ -68,13 +68,14 @@ def main(kdd=True):
             for skm_run in range(skm_runs):
                 skm_iters = dkm_iters + skm_run
                 logger.info(f"{skm_run}. Starting scalable_k_mean with {skm_iters} iterations and l=={l}")
-                skm_C, skm_C_final = competitors.scalable_k_means_clustering(N, skm_iters, l, k)
+                skm_C, skm_C_final, skm_timing = competitors.scalable_k_means(N, skm_iters, l, k, m)
+                skm_run_name = f'{skm_run}th_skm_run_in_rep_{rep}'
+                logger.info(f'{skm_run_name}:{skm_timing}')
                 skm_risk = risk(N, skm_C)
                 skm_risk_f = risk(N, skm_C_final)
                 risks[f'skm_{skm_run}'].append(skm_risk), risks[f'skm_f_{skm_run}'].append(skm_risk_f)
                 logger.info(f'The scalable_k_means risk is {skm_risk:,} and size of C is {len(skm_C)}')
-                test_summary = format_as_csv(f'{skm_run}th_skm_run_in_rep_{rep}', k, dt, m, ep, len(dkm_C), dkm_iters, skm_iters, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f, risks,
-                                             skm_run)
+                test_summary = format_as_csv(skm_run_name, k, dt, m, ep, len(dkm_C), dkm_iters, skm_iters, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f, risks, skm_run)
                 csv.write(test_summary + '\n')
                 logger.info('\n' + HEADER + '\n' + test_summary)
                 logger.info(f'===========================================================================================')

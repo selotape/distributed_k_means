@@ -1,15 +1,15 @@
 import logging
+import time
+from dataclasses import dataclass
 from math import log
+from random import choice
 from typing import List, Tuple
 
-import pandas as pd
-import numpy as np
-from random import choice
-
 from dist_k_mean.math import Blackbox, risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, A
+import numpy as np
+import pandas as pd
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
-
 from pyspark.sql import SparkSession
 
 
@@ -29,12 +29,19 @@ def blackbox(N, k):
     return risk(N, kmeans.cluster_centers_)
 
 
-def scalable_k_means_clustering(N: pd.DataFrame, iterations: int, l: int, k: int):
+@dataclass
+class SkmTiming:
+    iterate_time: float = 0
+    finalization_time: float = 0
+
+
+def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tuple[pd.DataFrame, pd.DataFrame, SkmTiming]:
+    start = time.time()
+    timing = SkmTiming()
     C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
     psii = risk(N, C)
     for i in range(iterations):
         calcs = pd.DataFrame()
-
         calcs['dists'] = pairwise_distances_argmin_min_squared(N, C)
         calcs['probs'] = (calcs['dists']) / psii
         # TODO - figure out why this didnt work -  calcs['coin_toss'] = np.random.uniform(size=len(N), )
@@ -42,12 +49,16 @@ def scalable_k_means_clustering(N: pd.DataFrame, iterations: int, l: int, k: int
         C = C.append(N.iloc[draws])
         psii = risk(N, C)
 
-
     C_weights = measure_weights(N, C)
 
-    C_final = A(C, k, C_weights)
+    end = time.time()
+    timing.iterate_time = (start - end) / m
 
-    return C, C_final
+    start = time.time()
+    C_final = A(C, k, C_weights)
+    timing.finalization_time = time.time() - start
+
+    return C, C_final, timing
 
 
 class _FastClusteringReducer:
