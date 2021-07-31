@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import time
-from typing import List, Iterable
+from typing import List, Iterable, Tuple
 
 from dist_k_mean.math import *
 from dist_k_mean.utils import keep_time, get_kept_time
