@@ -4,7 +4,7 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
 
 
@@ -33,7 +33,8 @@ def alpha_formula(n, k, ep, dt, N_current_size):
 
 
 distance = 'euclidean'
-Blackbox = KMeans
+# Blackbox = KMeans
+Blackbox = MiniBatchKMeans
 
 
 def A(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
