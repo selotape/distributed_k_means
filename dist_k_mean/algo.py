@@ -12,6 +12,7 @@ class DkmTiming:
     iterate_times: List[float] = field(default_factory=list)
     remove_handled_times: List[float] = field(default_factory=list)
     final_iter_time: float = 0.0
+    weighing_time: float = 0.0
     finalization_time: float = 0.0
 
 
@@ -31,12 +32,12 @@ class Reducer:
         removes from _Ni all points further than v from C.
         returns the number of remaining elements.
 
-        Using Ctmp instead of C might improve runtime but harm number of removed elements (and thus num iterations)
+        TODO - measure distance to Ctmp and do min with the prev distances (to C before adding Ctmp)
         """
         if len(self.Ni) == 0:
             return 0
         distances = pairwise_distances_argmin_min_squared(self.Ni, C)
-        remaining_points = distances > v
+        remaining_points: pd.DataFrame[bool] = distances > v
         self.Ni = self.Ni[remaining_points]
         return len(self.Ni)
 
@@ -53,13 +54,14 @@ class Coordinator:
         self._kp = kp
         self._dt = dt
         self._logger = logger
+        self._psi = 0.0
 
     @keep_time
     def iterate(self, P1s: List[pd.DataFrame], P2s: List[pd.DataFrame], alpha) -> Tuple[float, pd.DataFrame]:
         P1 = pd.concat(P1s)
         P2 = pd.concat(P2s)  # TODO - do these copy the data? if so, avoid it
 
-        v, Ctmp = EstProc(P1, P2, alpha, self._dt, self._k, self._kp)
+        v, Ctmp = self.EstProc(P1, P2, alpha, self._dt, self._k, self._kp)
         if v == 0.0:
             logging.error("Bad! v == 0.0")
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
@@ -71,6 +73,20 @@ class Coordinator:
         N_remaining = pd.concat(Nis)
         Ctmp = A(N_remaining, self._k)
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
+
+    def EstProc(self, P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
+        """
+        calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
+        Emits the cluster and the ~risk.
+        """
+        Ta = A(P1, kp)
+
+        phi_alpha = phi_alpha_formula(alpha, k, dt)
+        r = r_formula(alpha, k, phi_alpha)
+        Rr = risk_truncated(P2, Ta, r)
+
+        self._psi = max((1 / (3 * alpha)) * Rr, self._psi)
+        return v_formula(self._psi, k, phi_alpha), Ta
 
 
 def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int, DkmTiming]:
@@ -93,7 +109,6 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
         logging.error(err_msg)
         raise RuntimeError(err_msg)
 
-    # while remaining_elements_count > 4 * max_subset_size and max_subset_size > 5 * r_formula(alpha, k, phi_alpha_formula(alpha, k, dt)):
     while remaining_elements_count > max_subset_size:
         logger.info(f"============ Starting LOOP {iteration} ============")
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
@@ -131,7 +146,10 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     start = time.time()
     logger.info(f"Calculating center-weights...")
     C_weights = calculate_center_weights(coordinator, reducers)
+    timing.weighing_time = (time.time() - start) / m
+
     logger.info(f"Calculating C_final")
+    start = time.time()
     C_final = A(coordinator.C, k, C_weights)
     timing.finalization_time = time.time() - start
 

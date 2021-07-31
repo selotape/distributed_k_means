@@ -82,20 +82,6 @@ def v_formula(psi: float, k: int, phi_alpha: float):
     return psi / (k * phi_alpha)
 
 
-def EstProc(P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
-    """
-    calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
-    Emits the cluster and the ~risk.
-    """
-    Ta = A(P1, kp)
-
-    phi_alpha = phi_alpha_formula(alpha, k, dt)
-    r = r_formula(alpha, k, phi_alpha)
-    Rr = risk_truncated(P2, Ta, r)
-
-    psi = (1 / (3 * alpha)) * Rr
-    return v_formula(psi, k, phi_alpha), Ta
-
 
 def pairwise_distances_argmin_min_squared(X, Y):
     linear_dists = pairwise_distances_argmin_min(X, Y, metric=distance)[1]
