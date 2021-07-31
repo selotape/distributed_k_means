@@ -6,3 +6,4 @@ docs/Distributed.pdf
 kddcup.data.corrected
 *.log
 *.csv
+**/__pychache__

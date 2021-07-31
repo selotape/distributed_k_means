@@ -51,8 +51,7 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tup
 
     C_weights = measure_weights(N, C)
 
-    end = time.time()
-    timing.iterate_time = (start - end) / m
+    timing.iterate_time = (time.time() - start) / m
 
     start = time.time()
     C_final = A(C, k, C_weights)
