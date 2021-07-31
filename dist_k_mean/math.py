@@ -1,11 +1,12 @@
 import logging
 from math import log, pow
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
+
+from dist_k_mean.config import MINI_BATCH_SIZE
 
 
 def kplus_formula(k: int, dt: float):
@@ -42,7 +43,7 @@ def A(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
     The blackbox offline clustering algorithm. Returns the k chosen clusters
     """
     return pd.DataFrame(Blackbox(n_clusters=k)
-                        .fit(N, sample_weight=sample_weight)
+                        .fit(N, sample_weight=sample_weight, batch_size=MINI_BATCH_SIZE)
                         .cluster_centers_)
 
 
