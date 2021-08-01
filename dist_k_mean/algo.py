@@ -25,18 +25,20 @@ class DkmTiming:
     def total_time(self):
         return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time, self.weighing_time])
 
+
 class Reducer:
 
     def __init__(self, Ni):
         self.Ni_orig: pd.DataFrame = Ni
         self.Ni: pd.DataFrame = Ni
+        self._prev_distances_to_C = None
 
     @keep_time
     def sample_P1_P2(self, alpha) -> Tuple[pd.DataFrame, pd.DataFrame]:
         return self.Ni.sample(frac=alpha), self.Ni.sample(frac=alpha)  # TODO - figure out why this always returns exactly alpha
 
     @keep_time
-    def remove_handled_points_and_return_remaining(self, C: pd.DataFrame, v: float) -> int:
+    def remove_handled_points_and_return_remaining(self, Ctmp: pd.DataFrame, v: float) -> int:
         """
         removes from _Ni all points further than v from C.
         returns the number of remaining elements.
@@ -45,9 +47,11 @@ class Reducer:
         """
         if len(self.Ni) == 0:
             return 0
-        distances = pairwise_distances_argmin_min_squared(self.Ni, C)
-        remaining_points: pd.DataFrame[bool] = distances > v
+        distances_to_Ctmp = pairwise_distances_argmin_min_squared(self.Ni, Ctmp)
+        distances_to_C = np.minimum(distances_to_Ctmp, self._prev_distances_to_C) if self._prev_distances_to_C is not None else distances_to_Ctmp
+        remaining_points: pd.DataFrame[bool] = distances_to_Ctmp > v
         self.Ni = self.Ni[remaining_points]
+        self._prev_distances_to_C = distances_to_C[remaining_points]
         return len(self.Ni)
 
     @keep_time
@@ -130,7 +134,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
         timing.iterate_times.append(get_kept_time(coordinator, 'iterate'))
 
-        remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(coordinator.C, v) for r in reducers)
+        remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(Ctmp, v) for r in reducers)
         timing.remove_handled_times.append(max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers))
 
         if remaining_elements_count == 0:
@@ -161,8 +165,6 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     start = time.time()
     C_final = A(coordinator.C, k, C_weights)
     timing.finalization_time = time.time() - start
-
-
 
     logger.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
     return coordinator.C, C_final, iteration, timing
