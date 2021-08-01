@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import time
+from statistics import mean
 from typing import List, Iterable, Tuple
 
 from dist_k_mean.math import *
@@ -15,6 +16,14 @@ class DkmTiming:
     weighing_time: float = 0.0
     finalization_time: float = 0.0
 
+    def reducer_avg_time(self):
+        return mean(self.sample_times) + mean(self.remove_handled_times)
+
+    def coordinator_avg_time(self):
+        return mean(self.iterate_times)
+
+    def total_time(self):
+        return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time, self.weighing_time])
 
 class Reducer:
 
@@ -110,6 +119,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
         raise RuntimeError(err_msg)
 
     while remaining_elements_count > max_subset_size:
+        iteration += 1
         logger.info(f"============ Starting LOOP {iteration} ============")
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
         timing.sample_times.append(max(get_kept_time(r, 'sample_P1_P2') for r in reducers))
@@ -136,24 +146,23 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
                       f"  ============"
         logger.info(end_of_loop)
 
-        iteration += 1
-
-    logger.info(f"Finished while-loop after {iteration - 1} iterations")
+    logger.info(f"Finished while-loop after {iteration} iterations")
     if remaining_elements_count > 0:
         coordinator.last_iteration([r.Ni for r in reducers])
+        iteration += 1
         timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
 
     start = time.time()
-    logger.info(f"Calculating center-weights...")
+    logger.info("Calculating center-weights...")
     C_weights = calculate_center_weights(coordinator, reducers)
     timing.weighing_time = (time.time() - start) / m
 
-    logger.info(f"Calculating C_final")
+    logger.info("Calculating C_final")
     start = time.time()
     C_final = A(coordinator.C, k, C_weights)
     timing.finalization_time = time.time() - start
 
-    iteration += 1
+
 
     logger.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
     return coordinator.C, C_final, iteration, timing

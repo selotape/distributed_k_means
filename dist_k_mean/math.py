@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 from math import log, pow
 
 import numpy as np
@@ -34,8 +35,8 @@ def alpha_formula(n, k, ep, dt, N_current_size):
 
 
 distance = 'euclidean'
-# Blackbox = KMeans
-Blackbox = MiniBatchKMeans
+Blackbox = KMeans
+# Blackbox = partial(MiniBatchKMeans, batch_size=MINI_BATCH_SIZE)
 
 
 def A(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
@@ -43,7 +44,7 @@ def A(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
     The blackbox offline clustering algorithm. Returns the k chosen clusters
     """
     return pd.DataFrame(Blackbox(n_clusters=k)
-                        .fit(N, sample_weight=sample_weight, batch_size=MINI_BATCH_SIZE)
+                        .fit(N, sample_weight=sample_weight)
                         .cluster_centers_)
 
 

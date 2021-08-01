@@ -31,8 +31,11 @@ def blackbox(N, k):
 
 @dataclass
 class SkmTiming:
-    iterate_time: float = 0
+    iterate_total_time: float = 0
     finalization_time: float = 0
+
+    def total_time(self):
+        return self.iterate_total_time + self.finalization_time
 
 
 def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tuple[pd.DataFrame, pd.DataFrame, SkmTiming]:
@@ -51,7 +54,7 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tup
 
     C_weights = measure_weights(N, C)
 
-    timing.iterate_time = (time.time() - start) / m
+    timing.iterate_total_time = (time.time() - start) / m
 
     start = time.time()
     C_final = A(C, k, C_weights)

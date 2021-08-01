@@ -4,7 +4,8 @@ import subprocess
 from time import strftime
 
 from dist_k_mean import competitors
-from dist_k_mean.algo import distributed_k_means
+from dist_k_mean.algo import distributed_k_means, DkmTiming
+from dist_k_mean.competitors import SkmTiming
 from dist_k_mean.datasets import generate_k_gaussians, read_and_prep_kdd
 from dist_k_mean.math import risk
 from dist_k_mean.utils import setup_logger
@@ -28,12 +29,13 @@ log_time = strftime('%Y%m%d%H%M')
 run_name = f'dist_k_mean_{log_time}_git{label}'
 logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
 
-HEADER = 'test_name,k,dt,m,ep,len(dkm_C),dkm_iters,skm_iters,l,len(skm_C),(dkm_r/skm_r),(dkm_r_f/skm_r_f)'
+HEADER = 'test_name,k,dt,m,ep,len(dkm_C),dkm_iters,skm_iters,l,len(skm_C),(dkm_r/skm_r),(dkm_r_f/skm_r_f),dkmr_avg_time,dkmc_avg_time,dkmt_time,skmi_total_time,skmf_time,skm_total_time'
 
 
-def format_as_csv(test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, skm_risk, dkm_risk_final, skm_risk_final):
+def format_as_csv(test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, skm_risk, dkm_risk_final, skm_risk_final, dkm_timing: DkmTiming, skm_timing: SkmTiming):
     return ','.join(str(s) for s in
-                    [test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, (dkm_risk / skm_risk), (dkm_risk_final / skm_risk_final)])
+                    [test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, (dkm_risk / skm_risk), (dkm_risk_final / skm_risk_final),
+                     dkm_timing.reducer_avg_time(), dkm_timing.coordinator_avg_time(), dkm_timing.total_time(), skm_timing.iterate_total_time, skm_timing.finalization_time, skm_timing.total_time(), ])
 
 
 def main(kdd=True):
@@ -63,7 +65,7 @@ def main(kdd=True):
             skm_risk = risk(N, skm_C)
             skm_risk_f = risk(N, skm_C_final)
             logger.info(f'The scalable_k_means risk is {skm_risk:,} and size of C is {len(skm_C)}')
-            test_summary = format_as_csv(skm_run_name, k, dt, m, ep, len(dkm_C), dkm_iters, SKM_ITERATIONS, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f)
+            test_summary = format_as_csv(skm_run_name, k, dt, m, ep, len(dkm_C), dkm_iters, SKM_ITERATIONS, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f, dkm_timing, skm_timing)
             csv.write(test_summary + '\n')
             logger.info('\n' + HEADER + '\n' + test_summary)
             logger.info(f'===========================================================================================')
