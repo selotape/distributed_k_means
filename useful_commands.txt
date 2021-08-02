@@ -1,6 +1,17 @@
-python3.9 run_experiments.py
+# run the experiment!
+nohup python3.9 run_experiments.py &
 
+# delete all experiment logs+csvs
 rm dist_k_mean_*
 
-nano dist_kmeans/config.py
+# edit config.py
+nano dist_k_mean/config.py
+
+# revert your changes to config.py
+git checkout dist_k_mean/config.py
+# git reset --hard HEAD
+
+# download a file from the server
+# run on your LOCAL MACHINE:
+scp tomhe@sgesabatos.cs.bgu.ac.il:Desktop/distributed_k_means/README.md .
 
