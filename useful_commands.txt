@@ -4,6 +4,9 @@ nohup python3.9 run_experiments.py &
 # read the python output mid-run
 tail -f nohup.out
 
+# see which python processes are running
+ps -ef | grep python
+
 # delete all experiment logs+csvs
 rm dist_k_mean_*
 
