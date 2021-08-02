@@ -8,7 +8,7 @@ from dist_k_mean import competitors
 from dist_k_mean.algo import distributed_k_means, DkmTiming
 from dist_k_mean.competitors import SkmTiming
 from dist_k_mean.datasets import get_dataset
-from dist_k_mean.math import risk
+from dist_k_mean.disk_k_mean_math import risk
 from dist_k_mean.utils import setup_logger
 
 # 1. avg of ratio of risks & risk_f DONE

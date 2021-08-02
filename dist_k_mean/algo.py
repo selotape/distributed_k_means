@@ -3,7 +3,7 @@ import time
 from statistics import mean
 from typing import List, Iterable, Tuple
 
-from dist_k_mean.math import *
+from dist_k_mean.disk_k_mean_math import *
 from dist_k_mean.utils import keep_time, get_kept_time
 
 
