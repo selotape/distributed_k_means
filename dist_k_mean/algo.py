@@ -84,7 +84,7 @@ class Coordinator:
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
         self._logger.info('starting last iteration...')
         N_remaining = pd.concat(Nis)
-        Ctmp = A(N_remaining, self._k)
+        Ctmp = A(N_remaining, self._k) if len(N_remaining) > self._k else N_remaining
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
     def EstProc(self, P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
