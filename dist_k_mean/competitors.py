@@ -5,7 +5,7 @@ from math import log
 from random import choice
 from typing import List, Tuple
 
-from dist_k_mean.math import Blackbox, risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, A
+from dist_k_mean.disk_k_mean_math import Blackbox, risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, A
 import numpy as np
 import pandas as pd
 from pyspark.ml.clustering import KMeans
