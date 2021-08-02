@@ -1,0 +1,6 @@
+python3.9 run_experiments.py
+
+rm dist_k_mean_*
+
+nano dist_kmeans/config.py
+
