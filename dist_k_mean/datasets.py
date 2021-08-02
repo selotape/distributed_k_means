@@ -6,7 +6,7 @@ from math import floor
 
 import numpy as np
 
-from config import *
+from dist_k_mean.config import *
 
 
 @lru_cache
