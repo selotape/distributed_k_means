@@ -1,5 +1,5 @@
 # run the experiment!
-nohup python3.9 run_experiments.py &
+nohup python3.9 run_experiments.py BLORGYBORGY &
 
 # read the python output mid-run
 tail -f nohup.out
