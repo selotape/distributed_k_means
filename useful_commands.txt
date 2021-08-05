@@ -17,6 +17,12 @@ nano dist_k_mean/config.py
 git checkout dist_k_mean/config.py
 # git reset --hard HEAD
 
+
+# save your config for later
+git add --all && git stash
+# get your config from earlier
+git stash pop
+
 # download a file from the server
 # run on your LOCAL MACHINE:
 scp tomhe@sgesabatos.cs.bgu.ac.il:Desktop/distributed_k_means/README.md .
