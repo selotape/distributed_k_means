@@ -1,3 +1,5 @@
+RUN_NAME = 'SCHMOD'
+
 KDD_DATASET_FILE = "data_samples/kddcup99/kddcup.data"
 KDD_SUBSET_SIZE = 6000000
 
