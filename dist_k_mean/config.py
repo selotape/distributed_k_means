@@ -1,4 +1,4 @@
-KDD_DATASET_FILE = "/home/ronvis/private/distributed_k_median/data_samples/kddcup99/kddcup.data.corrected"
+KDD_DATASET_FILE = "/home/ronvis/private/distributed_k_median/data_samples/kddcup99/kddcup.data"
 KDD_SUBSET_SIZE = 6000000
 
 BLACKBOX = 'KMeans'  # MiniBatchKMeans
