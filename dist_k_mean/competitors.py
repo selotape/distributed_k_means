@@ -47,7 +47,6 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tup
         calcs = pd.DataFrame()
         calcs['dists'] = pairwise_distances_argmin_min_squared(N, C)
         calcs['probs'] = (calcs['dists']) / psii
-        # TODO - figure out why this didnt work -  calcs['coin_toss'] = np.random.uniform(size=len(N), )
         draws = np.random.choice(len(N), l, p=calcs['probs'], replace=False)
         C = C.append(N.iloc[draws])
         psii = risk(N, C)
