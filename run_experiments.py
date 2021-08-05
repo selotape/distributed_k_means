@@ -16,13 +16,15 @@ logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
 
 log_config_file(logger)
 
-HEADER = 'test_name,k,dt,m,ep,len(dkm_C),dkm_iters,skm_iters,l,len(skm_C),(dkm_r/skm_r),(dkm_r_f/skm_r_f),dkmr_avg_time,dkmc_avg_time,dkmt_time,skmi_total_time,skmf_time,skm_total_time'
+HEADER = "test_name,k,dt,m,ep,len(dkm_C),dkm_iters,skm_iters,l,len(skm_C),dkm_r,dkm_r_f,skm_r,skm_r_f,(dkm_r/skm_r),(dkm_r_f/skm_r_f),dkmr_avg_time,dkmc_avg_time,dkmt_time,skmi_total_time," \
+         "skmf_time,skm_total_time "
 
 
 def format_as_csv(test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, skm_risk, dkm_risk_final, skm_risk_final, dkm_timing: DkmTiming, skm_timing: SkmTiming):
     return ','.join(str(s) for s in
-                    [test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, (dkm_risk / skm_risk), (dkm_risk_final / skm_risk_final),
-                     dkm_timing.reducer_avg_time(), dkm_timing.coordinator_avg_time(), dkm_timing.total_time(), skm_timing.iterate_total_time, skm_timing.finalization_time, skm_timing.total_time(), ])
+                    [test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, dkm_risk_final, skm_risk, skm_risk_final, (dkm_risk / skm_risk),
+                     (dkm_risk_final / skm_risk_final), dkm_timing.reducer_avg_time(), dkm_timing.coordinator_avg_time(), dkm_timing.total_time(), skm_timing.iterate_total_time,
+                     skm_timing.finalization_time, skm_timing.total_time(), ])
 
 
 def main():
