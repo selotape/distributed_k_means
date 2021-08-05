@@ -1,12 +1,11 @@
 from itertools import product
 from statistics import mean
-import subprocess
 from time import strftime
 
-from dist_k_mean.config import *
 from dist_k_mean import competitors
 from dist_k_mean.algo import distributed_k_means, DkmTiming
 from dist_k_mean.competitors import SkmTiming
+from dist_k_mean.config import *
 from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
 from dist_k_mean.utils import setup_logger, log_config_file
@@ -24,9 +23,8 @@ from dist_k_mean.utils import setup_logger, log_config_file
 # 11. fast_clustering
 
 
-label = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode("utf-8")
-log_time = strftime('%Y%m%d%H%M')
-run_name = f'dist_k_mean_{log_time}_git{label}'
+log_time = strftime('%m_%d_%H_%M')
+run_name = f'dist_k_mean_{log_time}'
 logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
 
 log_config_file(logger)
