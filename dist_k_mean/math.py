@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
 
-from dist_k_mean.config import MINI_BATCH_SIZE
+from dist_k_mean.config import MINI_BATCH_SIZE, BLACKBOX
 
 
 def kplus_formula(k: int, dt: float):
@@ -35,8 +35,12 @@ def alpha_formula(n, k, ep, dt, N_current_size):
 
 
 distance = 'euclidean'
-Blackbox = KMeans
-# Blackbox = partial(MiniBatchKMeans, batch_size=MINI_BATCH_SIZE)
+BlackBoxes = {
+    'KMeans': KMeans,
+    'MiniBatchKMeans': partial(MiniBatchKMeans, batch_size=MINI_BATCH_SIZE),
+    # 'ScalableKMeans': ScalableKMeans,
+}
+Blackbox = BlackBoxes[BLACKBOX]
 
 
 def A(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
