@@ -43,3 +43,11 @@ def keep_time(func):
 
 def get_kept_time(obj, func_name):
     return obj.__dict__[func_name + LAST_RUNTIME]
+
+
+def log_config_file(logger):
+    with open('dist_k_mean/config.py') as config_f:
+        config_txt = config_f.readlines()
+    # Remove whitespace characters like '\n' at the end of each line
+    [logger.info(line) for line in config_txt]
+

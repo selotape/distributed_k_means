@@ -9,7 +9,7 @@ from dist_k_mean.algo import distributed_k_means, DkmTiming
 from dist_k_mean.competitors import SkmTiming
 from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
-from dist_k_mean.utils import setup_logger
+from dist_k_mean.utils import setup_logger, log_config_file
 
 # 1. avg of ratio of risks & risk_f DONE
 # 2. results as CSV DONE
@@ -28,6 +28,8 @@ label = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
 log_time = strftime('%Y%m%d%H%M')
 run_name = f'dist_k_mean_{log_time}_git{label}'
 logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
+
+log_config_file(logger)
 
 HEADER = 'test_name,k,dt,m,ep,len(dkm_C),dkm_iters,skm_iters,l,len(skm_C),(dkm_r/skm_r),(dkm_r_f/skm_r_f),dkmr_avg_time,dkmc_avg_time,dkmt_time,skmi_total_time,skmf_time,skm_total_time'
 
