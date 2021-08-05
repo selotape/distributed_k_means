@@ -9,18 +9,6 @@ from dist_k_mean.config import *
 from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
 from dist_k_mean.utils import setup_logger, log_config_file
-# 1. avg of ratio of risks & risk_f DONE
-# 2. results as CSV DONE
-# 3. new data set DONE
-# 4. sum/avg_iters(  max(sample_phase) + bb_phase + max(trim_phase)) DONE
-# 5. Timing for skm (total_time/num_machines) DONE
-# 6. super-comfortable config for running tests: gaussian params. l as param. DONE
-# 7. calculate distances to Ctmp... DONE
-# 8. find another BB DONE
-# 9. run on Server
-# 10. split internal BB & finalization BB
-# 11. fast_clustering
-
 
 log_time = strftime('%m_%d_%H_%M')
 run_name = f'dist_k_mean_{log_time}_{RUN_NAME}'
