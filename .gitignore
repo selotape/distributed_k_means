@@ -3,7 +3,8 @@
 *.iml
 *.gz
 docs/Distributed.pdf
-kddcup.data.corrected
+kddcup.data
 *.log
 *.csv
 **/__pycache__
+nohup.out
