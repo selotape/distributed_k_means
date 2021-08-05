@@ -42,14 +42,17 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tup
     start = time.time()
     timing = SkmTiming()
     C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
-    psii = risk(N, C)
+    Ctmp = C
+    prev_distances_to_C = None
     for i in range(iterations):
-        calcs = pd.DataFrame()
-        calcs['dists'] = pairwise_distances_argmin_min_squared(N, C)
-        calcs['probs'] = (calcs['dists']) / psii
-        draws = np.random.choice(len(N), l, p=calcs['probs'], replace=False)
-        C = C.append(N.iloc[draws])
         psii = risk(N, C)
+        distances_to_Ctmp = pairwise_distances_argmin_min_squared(N, Ctmp)
+        prev_distances_to_C = np.minimum(distances_to_Ctmp, prev_distances_to_C) if prev_distances_to_C is not None else distances_to_Ctmp
+        probabilities = prev_distances_to_C / psii
+
+        draws = np.random.choice(len(N), l, p=probabilities, replace=False)
+        Ctmp = N.iloc[draws]
+        C = C.append(Ctmp)
 
     C_weights = measure_weights(N, C)
 
