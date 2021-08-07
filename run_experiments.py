@@ -2,8 +2,8 @@ from itertools import product
 from statistics import mean
 from time import strftime
 
-from dist_k_mean import competitors
 from dist_k_mean.algo import distributed_k_means
+from dist_k_mean.competitors.scalable_k_means import scalable_k_means
 from dist_k_mean.config import *
 from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
@@ -49,7 +49,7 @@ def main():
                     for the_round in range(ROUNDS):
                         l = l_ratio * k
                         logger.info(f'===========Starting round {the_round} of scalable_k_mean with {skm_iters} iterations and l=={l}==============')
-                        skm_C, skm_C_final, skm_timing = competitors.scalable_k_means(N, skm_iters, l, k, m)
+                        skm_C, skm_C_final, skm_timing = scalable_k_means(N, skm_iters, l, k, m)
                         skm_run_name = f'{skm_iters}-iter_skm_{dataset}_round_{the_round}'
                         logger.info(f'{skm_run_name}_timing:{skm_timing}')
                         skm_risk = risk(N, skm_C)
