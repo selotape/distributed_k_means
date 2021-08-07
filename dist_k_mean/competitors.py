@@ -5,7 +5,8 @@ from math import log
 from random import choice
 from typing import List, Tuple
 
-from dist_k_mean.math import Blackbox, risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, A
+from dist_k_mean.black_box_clustering import A_final
+from dist_k_mean.math import risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights
 import numpy as np
 import pandas as pd
 from pyspark.ml.clustering import KMeans
@@ -22,11 +23,6 @@ def spark_kmeans(N, k):
     evaluator = ClusteringEvaluator()
     silhouette = evaluator.evaluate(predictions)
     return silhouette
-
-
-def blackbox(N, k):
-    kmeans = Blackbox(n_clusters=k, n_jobs=-1).fit(N)
-    return risk(N, kmeans.cluster_centers_)
 
 
 @dataclass
@@ -59,7 +55,7 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tup
     timing.reducers_time = (time.time() - start) / m
 
     start = time.time()
-    C_final = A(C, k, C_weights)
+    C_final = A_final(C, k, C_weights)
     timing.finalization_time = time.time() - start
 
     return C, C_final, timing

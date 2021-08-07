@@ -3,7 +3,8 @@ RUN_NAME = 'SCHMOD'
 KDD_DATASET_FILE = "data_samples/kddcup99/kddcup.data"
 KDD_SUBSET_SIZE = 6000000
 
-BLACKBOX = 'KMeans'  # 'KMeans' 'MiniBatchKMeans'
+INNER_BLACKBOX = 'KMeans'  # 'KMeans' 'MiniBatchKMeans'
+FINALIZATION_BLACKBOX = 'KMeans'  # 'KMeans' 'MiniBatchKMeans' 'ScalableKMeans'
 
 DATASETS = ['gaussian', 'kdd', ]  # 'gaussian', 'kdd'
 KS = [50]

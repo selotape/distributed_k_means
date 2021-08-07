@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 import time
-from statistics import mean
 from typing import List, Iterable, Tuple
 
+from dist_k_mean.black_box_clustering import A_inner, A_final
 from dist_k_mean.math import *
 from dist_k_mean.utils import keep_time, get_kept_time
 
@@ -81,7 +81,7 @@ class Coordinator:
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
         self._logger.info('starting last iteration...')
         N_remaining = pd.concat(Nis)
-        Ctmp = A(N_remaining, self._k) if len(N_remaining) > self._k else N_remaining
+        Ctmp = A_inner(N_remaining, self._k) if len(N_remaining) > self._k else N_remaining
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
     def EstProc(self, P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
@@ -89,7 +89,7 @@ class Coordinator:
         calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
         Emits the cluster and the ~risk.
         """
-        Ta = A(P1, kp)
+        Ta = A_inner(P1, kp)
 
         phi_alpha = phi_alpha_formula(alpha, k, dt)
         r = r_formula(alpha, k, phi_alpha)
@@ -160,7 +160,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
 
     logger.info("Calculating C_final")
     start = time.time()
-    C_final = A(coordinator.C, k, C_weights)
+    C_final = A_final(coordinator.C, k, C_weights)
     timing.finalization_time = time.time() - start
 
     logger.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')

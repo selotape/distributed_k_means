@@ -1,13 +1,9 @@
 import logging
-from functools import partial
 from math import log, pow
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
-
-from dist_k_mean.config import MINI_BATCH_SIZE, BLACKBOX
 
 
 def kplus_formula(k: int, dt: float):
@@ -33,23 +29,6 @@ def alpha_formula(n, k, ep, dt, N_current_size):
     """
     return max_subset_size_formula(n, k, ep, dt) / N_current_size
 
-
-distance = 'euclidean'
-BlackBoxes = {
-    'KMeans': KMeans,
-    'MiniBatchKMeans': partial(MiniBatchKMeans, batch_size=MINI_BATCH_SIZE),
-    # 'ScalableKMeans': ScalableKMeans,
-}
-Blackbox = BlackBoxes[BLACKBOX]
-
-
-def A(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
-    """
-    The blackbox offline clustering algorithm. Returns the k chosen clusters
-    """
-    return pd.DataFrame(Blackbox(n_clusters=k)
-                        .fit(N, sample_weight=sample_weight)
-                        .cluster_centers_)
 
 
 def risk_kmeans(N: pd.DataFrame, C: pd.DataFrame):
@@ -91,7 +70,7 @@ def v_formula(psi: float, k: int, phi_alpha: float):
 
 
 def pairwise_distances_argmin_min_squared(X, Y):
-    linear_dists = pairwise_distances_argmin_min(X, Y, metric=distance)[1]
+    linear_dists = pairwise_distances_argmin_min(X, Y)[1]
     square_dists = np.square(linear_dists)
     return square_dists
 
