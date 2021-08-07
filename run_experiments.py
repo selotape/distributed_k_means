@@ -3,8 +3,7 @@ from statistics import mean
 from time import strftime
 
 from dist_k_mean import competitors
-from dist_k_mean.algo import distributed_k_means, DkmTiming
-from dist_k_mean.competitors import SkmTiming
+from dist_k_mean.algo import distributed_k_means
 from dist_k_mean.config import *
 from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
@@ -16,55 +15,59 @@ logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
 
 log_config_file(logger)
 
-HEADER = "test_name,k,dt,m,ep,len(dkm_C),dkm_iters,skm_iters,l,len(skm_C),dkm_r,dkm_r_f,skm_r,skm_r_f,(dkm_r/skm_r),(dkm_r_f/skm_r_f),dkmr_avg_time,dkmc_avg_time,dkmt_time,skmi_total_time," \
-         "skmf_time,skm_total_time "
+HEADER = "test_name,k,dt,m,ep,l,len(C),iterations,risk,risk_final,reducers_time,total_time"
 
 
-def format_as_csv(test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, skm_risk, dkm_risk_final, skm_risk_final, dkm_timing: DkmTiming, skm_timing: SkmTiming):
-    return ','.join(str(s) for s in
-                    [test_name, k, dt, m, ep, len_dkm_C, dkm_iters, skm_iters, l, len_skm_C, dkm_risk, dkm_risk_final, skm_risk, skm_risk_final, (dkm_risk / skm_risk),
-                     (dkm_risk_final / skm_risk_final), dkm_timing.reducer_avg_time(), dkm_timing.coordinator_avg_time(), dkm_timing.total_time(), skm_timing.iterate_total_time,
-                     skm_timing.finalization_time, skm_timing.total_time(), ])
+def format_as_csv(test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_final, reducers_time, total_time):
+    return ','.join(str(s) for s in [test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_final, reducers_time, total_time])
 
 
 def main():
     csv = open(f"{run_name}_results.csv", "a")
     csv.write(HEADER + '\n')
-    for the_round in range(ROUNDS):
-        for k, dt, m, ep, l_ratio, dataset in product(KS, DELTAS, MS, EPSILONS, L_TO_K_RATIOS, DATASETS):
-            try:
+
+    for k, dt, m, ep, dataset in product(KS, DELTAS, MS, EPSILONS, DATASETS):
+        try:
+            N = get_dataset(dataset)
+            for the_round in range(ROUNDS):
                 logger.info(f"Loading Dataset {dataset}...")
-                N = get_dataset(dataset)
+
                 logger.info(f"len(N)={len(N)}")
 
-                logger.info(f"======== Starting distributed k means with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
+                logger.info(f"======== Starting round {the_round} of distributed k means with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
                 dkm_C, dkm_C_final, dkm_iters, dkm_timing = distributed_k_means(N, k, ep, dt, m, logger)
                 logger.info(f'dkm_timing:{dkm_timing}')
 
                 dkm_risk = risk(N, dkm_C)
                 dkm_risk_f = risk(N, dkm_C_final)
 
-                logger.info(f'len(N):{len(N)}. dkm_risk:{dkm_risk:,}. dkm_risk_final:{dkm_risk_f:,}. len(dkm_C):{len(dkm_C)}. len(dkm_C_final):{len(dkm_C_final)}')
-
+                write_csv_line(csv, logger, f'us_round_{the_round}', k, dt, m, ep, -1, len(dkm_C), dkm_iters, dkm_risk, dkm_risk_f, dkm_timing.reducers_time(), dkm_timing.total_time())
                 logger.info(f'===========================================================================================')
-                l = int(len(dkm_C) / dkm_iters) if l_ratio == AUTO_COMPUTE_L else l_ratio * k
-                for skm_iters in SKM_ITERATIONS:
-                    logger.info(f'===========Starting scalable_k_mean with {skm_iters} iterations and l=={l}==============')
-                    skm_C, skm_C_final, skm_timing = competitors.scalable_k_means(N, skm_iters, l, k, m)
-                    skm_run_name = f'{skm_iters}-iter_skm_{dataset}_round_{the_round}'
-                    logger.info(f'{skm_run_name}_timing:{skm_timing}')
-                    skm_risk = risk(N, skm_C)
-                    skm_risk_f = risk(N, skm_C_final)
-                    logger.info(f'The scalable_k_means risk is {skm_risk:,} and size of C is {len(skm_C)}')
-                    test_summary = format_as_csv(skm_run_name, k, dt, m, ep, len(dkm_C), dkm_iters, skm_iters, l, len(skm_C), dkm_risk, skm_risk, dkm_risk_f, skm_risk_f, dkm_timing, skm_timing)
-                    csv.write(test_summary + '\n')
-                    csv.flush()
-                    logger.info('\n' + HEADER + '\n' + test_summary)
-                    logger.info(f'===========================================================================================')
 
-            except Exception:
-                logger.exception("BAD!")
+            for l_ratio in L_TO_K_RATIOS:
+                for skm_iters in SKM_ITERATIONS:
+                    for the_round in range(ROUNDS):
+                        l = l_ratio * k
+                        logger.info(f'===========Starting round {the_round} of scalable_k_mean with {skm_iters} iterations and l=={l}==============')
+                        skm_C, skm_C_final, skm_timing = competitors.scalable_k_means(N, skm_iters, l, k, m)
+                        skm_run_name = f'{skm_iters}-iter_skm_{dataset}_round_{the_round}'
+                        logger.info(f'{skm_run_name}_timing:{skm_timing}')
+                        skm_risk = risk(N, skm_C)
+                        skm_risk_f = risk(N, skm_C_final)
+                        logger.info(f'The scalable_k_means risk is {skm_risk:,} and size of C is {len(skm_C)}')
+                        write_csv_line(csv, logger, f'skm_round_{the_round}', k, dt, m, ep, -1, len(skm_C), skm_iters, skm_risk, skm_risk_f, skm_timing.reducers_time, skm_timing.total_time())
+                        logger.info(f'===========================================================================================')
+
+        except Exception:
+            logger.exception("BAD!")
     csv.close()
+
+
+def write_csv_line(csv, the_logger, test_name, k, dt, m, ep, l, len_C, iterations, risk, risk_final, reducers_time, total_time):
+    test_summary = format_as_csv(test_name, k, dt, m, ep, l, len_C, iterations, risk, risk_final, reducers_time, total_time)
+    the_logger.info('\n' + HEADER + '\n' + test_summary)
+    csv.write(test_summary + '\n')
+    csv.flush()
 
 
 def avg_r(risks, skm_run):

@@ -16,11 +16,8 @@ class DkmTiming:
     weighing_time: float = 0.0
     finalization_time: float = 0.0
 
-    def reducer_avg_time(self):
-        return mean(self.sample_times) + mean(self.remove_handled_times)
-
-    def coordinator_avg_time(self):
-        return mean(self.iterate_times)
+    def reducers_time(self):
+        return sum(self.sample_times) + sum(self.remove_handled_times)
 
     def total_time(self):
         return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time, self.weighing_time])
