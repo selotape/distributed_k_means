@@ -1,4 +1,7 @@
-# run the experiment!
+# run all experiment!
+run_script.sh
+
+# run one experiment!
 nohup python3.9 run_experiments.py BLORGYBORGY &
 
 # read the python output mid-run
