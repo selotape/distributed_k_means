@@ -3,6 +3,7 @@ import time
 from typing import List, Iterable, Tuple
 
 from dist_k_mean.black_box_clustering import A_inner, A_final
+from dist_k_mean.config import INNER_BLACKBOX_ITERATIONS, INNER_BLACKBOX_L_TO_K_RATIO
 from dist_k_mean.math import *
 from dist_k_mean.utils import keep_time, get_kept_time
 
@@ -58,13 +59,15 @@ class Reducer:
 
 class Coordinator:
 
-    def __init__(self, k, kp, dt, logger):
+    def __init__(self, k, kp, dt, m, inner_iterations, logger):
         self.C = pd.DataFrame()
         self._k = k
         self._kp = kp
         self._dt = dt
         self._logger = logger
         self._psi = 0.0
+        self._m = m
+        self._inner_iterations = inner_iterations
 
     @keep_time
     def iterate(self, P1s: List[pd.DataFrame], P2s: List[pd.DataFrame], alpha) -> Tuple[float, pd.DataFrame]:
@@ -81,7 +84,7 @@ class Coordinator:
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
         self._logger.info('starting last iteration...')
         N_remaining = pd.concat(Nis)
-        Ctmp = A_inner(N_remaining, self._k) if len(N_remaining) > self._k else N_remaining
+        Ctmp = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=self._k * INNER_BLACKBOX_L_TO_K_RATIO) if len(N_remaining) > self._k else N_remaining
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
     def EstProc(self, P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
@@ -89,7 +92,7 @@ class Coordinator:
         calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
         Emits the cluster and the ~risk.
         """
-        Ta = A_inner(P1, kp)
+        Ta = A_inner(P1, kp, m=self._m, iterations=self._inner_iterations, l=self._k * INNER_BLACKBOX_L_TO_K_RATIO)
 
         phi_alpha = phi_alpha_formula(alpha, k, dt)
         r = r_formula(alpha, k, phi_alpha)
@@ -106,7 +109,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     logger.info("finished splitting")
     reducers = [Reducer(Ni) for Ni in Ns]
     kp = kplus_formula(k, dt)
-    coordinator = Coordinator(k, kp, dt, logger)
+    coordinator = Coordinator(k, kp, dt, m, INNER_BLACKBOX_ITERATIONS, logger)
     alpha = alpha_formula(n, k, ep, dt, len(N))
     timing = DkmTiming()
     remaining_elements_count = len(N)

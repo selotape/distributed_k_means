@@ -1,23 +1,33 @@
 RUN_NAME = 'SCHMOD'
 
+###### DATA SETS ######
+DATASETS = ['gaussian', 'kdd', ]  # 'gaussian', 'kdd'
+
 KDD_DATASET_FILE = "data_samples/kddcup99/kddcup.data"
 KDD_SUBSET_SIZE = 6000000
-
-INNER_BLACKBOX = 'KMeans'  # 'KMeans' 'MiniBatchKMeans'
-FINALIZATION_BLACKBOX = 'KMeans'  # 'KMeans' 'MiniBatchKMeans' 'ScalableKMeans'
-
-DATASETS = ['gaussian', 'kdd', ]  # 'gaussian', 'kdd'
-KS = [50]
-EPSILONS = [0.1]
-DELTAS = [0.1]
-MS = [50]
-L_TO_K_RATIOS = [1]
-SKM_ITERATIONS = [2, 3]
-ROUNDS = 3
-MINI_BATCH_SIZE = 1000
 
 GAUSSIANS_DIMENSIONS = 10
 GAUSSIANS_NUM_POINTS = 10_000_000
 GAUSSIANS_K = 50
 GAUSSIANS_ALPHA = 0.0
 GAUSSIANS_STD_DEV = 0.1
+
+###### BLACK_BOXES ######
+INNER_BLACKBOX = 'ScalableKMeans'  # 'KMeans' 'MiniBatchKMeans' 'ScalableKMeans'
+INNER_BLACKBOX_ITERATIONS = 3
+INNER_BLACKBOX_L_TO_K_RATIO = 1
+
+FINALIZATION_BLACKBOX = 'KMeans'
+
+MINI_BATCH_SIZE = 1000
+
+###### DISTRIBUTED PARAMS ######
+ROUNDS = 3
+KS = [50]
+EPSILONS = [0.1]
+DELTAS = [0.1]
+MS = [50]
+
+###### SKM PARAMS ######
+L_TO_K_RATIOS = [1]
+SKM_ITERATIONS = [2, 3]
