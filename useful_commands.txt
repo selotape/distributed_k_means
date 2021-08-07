@@ -27,3 +27,8 @@ git stash pop
 # run on your LOCAL MACHINE:
 scp tomhe@sgesabatos.cs.bgu.ac.il:Desktop/distributed_k_means/README.md .
 
+
+# kill ALLLLLLLLLLL your experiments on the machine
+pkill -f python3.9
+# delete ALLLLLLLLLLL your logs in the current dir
+rm *.csv && rm *.log

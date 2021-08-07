@@ -1,3 +1,4 @@
+import sys
 from itertools import product
 from statistics import mean
 from time import strftime
@@ -24,14 +25,15 @@ def format_as_csv(test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_
 
 
 def main():
+    logger.info(sys.argv)
     csv = open(f"{run_name}_results.csv", "a")
     csv.write(HEADER + '\n')
 
-    for k, dt, m, ep, dataset in product(KS, DELTAS, MS, EPSILONS, DATASETS):
+    for k, dt, m, ep in product(KS, DELTAS, MS, EPSILONS):
         try:
-            N = get_dataset(dataset)
+            N = get_dataset(DATASET)
             for the_round in range(ROUNDS):
-                logger.info(f"Loading Dataset {dataset}...")
+                logger.info(f"Loading Dataset {DATASET}...")
 
                 logger.info(f"len(N)={len(N)}")
 
