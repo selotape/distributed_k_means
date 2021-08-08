@@ -1,4 +1,3 @@
-import sys
 from itertools import product
 from statistics import mean
 from time import strftime
@@ -53,7 +52,7 @@ def main():
                         l = l_ratio * k
                         logger.info(f'===========Starting round {the_round} of scalable_k_mean with {skm_iters} iterations and l=={l}==============')
                         skm_C, skm_C_final, skm_timing = _scalable_k_means(N, skm_iters, l, k, m)
-                        skm_run_name = f'{skm_iters}-iter_skm_{dataset}_round_{the_round}'
+                        skm_run_name = f'{skm_iters}-iter_skm_{DATASET}_round_{the_round}'
                         logger.info(f'{skm_run_name}_timing:{skm_timing}')
                         skm_risk = risk(N, skm_C)
                         skm_risk_f = risk(N, skm_C_final)
