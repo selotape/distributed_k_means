@@ -59,11 +59,12 @@ class Reducer:
 
 class Coordinator:
 
-    def __init__(self, k, kp, dt, m, inner_iterations, logger):
+    def __init__(self, k, kp, dt, ep, m, inner_iterations, logger):
         self.C = pd.DataFrame()
         self._k = k
         self._kp = kp
         self._dt = dt
+        self._ep = ep
         self._logger = logger
         self._psi = 0.0
         self._m = m
@@ -94,7 +95,7 @@ class Coordinator:
         """
         Ta = A_inner(P1, kp, m=self._m, iterations=self._inner_iterations, l=self._k * INNER_BLACKBOX_L_TO_K_RATIO)
 
-        phi_alpha = phi_alpha_formula(alpha, k, dt)
+        phi_alpha = phi_alpha_formula(alpha, k, dt, self._ep)
         r = r_formula(alpha, k, phi_alpha)
         Rr = risk_truncated(P2, Ta, r)
 
@@ -109,7 +110,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     logger.info("finished splitting")
     reducers = [Reducer(Ni) for Ni in Ns]
     kp = kplus_formula(k, dt)
-    coordinator = Coordinator(k, kp, dt, m, INNER_BLACKBOX_ITERATIONS, logger)
+    coordinator = Coordinator(k, kp, dt, ep, m, INNER_BLACKBOX_ITERATIONS, logger)
     alpha = alpha_formula(n, k, ep, dt, len(N))
     timing = DkmTiming()
     remaining_elements_count = len(N)
@@ -146,7 +147,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
                       f"remaining_elements_count:{remaining_elements_count}." + \
                       f" alpha:{alpha}. v:{v}. len(Ctmp):{len(Ctmp)}. " + \
                       f" len(P2s):{sum(len(P2) for P2 in P2s)}. max_subset_size:{max_subset_size}" + \
-                      f" r:{r_formula(alpha, k, phi_alpha_formula(alpha, k, dt))}" + \
+                      f" r:{r_formula(alpha, k, phi_alpha_formula(alpha, k, dt, ep))}" + \
                       f"  ============"
         logger.info(end_of_loop)
 

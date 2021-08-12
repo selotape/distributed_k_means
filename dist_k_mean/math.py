@@ -53,11 +53,11 @@ def risk_truncated(P2, C, r):
 risk = risk_kmeans
 
 
-def phi_alpha_formula(alpha: float, k: int, dt: float):
+def phi_alpha_formula(alpha: float, k: int, dt: float, ep: float):
     """
     The size of the already-handled clusters
     """
-    return (5 / alpha) * log(1.1 * k / dt)
+    return (5 / alpha) * log(1.1 * k / (dt * ep))
 
 
 def r_formula(alpha: float, k: int, phi_alpha: float) -> int:
