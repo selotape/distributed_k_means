@@ -9,7 +9,7 @@ from dist_k_mean.math import risk
 from dist_k_mean.utils import setup_logger, log_config_file
 
 log_time = strftime('%m_%d_%H_%M')
-run_name = f'dist_k_mean_{log_time}_{RUN_NAME}'
+run_name = f'{RUN_NAME}_{log_time}'
 logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
 
 log_config_file(logger)
