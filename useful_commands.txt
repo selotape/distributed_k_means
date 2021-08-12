@@ -1,5 +1,5 @@
 # run all experiment!
-./run_script.sh
+DATASET=gaussian K=100 ./run_meta_experiment.sh
 
 # run one experiment!
 nohup python3.9 run_experiments.py BLORGYBORGY &
