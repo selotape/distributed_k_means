@@ -31,6 +31,20 @@ EPSILONS = [0.1, 0.2]
 DELTAS = [0.1]
 MS = [50]
 
+CONST_MODE = 'fast'  # 'fast' 'strict'
+PHI_ALPHA = {
+    'strict': 6.5,
+    'fast': 5.0,
+}
+MAX_SS_SIZE = {
+    'strict': 38,
+    'fast': 16,
+}
+KPLUS = {
+    'strict': 9,
+    'fast': 8,
+}
+
 ###### SKM PARAMS ######
 L_TO_K_RATIOS = [1, 2, 5]
 SKM_ITERATIONS = [2, 3, 4, 5]
