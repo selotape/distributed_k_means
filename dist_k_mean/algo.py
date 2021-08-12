@@ -99,7 +99,7 @@ class Coordinator:
         r = r_formula(alpha, k, phi_alpha)
         Rr = risk_truncated(P2, Ta, r)
 
-        self._psi = max((1 / (3 * alpha)) * Rr, self._psi)
+        self._psi = max((2 / (3 * alpha)) * Rr, self._psi)
         return v_formula(self._psi, k, phi_alpha), Ta
 
 
@@ -109,7 +109,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     Ns = np.array_split(N, m)
     logger.info("finished splitting")
     reducers = [Reducer(Ni) for Ni in Ns]
-    kp = kplus_formula(k, dt)
+    kp = kplus_formula(k, dt, ep)
     coordinator = Coordinator(k, kp, dt, ep, m, INNER_BLACKBOX_ITERATIONS, logger)
     alpha = alpha_formula(n, k, ep, dt, len(N))
     timing = DkmTiming()
