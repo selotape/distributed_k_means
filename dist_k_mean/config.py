@@ -38,11 +38,11 @@ PHI_ALPHA = {
 }
 MAX_SS_SIZE = {
     'strict': 38,
-    'fast': 16,
+    'fast': 10,
 }
 KPLUS = {
     'strict': 9,
-    'fast': 8,
+    'fast': 5,
 }
 
 ###### SKM PARAMS ######
