@@ -67,11 +67,14 @@ def _A(N: pd.DataFrame, k: int, Blackbox, sample_weight=None) -> pd.DataFrame:
 
 @dataclass
 class SkmTiming:
-    reducers_time: float = 0
+    reducers_time_: float = 0
     finalization_time: float = 0
 
+    def reducers_time(self):
+        return self.reducers_time_
+
     def total_time(self):
-        return self.reducers_time + self.finalization_time
+        return self.reducers_time_ + self.finalization_time
 
 
 def _scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tuple[pd.DataFrame, pd.DataFrame, SkmTiming]:
@@ -92,7 +95,7 @@ def _scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tu
 
     C_weights = measure_weights(N, C)
 
-    timing.reducers_time = (time.time() - start) / m
+    timing.reducers_time_ = (time.time() - start) / m
 
     start = time.time()
     C_final = A_final(C, k, C_weights)
