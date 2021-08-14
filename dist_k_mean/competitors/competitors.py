@@ -11,7 +11,7 @@ from pyspark.ml.evaluation import ClusteringEvaluator
 from pyspark.sql import SparkSession
 
 from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, risk
-from dist_k_mean.utils import SimpleTiming, Timing
+from dist_k_mean.utils import SimpleTiming, Timing, keep_time, get_kept_time
 
 
 def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Timing]:
@@ -32,8 +32,8 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finali
 
     timing.reducers_time_ = (time.time() - start) / m
 
-    start = time.time()
     C_weights = measure_weights(N, C)
+    start = time.time()
     C_final = finalize(C, k, C_weights)
     timing.finalization_time_ = time.time() - start
 
@@ -46,8 +46,6 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     reducers = [_FastClusteringReducer(Ri) for Ri in Rs]
     coordinator = _FastClusteringCoordinator(n)
     timing = SimpleTiming()
-    start = time.time()
-
     remaining_elements_count = len(R)
     iteration = 0
     max_subset_size = (4 / ep) * k * (n ** ep) * log(n)
@@ -60,6 +58,7 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
         logging.info(f"============ Starting iteration {iteration} ============")
         logging.info(f"============ Sampling Ss & Hs ============")
         Ss_and_Hs = [r.sample_Ss_and_Hs(alpha_s, alpha_h) for r in reducers]
+        timing.reducers_time_ += max(get_kept_time(r, 'sample_Ss_and_Hs') for r in reducers)
         logging.info(f"============ Sampling done ============")
 
         Ss = [h_and_s[0] for h_and_s in Ss_and_Hs]
@@ -67,12 +66,14 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
 
         logging.info(f"============ iterate start ============")
         v = coordinator.iterate(Ss, Hs)
+        timing.coordinator_time_ += get_kept_time(coordinator, 'iterate')
 
         logging.info(f"============ len(S): {len(coordinator.S)} ============")
         logging.info(f"============ iterate end ============")
 
         logging.info(f"============ remove_handled_points_and_return_remaining start ============")
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(coordinator.S, v) for r in reducers)
+        timing.reducers_time_ += max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers)
         logging.info(f"============ remove_handled_points_and_return_remaining end ============")
         alpha_s, alpha_h = alpha_s_formula(k, n, ep, remaining_elements_count), alpha_h_formula(n, ep, remaining_elements_count)
         logging.info(f"============ END OF iteration {iteration}. "
@@ -86,12 +87,10 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     coordinator.S = pd.concat([r.Ri for r in reducers] + [coordinator.S])
     iteration += 1
 
-    timing.reducers_time_ = (time.time() - start) / m
-
-    start = time.time()
     S_weights = measure_weights(R, coordinator.S)
+    start = time.time()
     S_final = finalize(coordinator.S, k, S_weights)
-    timing.finalization_time_ = time.time() - start
+    timing.finalization_time_ += time.time() - start
 
     logging.info(f'iteration: {iteration}. len(S):{len(coordinator.S)}')
     return coordinator.S, S_final, iteration, timing
@@ -102,9 +101,11 @@ class _FastClusteringReducer:
     def __init__(self, Ri):
         self.Ri: pd.DataFrame = Ri
 
+    @keep_time
     def sample_Ss_and_Hs(self, alpha_s, alpha_h) -> Tuple[pd.DataFrame, pd.DataFrame]:
         return self.Ri.sample(frac=alpha_s), self.Ri.sample(frac=alpha_h)  # TODO - figure out why this always returns exactly alpha
 
+    @keep_time
     def remove_handled_points_and_return_remaining(self, S: pd.DataFrame, v: float) -> int:
         if len(self.Ri) == 0:
             return 0
