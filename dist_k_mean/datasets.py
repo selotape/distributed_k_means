@@ -10,7 +10,8 @@ from dist_k_mean.config import *
 
 
 @lru_cache
-def get_dataset(dataset):
+def get_dataset(dataset, logger):
+    logger.info(f"Loading Dataset {DATASET}...")
     if dataset == 'kdd':
         return read_and_prep_kdd()
     elif dataset == 'gaussian':
