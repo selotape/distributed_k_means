@@ -14,53 +14,30 @@ from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alph
 from dist_k_mean.utils import SimpleTiming, Timing
 
 
-def spark_kmeans(N, k):
-    spark = SparkSession.builder.getOrCreate()
-    dataset = spark.createDataFrame(N)
-    kmeans = KMeans().setK(k)
-    model = kmeans.fit(dataset)
-    predictions = model.transform(dataset)
-    evaluator = ClusteringEvaluator()
-    silhouette = evaluator.evaluate(predictions)
-    return silhouette
+def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Timing]:
+    start = time.time()
+    timing = SimpleTiming()
+    C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
+    Ctmp = C
+    prev_distances_to_C = None
+    for i in range(iterations):
+        psii = risk(N, C)
+        distances_to_Ctmp = pairwise_distances_argmin_min_squared(N, Ctmp)
+        prev_distances_to_C = np.minimum(distances_to_Ctmp, prev_distances_to_C) if prev_distances_to_C is not None else distances_to_Ctmp
+        probabilities = prev_distances_to_C / psii
 
+        draws = np.random.choice(len(N), l, p=probabilities, replace=False)
+        Ctmp = N.iloc[draws]
+        C = C.append(Ctmp)
 
-class _FastClusteringReducer:
+    timing.reducers_time_ = (time.time() - start) / m
 
-    def __init__(self, Ri):
-        self.Ri: pd.DataFrame = Ri
+    start = time.time()
+    C_weights = measure_weights(N, C)
+    C_final = finalize(C, k, C_weights)
+    timing.finalization_time_ = time.time() - start
 
-    def sample_Ss_and_Hs(self, alpha_s, alpha_h) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        return self.Ri.sample(frac=alpha_s), self.Ri.sample(frac=alpha_h)  # TODO - figure out why this always returns exactly alpha
-
-    def remove_handled_points_and_return_remaining(self, S: pd.DataFrame, v: float) -> int:
-        if len(self.Ri) == 0:
-            return 0
-
-        distances = pairwise_distances_argmin_min_squared(self.Ri, S)
-        remaining_points = distances > v
-        self.Ri = self.Ri[remaining_points]
-        return len(self.Ri)
-
-
-class _FastClusteringCoordinator:
-
-    def __init__(self, n):
-        self.n = n
-        self.S = pd.DataFrame()
-
-    def iterate(self, Ss: List[pd.DataFrame], Hs: List[pd.DataFrame]) -> float:
-        Stmp = pd.concat(Ss)
-        self.S = pd.concat([self.S, Stmp], ignore_index=True)
-        H = pd.concat(Hs)  # TODO - do these copy the data? if so, avoid it
-
-        logging.info(f"============ Select start ============")
-        v = Select(self.S, H, self.n)
-        logging.info(f"============ Select end ============")
-        if v == 0.0:
-            logging.error("Bad! v == 0.0")
-
-        return v
+    return C, C_final, timing
 
 
 def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
@@ -120,27 +97,50 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     return coordinator.S, S_final, iteration, timing
 
 
-def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Timing]:
-    start = time.time()
-    timing = SimpleTiming()
-    C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
-    Ctmp = C
-    prev_distances_to_C = None
-    for i in range(iterations):
-        psii = risk(N, C)
-        distances_to_Ctmp = pairwise_distances_argmin_min_squared(N, Ctmp)
-        prev_distances_to_C = np.minimum(distances_to_Ctmp, prev_distances_to_C) if prev_distances_to_C is not None else distances_to_Ctmp
-        probabilities = prev_distances_to_C / psii
+class _FastClusteringReducer:
 
-        draws = np.random.choice(len(N), l, p=probabilities, replace=False)
-        Ctmp = N.iloc[draws]
-        C = C.append(Ctmp)
+    def __init__(self, Ri):
+        self.Ri: pd.DataFrame = Ri
 
-    timing.reducers_time_ = (time.time() - start) / m
+    def sample_Ss_and_Hs(self, alpha_s, alpha_h) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        return self.Ri.sample(frac=alpha_s), self.Ri.sample(frac=alpha_h)  # TODO - figure out why this always returns exactly alpha
 
-    start = time.time()
-    C_weights = measure_weights(N, C)
-    C_final = finalize(C, k, C_weights)
-    timing.finalization_time_ = time.time() - start
+    def remove_handled_points_and_return_remaining(self, S: pd.DataFrame, v: float) -> int:
+        if len(self.Ri) == 0:
+            return 0
 
-    return C, C_final, timing
+        distances = pairwise_distances_argmin_min_squared(self.Ri, S)
+        remaining_points = distances > v
+        self.Ri = self.Ri[remaining_points]
+        return len(self.Ri)
+
+
+class _FastClusteringCoordinator:
+
+    def __init__(self, n):
+        self.n = n
+        self.S = pd.DataFrame()
+
+    def iterate(self, Ss: List[pd.DataFrame], Hs: List[pd.DataFrame]) -> float:
+        Stmp = pd.concat(Ss)
+        self.S = pd.concat([self.S, Stmp], ignore_index=True)
+        H = pd.concat(Hs)  # TODO - do these copy the data? if so, avoid it
+
+        logging.info(f"============ Select start ============")
+        v = Select(self.S, H, self.n)
+        logging.info(f"============ Select end ============")
+        if v == 0.0:
+            logging.error("Bad! v == 0.0")
+
+        return v
+
+
+def spark_kmeans(N, k):
+    spark = SparkSession.builder.getOrCreate()
+    dataset = spark.createDataFrame(N)
+    kmeans = KMeans().setK(k)
+    model = kmeans.fit(dataset)
+    predictions = model.transform(dataset)
+    evaluator = ClusteringEvaluator()
+    silhouette = evaluator.evaluate(predictions)
+    return silhouette
