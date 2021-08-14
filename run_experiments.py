@@ -28,16 +28,16 @@ def main():
 
     N = get_dataset(DATASET, logger)
 
-    run_exp = create_exp_runner(N, csv)
+    run_experiment = create_experiment_runner(N, csv)
 
-    risks, risks_final, timings = run_all_rounds(run_exp)
+    risks, risks_final, timings = run_all_rounds(run_experiment)
 
     print_summary(csv, risks, risks_final, timings)
 
     csv.close()
 
 
-def create_exp_runner(N, csv):
+def create_experiment_runner(N, csv):
     if ALGO == 'DKM':
         def run_exp(the_round):
             return run_dkm_exp(N, csv, DELTA, EPSILON, K, M, the_round)
