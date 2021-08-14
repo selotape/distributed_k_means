@@ -72,7 +72,7 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int):
     start = time.time()
 
     remaining_elements_count = len(R)
-    loop_count = 0
+    iteration = 0
     max_subset_size = (4 / ep) * k * (n ** ep) * log(n)
 
     logging.info(f"max_subset_size:{max_subset_size}")
@@ -80,7 +80,7 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int):
     alpha_s, alpha_h = alpha_s_formula(k, n, ep, len(R)), alpha_h_formula(n, ep, len(R))
 
     while remaining_elements_count > max_subset_size:
-        logging.info(f"============ Starting LOOP {loop_count} ============")
+        logging.info(f"============ Starting iteration {iteration} ============")
         logging.info(f"============ Sampling Ss & Hs ============")
         Ss_and_Hs = [r.sample_Ss_and_Hs(alpha_s, alpha_h) for r in reducers]
         logging.info(f"============ Sampling done ============")
@@ -98,15 +98,16 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int):
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(coordinator.S, v) for r in reducers)
         logging.info(f"============ remove_handled_points_and_return_remaining end ============")
         alpha_s, alpha_h = alpha_s_formula(k, n, ep, remaining_elements_count), alpha_h_formula(n, ep, remaining_elements_count)
-        logging.info(f"============ END OF LOOP {loop_count}. "
+        logging.info(f"============ END OF iteration {iteration}. "
                      f"remaining_elements_count:{remaining_elements_count}."
                      f" alpha_s:{alpha_s}. alpha_h:{alpha_h}. v:{v}. len(S):{len(coordinator.S)}. "
                      f" len(Ss):{sum(len(s) for s in Ss)}. len(Hs):{sum(len(h) for h in Hs)}"
                      f" max_subset_size:{max_subset_size}. remaining_elements_count:{remaining_elements_count}."
                      f"  ============")
-        loop_count += 1
+        iteration += 1
 
     coordinator.S = pd.concat([r.Ri for r in reducers] + [coordinator.S])
+    iteration += 1
 
     timing.reducers_time_ = (time.time() - start) / m
 
@@ -115,5 +116,5 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int):
     S_final = A_final(coordinator.S, k, S_weights)
     timing.finalization_time_ = time.time() - start
 
-    logging.info(f'loop_count: {loop_count}. len(S):{len(coordinator.S)}')
-    return coordinator.S, S_final, timing
+    logging.info(f'iteration: {iteration}. len(S):{len(coordinator.S)}')
+    return coordinator.S, S_final, iteration, timing
