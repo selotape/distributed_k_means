@@ -14,14 +14,13 @@ class DkmTiming(Timing):
     iterate_times: List[float] = field(default_factory=list)
     remove_handled_times: List[float] = field(default_factory=list)
     final_iter_time: float = 0.0
-    weighing_time: float = 0.0
     finalization_time: float = 0.0
 
     def reducers_time(self):
         return sum(self.sample_times) + sum(self.remove_handled_times)
 
     def total_time(self):
-        return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time, self.weighing_time])
+        return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time])
 
 
 class Reducer:
@@ -157,12 +156,8 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
         iteration += 1
         timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
 
-    start = time.time()
-    logger.info("Calculating center-weights...")
-    C_weights = calculate_center_weights(coordinator, reducers)
-    timing.weighing_time = (time.time() - start) / m
-
     logger.info("Calculating C_final")
+    C_weights = calculate_center_weights(coordinator, reducers)
     start = time.time()
     C_final = A_final(coordinator.C, k, C_weights)
     timing.finalization_time = time.time() - start

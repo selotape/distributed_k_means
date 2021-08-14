@@ -71,11 +71,15 @@ class Timing(ABC):
 
 @dataclass
 class SimpleTiming(Timing):
-    reducers_time_: float = -1
-    finalization_time_: float = -1
+    reducers_time_: float = 0.0
+    coordinator_time_: float = 0.0
+    finalization_time_: float = 0.0
 
     def reducers_time(self):
         return self.reducers_time_
 
+    def coordinator_time(self):
+        return self.reducers_time_
+
     def total_time(self):
-        return self.reducers_time_ + self.finalization_time_
+        return self.reducers_time_ + self.coordinator_time_ + self.finalization_time_
