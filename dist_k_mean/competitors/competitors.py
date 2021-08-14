@@ -1,17 +1,17 @@
 import logging
 import time
-from dataclasses import dataclass
 from math import log
-from random import choice
 from typing import List, Tuple
 
-from dist_k_mean.black_box_clustering import A_final
-from dist_k_mean.math import risk, Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights
 import numpy as np
 import pandas as pd
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
 from pyspark.sql import SparkSession
+
+from dist_k_mean.black_box_clustering import A_final
+from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights
+from dist_k_mean.utils import SimpleTiming
 
 
 def spark_kmeans(N, k):
@@ -68,6 +68,8 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int):
     Rs = np.array_split(R, m)
     reducers = [_FastClusteringReducer(Ri) for Ri in Rs]
     coordinator = _FastClusteringCoordinator(n)
+    timing = SimpleTiming()
+    start = time.time()
 
     remaining_elements_count = len(R)
     loop_count = 0
@@ -106,5 +108,12 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int):
 
     coordinator.S = pd.concat([r.Ri for r in reducers] + [coordinator.S])
 
+    timing.reducers_time_ = (time.time() - start) / m
+
+    start = time.time()
+    S_weights = measure_weights(R, coordinator.S)
+    S_final = A_final(coordinator.S, k, S_weights)
+    timing.finalization_time_ = time.time() - start
+
     logging.info(f'loop_count: {loop_count}. len(S):{len(coordinator.S)}')
-    return coordinator.S
+    return coordinator.S, S_final, timing

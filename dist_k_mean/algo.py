@@ -5,11 +5,11 @@ from typing import List, Iterable, Tuple
 from dist_k_mean.black_box_clustering import A_inner, A_final
 from dist_k_mean.config import INNER_BLACKBOX_ITERATIONS, INNER_BLACKBOX_L_TO_K_RATIO
 from dist_k_mean.math import *
-from dist_k_mean.utils import keep_time, get_kept_time
+from dist_k_mean.utils import keep_time, get_kept_time, Timing
 
 
 @dataclass
-class DkmTiming:
+class DkmTiming(Timing):
     sample_times: List[float] = field(default_factory=list)
     iterate_times: List[float] = field(default_factory=list)
     remove_handled_times: List[float] = field(default_factory=list)
