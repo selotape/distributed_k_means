@@ -63,11 +63,11 @@ def run_all_rounds(run_exp):
 
 def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Timing]:
     logger.info(f"======== Starting round {the_round} of fast_clustering with len(N)={len(N)} k={k} ep={ep} & m={m} ========")
-    C, C_final, timing = fast_clustering(N, k, ep, m)
+    C, C_final, iterations, timing = fast_clustering(N, k, ep, m)
     logger.info(f'fast_timing:{timing}')
     the_risk = risk(N, C)
     risk_final = risk(N, C_final)
-    write_csv_line(csv, logger, f'fast_round_{the_round}', k, -1, m, ep, -1, len(C), -1, the_risk, risk_final, timing.reducers_time(), timing.total_time())
+    write_csv_line(csv, logger, f'fast_round_{the_round}', k, -1, m, ep, -1, len(C), iterations, the_risk, risk_final, timing.reducers_time(), timing.total_time())
     return the_risk, risk_final, timing
 
 
