@@ -3,6 +3,8 @@ import subprocess
 import sys
 
 import time
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 formatter = logging.Formatter('%(asctime)s %(message)s')
 
@@ -56,3 +58,25 @@ def log_config_file(logger):
     # Remove whitespace characters like '\n' at the end of each line
     [logger.info(line) for line in config_txt]
 
+
+class Timing(ABC):
+
+    @abstractmethod
+    def reducers_time(self):
+        pass
+
+    @abstractmethod
+    def total_time(self):
+        pass
+
+
+@dataclass
+class SimpleTiming(Timing):
+    reducers_time_: float = -1
+    finalization_time_: float = -1
+
+    def reducers_time(self):
+        return self.reducers_time_
+
+    def total_time(self):
+        return self.reducers_time_ + self.finalization_time_

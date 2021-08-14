@@ -1,12 +1,14 @@
 from statistics import mean
 from time import strftime
+from typing import Tuple, Iterable
 
 from dist_k_mean.algo import distributed_k_means
 from dist_k_mean.black_box_clustering import _scalable_k_means
+from dist_k_mean.competitors.competitors import fast_clustering
 from dist_k_mean.config import *
 from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
-from dist_k_mean.utils import setup_logger, log_config_file
+from dist_k_mean.utils import setup_logger, log_config_file, Timing
 
 log_time = strftime('%m_%d_%H_%M')
 run_name = f'{RUN_NAME}_{log_time}'
@@ -22,9 +24,11 @@ def format_as_csv(test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_
     return ','.join(str(s) for s in [test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_final, reducers_time, total_time])
 
 
-def print_summary(csv, risks, risks_final, timings):
+def print_summary(csv, risks, risks_final, timings: Iterable[Timing]):
+    test_summary = ','.join(str(x) for x in [RUN_NAME, mean(t.reducers_time() for t in timings), mean(t.total_time() for t in timings), mean(risks), mean(risks_final)])
+    logger.info('\n' + SUMMARY_HEADER + '\n' + test_summary)
     csv.write('\n' + SUMMARY_HEADER + '\n')
-    csv.write(','.join(str(x) for x in [RUN_NAME, mean(t.reducers_time() for t in timings), mean(t.total_time() for t in timings), mean(risks), mean(risks_final)]) + '\n')
+    csv.write(test_summary + '\n')
 
 
 def main():
@@ -57,6 +61,16 @@ def run_all_rounds(run_exp):
     return risks, risks_final, timings
 
 
+def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Timing]:
+    logger.info(f"======== Starting round {the_round} of fast_clustering with len(N)={len(N)} k={k} ep={ep} & m={m} ========")
+    C, C_final, timing = fast_clustering(N, k, ep, m)
+    logger.info(f'fast_timing:{timing}')
+    the_risk = risk(N, C)
+    risk_final = risk(N, C_final)
+    write_csv_line(csv, logger, f'fast_round_{the_round}', k, -1, m, ep, -1, len(C), -1, the_risk, risk_final, timing.reducers_time(), timing.total_time())
+    return the_risk, risk_final, timing
+
+
 def create_exp_runner(N, csv):
     if ALGO == 'DKM':
         def run_exp(the_round):
@@ -64,12 +78,15 @@ def create_exp_runner(N, csv):
     elif ALGO == 'SKM':
         def run_exp(the_round):
             return run_skm_exp(N, csv, DELTA, EPSILON, K, L_TO_K_RATIO, M, SKM_ITERATIONS, the_round)
+    elif ALGO == 'FAST':
+        def run_exp(the_round):
+            return run_fast_exp(N, csv, K, EPSILON, M, the_round)
     else:
         raise NotImplementedError(f"Algo {ALGO} is not implemented")
     return run_exp
 
 
-def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round):
+def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[float, float, Timing]:
     l = l_ratio * k
     logger.info(f'===========Starting round {the_round} of scalable_k_mean with {skm_iters} iterations and l=={l}==============')
     skm_C, skm_C_final, timing = _scalable_k_means(N, skm_iters, l, k, m)
@@ -78,11 +95,11 @@ def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round):
     the_risk = risk(N, skm_C)
     risk_final = risk(N, skm_C_final)
     logger.info(f'The scalable_k_means risk is {the_risk:,} and size of C is {len(skm_C)}')
-    write_csv_line(csv, logger, f'skm_round_{the_round}', k, dt, m, ep, -1, len(skm_C), skm_iters, the_risk, risk_final, timing.reducers_time_, timing.total_time())
+    write_csv_line(csv, logger, f'skm_round_{the_round}', k, dt, m, ep, -1, len(skm_C), skm_iters, the_risk, risk_final, timing.reducers_time(), timing.total_time())
     return the_risk, risk_final, timing
 
 
-def run_dkm_exp(N, csv, dt, ep, k, m, the_round):
+def run_dkm_exp(N, csv, dt, ep, k, m, the_round) -> Tuple[float, float, Timing]:
     logger.info(f"======== Starting round {the_round} of distributed k means with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
     dkm_C, dkm_C_final, dkm_iters, timing = distributed_k_means(N, k, ep, dt, m, logger)
     logger.info(f'dkm_timing:{timing}')

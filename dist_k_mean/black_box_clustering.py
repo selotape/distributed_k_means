@@ -1,6 +1,5 @@
 import inspect
 import time
-from dataclasses import dataclass
 from functools import partial
 from random import choice
 from typing import Tuple, Union
@@ -11,6 +10,7 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 
 from dist_k_mean.config import MINI_BATCH_SIZE, INNER_BLACKBOX, FINALIZATION_BLACKBOX
 from dist_k_mean.math import risk, pairwise_distances_argmin_min_squared, measure_weights
+from dist_k_mean.utils import Timing, SimpleTiming
 
 
 class ScalableKMeans:
@@ -21,7 +21,7 @@ class ScalableKMeans:
         self.iterations = iterations
         self.cluster_centers_: Union[pd.DataFrame, None] = None
         self._cluster_centers_pre_finalization: Union[pd.DataFrame, None] = None
-        self._timing: Union[SkmTiming, None] = None
+        self._timing: Union[Timing, None] = None
 
     def fit(self, N, sample_weight=None):
         if sample_weight:
@@ -65,21 +65,9 @@ def _A(N: pd.DataFrame, k: int, Blackbox, sample_weight=None) -> pd.DataFrame:
                         .cluster_centers_)
 
 
-@dataclass
-class SkmTiming:
-    reducers_time_: float = 0
-    finalization_time: float = 0
-
-    def reducers_time(self):
-        return self.reducers_time_
-
-    def total_time(self):
-        return self.reducers_time_ + self.finalization_time
-
-
-def _scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tuple[pd.DataFrame, pd.DataFrame, SkmTiming]:
+def _scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tuple[pd.DataFrame, pd.DataFrame, Timing]:
     start = time.time()
-    timing = SkmTiming()
+    timing = SimpleTiming()
     C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
     Ctmp = C
     prev_distances_to_C = None
@@ -93,12 +81,11 @@ def _scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m) -> Tu
         Ctmp = N.iloc[draws]
         C = C.append(Ctmp)
 
-    C_weights = measure_weights(N, C)
-
     timing.reducers_time_ = (time.time() - start) / m
 
     start = time.time()
+    C_weights = measure_weights(N, C)
     C_final = A_final(C, k, C_weights)
-    timing.finalization_time = time.time() - start
+    timing.finalization_time_ = time.time() - start
 
     return C, C_final, timing

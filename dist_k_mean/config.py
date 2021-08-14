@@ -5,7 +5,7 @@ RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
 DATASET = os.getenv('DATASET', default='gaussian')  # 'gaussian', 'kdd'
-ALGO = os.getenv('ALGO', default='SKM')  # 'SKM', 'DKM'
+ALGO = os.getenv('ALGO', default='FAST')  # 'SKM', 'DKM', 'FAST'
 
 KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")  # const
 KDD_SUBSET_SIZE = int(os.getenv('KDD_SUBSET_SIZE', default=6_000_000))
@@ -26,7 +26,7 @@ FINALIZATION_BLACKBOX = os.getenv('FINALIZATION_BLACKBOX', default='KMeans')
 MINI_BATCH_SIZE = int(os.getenv('MINI_BATCH_SIZE', default=1000))
 
 ###### DISTRIBUTED PARAMS ######
-ROUNDS = int(os.getenv('ROUNDS', default=10))
+ROUNDS = int(os.getenv('ROUNDS', default=3))
 K = int(os.getenv('K', default=50))
 EPSILON = float(os.getenv('EPSILON', default=0.1))  # 0.2
 DELTA = float(os.getenv('DELTA', default=0.1))
