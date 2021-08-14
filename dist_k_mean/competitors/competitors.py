@@ -1,6 +1,7 @@
 import logging
 import time
 from math import log
+from random import choice
 from typing import List, Tuple
 
 import numpy as np
@@ -9,9 +10,8 @@ from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
 from pyspark.sql import SparkSession
 
-from dist_k_mean.black_box_clustering import A_final
-from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights
-from dist_k_mean.utils import SimpleTiming
+from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, risk
+from dist_k_mean.utils import SimpleTiming, Timing
 
 
 def spark_kmeans(N, k):
@@ -63,7 +63,7 @@ class _FastClusteringCoordinator:
         return v
 
 
-def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int):
+def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     n = len(R)
     Rs = np.array_split(R, m)
     reducers = [_FastClusteringReducer(Ri) for Ri in Rs]
@@ -113,8 +113,34 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int):
 
     start = time.time()
     S_weights = measure_weights(R, coordinator.S)
-    S_final = A_final(coordinator.S, k, S_weights)
+    S_final = finalize(coordinator.S, k, S_weights)
     timing.finalization_time_ = time.time() - start
 
     logging.info(f'iteration: {iteration}. len(S):{len(coordinator.S)}')
     return coordinator.S, S_final, iteration, timing
+
+
+def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Timing]:
+    start = time.time()
+    timing = SimpleTiming()
+    C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
+    Ctmp = C
+    prev_distances_to_C = None
+    for i in range(iterations):
+        psii = risk(N, C)
+        distances_to_Ctmp = pairwise_distances_argmin_min_squared(N, Ctmp)
+        prev_distances_to_C = np.minimum(distances_to_Ctmp, prev_distances_to_C) if prev_distances_to_C is not None else distances_to_Ctmp
+        probabilities = prev_distances_to_C / psii
+
+        draws = np.random.choice(len(N), l, p=probabilities, replace=False)
+        Ctmp = N.iloc[draws]
+        C = C.append(Ctmp)
+
+    timing.reducers_time_ = (time.time() - start) / m
+
+    start = time.time()
+    C_weights = measure_weights(N, C)
+    C_final = finalize(C, k, C_weights)
+    timing.finalization_time_ = time.time() - start
+
+    return C, C_final, timing
