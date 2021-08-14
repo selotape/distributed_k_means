@@ -20,26 +20,13 @@ SINGLE_HEADER = "test_name,k,dt,m,ep,l,len(C),iterations,risk,risk_final,reducer
 SUMMARY_HEADER = "test_name,reducers_time_avg,total_time_avg,risk_avg,risk_final_avg"
 
 
-def format_as_csv(test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_final, reducers_time, total_time):
-    return ','.join(str(s) for s in [test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_final, reducers_time, total_time])
-
-
-def print_summary(csv, risks, risks_final, timings: Iterable[Timing]):
-    test_summary = ','.join(str(x) for x in [RUN_NAME, mean(t.reducers_time() for t in timings), mean(t.total_time() for t in timings), mean(risks), mean(risks_final)])
-    logger.info('\n' + SUMMARY_HEADER + '\n' + test_summary)
-    csv.write('\n' + SUMMARY_HEADER + '\n')
-    csv.write(test_summary + '\n')
-
-
 def main():
     logger.info(sys.argv)
 
     csv = open(f"{run_name}_results.csv", "a")
     csv.write(SINGLE_HEADER + '\n')
 
-    logger.info(f"Loading Dataset {DATASET}...")
-    N = get_dataset(DATASET)
-    logger.info(f"len(N)={len(N)}")
+    N = get_dataset(DATASET, logger)
 
     run_exp = create_exp_runner(N, csv)
 
@@ -48,27 +35,6 @@ def main():
     print_summary(csv, risks, risks_final, timings)
 
     csv.close()
-
-
-def run_all_rounds(run_exp):
-    timings = []
-    risks = []
-    risks_final = []
-    for the_round in range(ROUNDS):
-        risk, risk_final, timing = run_exp(the_round)
-        timings.append(timing), risks.append(risk), risks_final.append(risk_final)
-        logger.info(f'===========================================================================================')
-    return risks, risks_final, timings
-
-
-def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Timing]:
-    logger.info(f"======== Starting round {the_round} of fast_clustering with len(N)={len(N)} k={k} ep={ep} & m={m} ========")
-    C, C_final, iterations, timing = fast_clustering(N, k, ep, m, A_final)
-    logger.info(f'fast_timing:{timing}')
-    the_risk = risk(N, C)
-    risk_final = risk(N, C_final)
-    write_csv_line(csv, logger, f'fast_round_{the_round}', k, -1, m, ep, -1, len(C), iterations, the_risk, risk_final, timing.reducers_time(), timing.total_time())
-    return the_risk, risk_final, timing
 
 
 def create_exp_runner(N, csv):
@@ -84,6 +50,16 @@ def create_exp_runner(N, csv):
     else:
         raise NotImplementedError(f"Algo {ALGO} is not implemented")
     return run_exp
+
+
+def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Timing]:
+    logger.info(f"======== Starting round {the_round} of fast_clustering with len(N)={len(N)} k={k} ep={ep} & m={m} ========")
+    C, C_final, iterations, timing = fast_clustering(N, k, ep, m, A_final)
+    logger.info(f'fast_timing:{timing}')
+    the_risk = risk(N, C)
+    risk_final = risk(N, C_final)
+    write_csv_line(csv, logger, f'fast_round_{the_round}', k, -1, m, ep, -1, len(C), iterations, the_risk, risk_final, timing.reducers_time(), timing.total_time())
+    return the_risk, risk_final, timing
 
 
 def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[float, float, Timing]:
@@ -109,19 +85,29 @@ def run_dkm_exp(N, csv, dt, ep, k, m, the_round) -> Tuple[float, float, Timing]:
     return the_risk, risk_final, timing
 
 
+def run_all_rounds(run_exp):
+    timings = []
+    risks = []
+    risks_final = []
+    for the_round in range(ROUNDS):
+        risk, risk_final, timing = run_exp(the_round)
+        timings.append(timing), risks.append(risk), risks_final.append(risk_final)
+        logger.info(f'===========================================================================================')
+    return risks, risks_final, timings
+
+
 def write_csv_line(csv, the_logger, test_name, k, dt, m, ep, l, len_C, iterations, risk, risk_final, reducers_time, total_time):
-    test_summary = format_as_csv(test_name, k, dt, m, ep, l, len_C, iterations, risk, risk_final, reducers_time, total_time)
+    test_summary = ','.join(str(s) for s in [test_name, k, dt, m, ep, l, len_C, iterations, risk, risk_final, reducers_time, total_time])
     the_logger.info('\n' + SINGLE_HEADER + '\n' + test_summary)
     csv.write(test_summary + '\n')
     csv.flush()
 
 
-def avg_r(risks, skm_run):
-    return mean(risks['dkm']) / mean(risks[f'skm_{skm_run}'])
-
-
-def avg_r_f(risks, skm_run):
-    return mean(risks['dkm_f']) / mean(risks[f'skm_f_{skm_run}'])
+def print_summary(csv, risks, risks_final, timings: Iterable[Timing]):
+    test_summary = ','.join(str(x) for x in [RUN_NAME, mean(t.reducers_time() for t in timings), mean(t.total_time() for t in timings), mean(risks), mean(risks_final)])
+    logger.info('\n' + SUMMARY_HEADER + '\n' + test_summary)
+    csv.write('\n' + SUMMARY_HEADER + '\n')
+    csv.write(test_summary + '\n')
 
 
 if __name__ == "__main__":

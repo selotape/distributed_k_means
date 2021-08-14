@@ -55,7 +55,6 @@ def log_config_file(logger):
 
     with open('dist_k_mean/config.py') as config_f:
         config_txt = config_f.readlines()
-    # Remove whitespace characters like '\n' at the end of each line
     [logger.info(line) for line in config_txt]
 
 
