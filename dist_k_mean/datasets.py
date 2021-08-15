@@ -16,21 +16,29 @@ def get_dataset(dataset, logger):
         return read_and_prep_kdd()
     elif dataset == 'gaussian':
         return generate_k_gaussians()
+    elif dataset == 'covtype':
+        return read_and_prep_covtype()
     else:
         raise RuntimeError(f"bad dataset {dataset}")
 
 
 def read_and_prep_kdd():
-    full_data = pd.read_csv(KDD_DATASET_FILE, nrows=KDD_SUBSET_SIZE)
+    full_data = pd.read_csv(KDD_DATASET_FILE, nrows=DATASET_SIZE)
+    N = full_data.select_dtypes([np.number])
+    return N
+
+
+def read_and_prep_covtype():
+    full_data = pd.read_csv(COVTYPE_DATASET_FILE, nrows=DATASET_SIZE)
     N = full_data.select_dtypes([np.number])
     return N
 
 
 def generate_k_gaussians():
-    N = np.random.normal(scale=GAUSSIANS_STD_DEV, size=(GAUSSIANS_NUM_POINTS, GAUSSIANS_DIMENSIONS,))
+    N = np.random.normal(scale=GAUSSIANS_STD_DEV, size=(DATASET_SIZE, GAUSSIANS_DIMENSIONS,))
     centers = np.random.uniform(size=(GAUSSIANS_K, GAUSSIANS_DIMENSIONS,))
     the_sum = sum(i ** GAUSSIANS_ALPHA for i in range(1, GAUSSIANS_K + 1))
-    cluster_sizes = [floor(GAUSSIANS_NUM_POINTS * ((i ** GAUSSIANS_ALPHA) / the_sum)) for i in range(1, GAUSSIANS_K + 1)]
+    cluster_sizes = [floor(DATASET_SIZE * ((i ** GAUSSIANS_ALPHA) / the_sum)) for i in range(1, GAUSSIANS_K + 1)]
     N = N[:sum(cluster_sizes)]
 
     cluster_slices = []
