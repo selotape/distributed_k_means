@@ -33,18 +33,9 @@ DELTA = float(os.getenv('DELTA', default=0.1))
 M = int(os.getenv('M', default=50))
 
 CONST_MODE = os.getenv('CONST_MODE', default='fast')  # 'fast' 'strict'
-PHI_ALPHA = {
-    'strict': 6.5,
-    'fast': 5.0,
-}
-MAX_SS_SIZE = {
-    'strict': 38,
-    'fast': 10,
-}
-KPLUS = {
-    'strict': 9,
-    'fast': 5,
-}
+PHI_ALPHA_C = 6.5
+MAX_SS_SIZE_C = 38
+KPLUS_C = 9
 
 ###### SKM PARAMS ######
 L_TO_K_RATIO = int(os.getenv('L_TO_K_RATIO', default=2))

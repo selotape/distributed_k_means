@@ -5,14 +5,14 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
 
-from dist_k_mean.config import CONST_MODE, PHI_ALPHA, MAX_SS_SIZE, KPLUS
+from dist_k_mean.config import PHI_ALPHA_C, MAX_SS_SIZE_C, KPLUS_C
 
 
 def kplus_formula(k: int, dt: float, ep: float):
     """
     The allowed size of the "k+" clusters group
     """
-    return int(k + KPLUS[CONST_MODE] * log(1.1 * k / (dt * ep)))
+    return int(k + KPLUS_C * log(1.1 * k / (dt * ep)))
 
 
 def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
@@ -20,7 +20,7 @@ def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
     The size above which data doesn't fit inside a single machine,
     so clustering must be distributed.
     """
-    return MAX_SS_SIZE[CONST_MODE] * k * pow(n, ep) * log(1.1 * k / dt)
+    return MAX_SS_SIZE_C * k * pow(n, ep) * log(1.1 * k / dt)
 
 
 def alpha_formula(n, k, ep, dt, N_current_size):
@@ -58,7 +58,7 @@ def phi_alpha_formula(alpha: float, k: int, dt: float, ep: float):
     """
     The size of the already-handled clusters
     """
-    return (PHI_ALPHA[CONST_MODE] / alpha) * log(1.1 * k / (dt * ep))
+    return (PHI_ALPHA_C / alpha) * log(1.1 * k / (dt * ep))
 
 
 def r_formula(alpha: float, k: int, phi_alpha: float) -> int:
