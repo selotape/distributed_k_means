@@ -35,3 +35,9 @@ scp tomhe@sgesabatos.cs.bgu.ac.il:Desktop/distributed_k_means/README.md .
 pkill -f python3.9
 # delete ALLLLLLLLLLL your logs in the current dir
 rm *.csv && rm *.log
+
+
+# download and prepare covtype dataset
+cd data_samples/covtype && wget https://archive.ics.uci.edu/ml/machine-learning-databases/covtype/covtype.data.gz && gunzip covtype.data.gz
+# download and prepare kdd dataset
+cd data_samples/kddcup99 && wget http://kdd.ics.uci.edu/databases/kddcup99/kddcup.data.gz && gunzip kddcup.data.gz
