@@ -61,8 +61,8 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
         timing.reducers_time_ += max(get_kept_time(r, 'sample_Ss_and_Hs') for r in reducers)
         logging.info(f"============ Sampling done ============")
 
-        Ss = [h_and_s[0] for h_and_s in Ss_and_Hs]
-        Hs = [h_and_s[1] for h_and_s in Ss_and_Hs]
+        Ss = [s_and_h[0] for s_and_h in Ss_and_Hs]
+        Hs = [s_and_h[1] for s_and_h in Ss_and_Hs]
 
         logging.info(f"============ iterate start ============")
         v = coordinator.iterate(Ss, Hs)
@@ -84,7 +84,7 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
                      f"  ============")
         iteration += 1
 
-    coordinator.S = pd.concat([r.Ri for r in reducers] + [coordinator.S])
+    coordinator.S = pd.concat([r.Ri for r in reducers] + [coordinator.S], ignore_index=True)
     iteration += 1
 
     S_weights = measure_weights(R, coordinator.S)
@@ -122,10 +122,11 @@ class _FastClusteringCoordinator:
         self.n = n
         self.S = pd.DataFrame()
 
+    @keep_time
     def iterate(self, Ss: List[pd.DataFrame], Hs: List[pd.DataFrame]) -> float:
         Stmp = pd.concat(Ss)
         self.S = pd.concat([self.S, Stmp], ignore_index=True)
-        H = pd.concat(Hs)  # TODO - do these copy the data? if so, avoid it
+        H = pd.concat(Hs, ignore_index=True)  # TODO - do these copy the data? if so, avoid it
 
         logging.info(f"============ Select start ============")
         v = Select(self.S, H, self.n)

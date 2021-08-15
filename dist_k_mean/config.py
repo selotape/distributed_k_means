@@ -4,14 +4,14 @@ import sys
 RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
-DATASET = os.getenv('DATASET', default='gaussian')  # 'gaussian', 'kdd'
-ALGO = os.getenv('ALGO', default='FAST')  # 'SKM', 'DKM', 'FAST'
+DATASET = os.getenv('DATASET', default='covtype')  # 'gaussian', 'kdd', 'covtype'
+ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'FAST'
 
-KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")  # const
-KDD_SUBSET_SIZE = int(os.getenv('KDD_SUBSET_SIZE', default=6_000_000))
+KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")
+COVTYPE_DATASET_FILE = os.getenv('COVTYPE_DATASET_FILE', default="data_samples/covtype/covtype.data")
+DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=10_000_000))
 
 GAUSSIANS_DIMENSIONS = int(os.getenv('GAUSSIANS_DIMENSIONS', default=15))
-GAUSSIANS_NUM_POINTS = int(os.getenv('GAUSSIANS_NUM_POINTS', default=10_000_000))
 GAUSSIANS_K = int(os.getenv('GAUSSIANS_K', default=100))
 GAUSSIANS_ALPHA = float(os.getenv('GAUSSIANS_ALPHA', default=0.0))
 GAUSSIANS_STD_DEV = float(os.getenv('GAUSSIANS_STD_DEV', default=0.1))
@@ -26,9 +26,9 @@ FINALIZATION_BLACKBOX = os.getenv('FINALIZATION_BLACKBOX', default='KMeans')
 MINI_BATCH_SIZE = int(os.getenv('MINI_BATCH_SIZE', default=1000))
 
 ###### DISTRIBUTED PARAMS ######
-ROUNDS = int(os.getenv('ROUNDS', default=3))
+ROUNDS = int(os.getenv('ROUNDS', default=10))
 K = int(os.getenv('K', default=50))
-EPSILON = float(os.getenv('EPSILON', default=0.1))  # 0.2
+EPSILON = float(os.getenv('EPSILON', default=0.2))  # 0.2
 DELTA = float(os.getenv('DELTA', default=0.1))
 M = int(os.getenv('M', default=50))
 
