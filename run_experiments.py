@@ -1,3 +1,4 @@
+from logging import Logger
 from statistics import mean
 from time import strftime
 from typing import Tuple, Iterable
@@ -81,7 +82,7 @@ def run_dkm_exp(N, csv, dt, ep, k, m, the_round) -> Tuple[float, float, Timing]:
     logger.info(f'dkm_timing:{timing}')
     the_risk = risk(N, dkm_C)
     risk_final = risk(N, dkm_C_final)
-    write_csv_line(csv, logger, f'us_round_{the_round}', k, dt, m, ep, -1, len(dkm_C), dkm_iters, risk, risk_final, timing.reducers_time(), timing.total_time())
+    write_csv_line(csv, logger, f'us_round_{the_round}', k, dt, m, ep, -1, len(dkm_C), dkm_iters, the_risk, risk_final, timing.reducers_time(), timing.total_time())
     return the_risk, risk_final, timing
 
 
@@ -96,8 +97,8 @@ def run_all_rounds(run_exp):
     return risks, risks_final, timings
 
 
-def write_csv_line(csv, the_logger, test_name, k, dt, m, ep, l, len_C, iterations, risk, risk_final, reducers_time, total_time):
-    test_summary = ','.join(str(s) for s in [test_name, k, dt, m, ep, l, len_C, iterations, risk, risk_final, reducers_time, total_time])
+def write_csv_line(csv, the_logger: Logger, test_name: str, k: int, dt, m: int, ep, l, len_C: int, iterations: int, the_risk: float, risk_final: float, reducers_time, total_time):
+    test_summary = ','.join(str(s) for s in [test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_final, reducers_time, total_time])
     the_logger.info('\n' + SINGLE_HEADER + '\n' + test_summary)
     csv.write(test_summary + '\n')
     csv.flush()
