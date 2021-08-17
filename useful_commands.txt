@@ -41,3 +41,8 @@ rm *.csv && rm *.log
 cd data_samples/covtype && wget https://archive.ics.uci.edu/ml/machine-learning-databases/covtype/covtype.data.gz && gunzip covtype.data.gz
 # download and prepare kdd dataset
 cd data_samples/kddcup99 && wget http://kdd.ics.uci.edu/databases/kddcup99/kddcup.data.gz && gunzip kddcup.data.gz
+
+
+# use newstyle git authentication
+rm ~/.git-credentials
+# follow this - https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token
