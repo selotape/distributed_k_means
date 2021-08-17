@@ -38,5 +38,5 @@ MAX_SS_SIZE_C = 38
 KPLUS_C = 9
 
 ###### SKM PARAMS ######
-L_TO_K_RATIO = int(os.getenv('L_TO_K_RATIO', default=2))
+L_TO_K_RATIO = float(os.getenv('L_TO_K_RATIO', default=2.0))
 SKM_ITERATIONS = int(os.getenv('SKM_ITERATIONS', default=5))
