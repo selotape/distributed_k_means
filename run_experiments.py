@@ -64,7 +64,7 @@ def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Timing]:
 
 
 def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[float, float, Timing]:
-    l = l_ratio * k
+    l = int(l_ratio * k)
     logger.info(f'===========Starting round {the_round} of scalable_k_mean with {skm_iters} iterations and l=={l}==============')
     skm_C, skm_C_final, timing = scalable_k_means(N, skm_iters, l, k, m, A_final)
     skm_run_name = f'{skm_iters}-iter_skm_{DATASET}_round_{the_round}'

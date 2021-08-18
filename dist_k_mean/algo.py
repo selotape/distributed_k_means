@@ -84,7 +84,7 @@ class Coordinator:
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
         self._logger.info('starting last iteration...')
         N_remaining = pd.concat(Nis)
-        Ctmp = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=self._k * INNER_BLACKBOX_L_TO_K_RATIO) if len(N_remaining) > self._k else N_remaining
+        Ctmp = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)) if len(N_remaining) > self._k else N_remaining
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
     def EstProc(self, P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
@@ -92,7 +92,7 @@ class Coordinator:
         calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
         Emits the cluster and the ~risk.
         """
-        Ta = A_inner(P1, kp, m=self._m, iterations=self._inner_iterations, l=self._k * INNER_BLACKBOX_L_TO_K_RATIO)
+        Ta = A_inner(P1, kp, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO))
 
         phi_alpha = phi_alpha_formula(alpha, k, dt, self._ep)
         r = r_formula(alpha, k, phi_alpha)
