@@ -45,7 +45,7 @@ def create_experiment_runner(N, csv):
     elif ALGO == 'SKM':
         def run_exp(the_round):
             return run_skm_exp(N, csv, DELTA, EPSILON, K, L_TO_K_RATIO, M, SKM_ITERATIONS, the_round)
-    elif ALGO == 'FAST':
+    elif ALGO == 'ENE':
         def run_exp(the_round):
             return run_fast_exp(N, csv, K, EPSILON, M, the_round)
     else:
