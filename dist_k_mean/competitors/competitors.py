@@ -40,11 +40,11 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finali
     return C, C_final, timing
 
 
-def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
+def ene_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     n = len(R)
     Rs = np.array_split(R, m)
-    reducers = [_FastClusteringReducer(Ri) for Ri in Rs]
-    coordinator = _FastClusteringCoordinator(n)
+    reducers = [_EneClusteringReducer(Ri) for Ri in Rs]
+    coordinator = _EneClusteringCoordinator(n)
     timing = SimpleTiming()
     remaining_elements_count = len(R)
     iteration = 0
@@ -96,7 +96,7 @@ def fast_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     return coordinator.S, S_final, iteration, timing
 
 
-class _FastClusteringReducer:
+class _EneClusteringReducer:
 
     def __init__(self, Ri):
         self.Ri: pd.DataFrame = Ri
@@ -116,7 +116,7 @@ class _FastClusteringReducer:
         return len(self.Ri)
 
 
-class _FastClusteringCoordinator:
+class _EneClusteringCoordinator:
 
     def __init__(self, n):
         self.n = n
