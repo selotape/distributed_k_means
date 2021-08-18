@@ -28,11 +28,10 @@ MINI_BATCH_SIZE = int(os.getenv('MINI_BATCH_SIZE', default=1000))
 ###### DISTRIBUTED PARAMS ######
 ROUNDS = int(os.getenv('ROUNDS', default=10))
 K = int(os.getenv('K', default=50))
-EPSILON = float(os.getenv('EPSILON', default=0.2))  # 0.2
+EPSILON = float(os.getenv('EPSILON', default=0.1))  # 0.2
 DELTA = float(os.getenv('DELTA', default=0.1))
 M = int(os.getenv('M', default=50))
 
-CONST_MODE = os.getenv('CONST_MODE', default='fast')  # 'fast' 'strict'
 PHI_ALPHA_C = 6.5
 MAX_SS_SIZE_C = 38
 KPLUS_C = 9
