@@ -5,7 +5,7 @@ RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
 DATASET = os.getenv('DATASET', default='covtype')  # 'gaussian', 'kdd', 'covtype'
-ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'FAST'
+ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'ENE'
 
 KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")
 COVTYPE_DATASET_FILE = os.getenv('COVTYPE_DATASET_FILE', default="data_samples/covtype/covtype.data")
