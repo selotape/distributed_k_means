@@ -5,7 +5,7 @@ from typing import Tuple, Iterable
 
 from dist_k_mean.algo import distributed_k_means
 from dist_k_mean.black_box import A_final
-from dist_k_mean.competitors.competitors import fast_clustering, scalable_k_means
+from dist_k_mean.competitors.competitors import ene_clustering, scalable_k_means
 from dist_k_mean.config import *
 from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
@@ -55,7 +55,7 @@ def create_experiment_runner(N, csv):
 
 def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Timing]:
     logger.info(f"======== Starting round {the_round} of fast_clustering with len(N)={len(N)} k={k} ep={ep} & m={m} ========")
-    C, C_final, iterations, timing = fast_clustering(N, k, ep, m, A_final)
+    C, C_final, iterations, timing = ene_clustering(N, k, ep, m, A_final)
     logger.info(f'fast_timing:{timing}')
     the_risk = risk(N, C)
     risk_final = risk(N, C_final)
