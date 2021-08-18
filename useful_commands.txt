@@ -38,9 +38,9 @@ rm *.csv && rm *.log
 
 
 # download and prepare covtype dataset
-cd data_samples/covtype && wget https://archive.ics.uci.edu/ml/machine-learning-databases/covtype/covtype.data.gz && gunzip covtype.data.gz
+cd data_samples/covtype && wget https://archive.ics.uci.edu/ml/machine-learning-databases/covtype/covtype.data.gz && gunzip covtype.data.gz && cd -
 # download and prepare kdd dataset
-cd data_samples/kddcup99 && wget http://kdd.ics.uci.edu/databases/kddcup99/kddcup.data.gz && gunzip kddcup.data.gz
+cd data_samples/kddcup99 && wget http://kdd.ics.uci.edu/databases/kddcup99/kddcup.data.gz && gunzip kddcup.data.gz  && cd -
 
 
 # use newstyle git authentication
