@@ -20,6 +20,8 @@ def get_dataset(dataset, logger):
         N = read_and_prep_covtype()
     elif dataset == 'bigcross':
         N = read_and_prep_bigcross()
+    elif dataset == 'census1990':
+        N = read_and_prep_census1990()
     elif dataset == 'skin':
         N = read_and_prep_skin()
     else:
@@ -44,6 +46,13 @@ def read_and_prep_bigcross():
     full_data = pd.read_csv(BIGCROSS_DATASET_FILE, nrows=DATASET_SIZE)
     N = full_data.select_dtypes([np.number])
     return N
+
+def read_and_prep_census1990():
+    census = pd.read_csv(CENSUS1990_DATASET_FILE, nrows=DATASET_SIZE, skiprows=1)
+    census = pd.get_dummies(census)
+    census = census.dropna()
+    census = census.iloc[: , 1:]  # throw away first index column
+    return census
 
 
 def read_and_prep_power_consumption():

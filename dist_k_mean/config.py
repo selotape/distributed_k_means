@@ -4,10 +4,11 @@ import sys
 RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
-DATASET = os.getenv('DATASET', default='bigcross')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin', 'bigcross'
+DATASET = os.getenv('DATASET', default='gaussian')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin', 'bigcross', 'census1990'
 ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'ENE'
 
 KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")
+CENSUS1990_DATASET_FILE = os.getenv('CENSUS1990_DATASET_FILE', default="data_samples/census1990/USCensus1990.data.txt")
 BIGCROSS_DATASET_FILE = os.getenv('BIGCROSS_DATASET_FILE', default="data_samples/bigcross/BigCross.data")
 COVTYPE_DATASET_FILE = os.getenv('COVTYPE_DATASET_FILE', default="data_samples/covtype/covtype.data")
 POWER_DATASET_FILE = os.getenv('POWER_DATASET_FILE', default="data_samples/power/household_power_consumption.txt")
