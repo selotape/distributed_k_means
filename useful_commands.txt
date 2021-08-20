@@ -37,10 +37,17 @@ pkill -f python3.9
 rm *.csv && rm *.log
 
 
-# download and prepare covtype dataset
+# download and extract datasets
+### COVTYPE
 cd data_samples/covtype && wget https://archive.ics.uci.edu/ml/machine-learning-databases/covtype/covtype.data.gz && gunzip covtype.data.gz && cd -
-# download and prepare kdd dataset
+### KDDCUP99
 cd data_samples/kddcup99 && wget http://kdd.ics.uci.edu/databases/kddcup99/kddcup.data.gz && gunzip kddcup.data.gz  && cd -
+### SKIN
+mkdir -p data_samples/skin && cd data_samples/skin  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00229/Skin_NonSkin.txt && cd -
+### BIGCROSS
+mkdir -p data_samples/bigcross && cd data_samples/bigcross  &&  wget https://s3.amazonaws.com/h2o-training/clustering/BigCross.data.gz && gunzip BigCross.data.gz && cd -
+### POWER CONSUMPTION
+mkdir -p data_samples/power && cd data_samples/power  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00235/household_power_consumption.zip && gunzip -S .zip household_power_consumption.zip && cd -
 
 
 # use newstyle git authentication
