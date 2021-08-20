@@ -117,10 +117,10 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
     logger.info(f"max_subset_size:{max_subset_size}")
 
-    if n ** ep < 4:
-        err_msg = f"n ** ep < 4 !! n:{n}. ep:{ep}"
-        logger.error(err_msg)
-        raise RuntimeError(err_msg)
+    # if n ** ep < 4:
+    #     err_msg = f"n ** ep < 4 !! n:{n}. ep:{ep}"
+    #     logger.error(err_msg)
+    #     raise RuntimeError(err_msg)
 
     while remaining_elements_count > max_subset_size:
         iteration += 1
