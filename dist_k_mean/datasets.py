@@ -1,6 +1,8 @@
 from functools import lru_cache
 from math import floor
 
+from sklearn.preprocessing import MinMaxScaler  # , StandardScaler,
+
 import numpy as np
 import pandas as pd
 
@@ -27,6 +29,16 @@ def get_dataset(dataset, logger):
     else:
         raise RuntimeError(f"bad dataset {dataset}")
     logger.info(f'len(N)={len(N)}')
+    if SCALE_DATASET:
+        N = scale_dataset(N)
+
+    return N
+
+
+def scale_dataset(N):
+    scaler = MinMaxScaler()
+    scaler.fit(N)
+    N = scaler.transform(N)
     return N
 
 
