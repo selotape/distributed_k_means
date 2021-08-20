@@ -1,10 +1,8 @@
 from functools import lru_cache
-
-import pandas as pd
-
 from math import floor
 
 import numpy as np
+import pandas as pd
 
 from dist_k_mean.config import *
 
@@ -13,13 +11,19 @@ from dist_k_mean.config import *
 def get_dataset(dataset, logger):
     logger.info(f"Loading Dataset {DATASET}...")
     if dataset == 'kdd':
-        return read_and_prep_kdd()
+        N = read_and_prep_kdd()
     elif dataset == 'gaussian':
-        return generate_k_gaussians()
+        N = generate_k_gaussians()
+    elif dataset == 'power':
+        N = read_and_prep_power_consumption()
     elif dataset == 'covtype':
-        return read_and_prep_covtype()
+        N = read_and_prep_covtype()
+    elif dataset == 'skin':
+        N = read_and_prep_skin()
     else:
         raise RuntimeError(f"bad dataset {dataset}")
+    logger.info(f'len(N)={len(N)}')
+    return N
 
 
 def read_and_prep_kdd():
@@ -31,6 +35,29 @@ def read_and_prep_kdd():
 def read_and_prep_covtype():
     full_data = pd.read_csv(COVTYPE_DATASET_FILE, nrows=DATASET_SIZE)
     N = full_data.select_dtypes([np.number])
+    return N
+
+
+def read_and_prep_power_consumption():
+    dtypes = {"Date": 'str',
+              'Time': 'str',
+              'Global_active_power': 'float64',
+              'Global_reactive_power': 'float64',
+              'Voltage': 'float64',
+              'Global_intensity': 'float64',
+              'Sub_metering_1': 'float64',
+              'Sub_metering_2': 'float64',
+              'Sub_metering_3': 'float64',
+              }
+    full_data: pd.DataFrame = pd.read_csv(POWER_DATASET_FILE, nrows=DATASET_SIZE, skiprows=1, sep=';', dtype=dtypes)
+    N: pd.DataFrame = full_data.select_dtypes([np.number])
+    N = N.dropna()
+    return N
+
+
+def read_and_prep_skin():
+    full_data: pd.DataFrame = pd.read_csv(SKIN_DATASET_FILE, nrows=DATASET_SIZE, sep='\t')
+    N = full_data.iloc[:, :-1]  # drop labels
     return N
 
 

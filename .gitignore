@@ -1,11 +1,14 @@
 **/kddcup.data_10_percent_corrected.csv
 .idea
 *.iml
+
 *.gz
-docs/Distributed.pdf
+**.zip
+**.data
+**.txt
 kddcup.data
+
 *.log
 *.csv
 **/__pycache__
 nohup.out
-**.data
