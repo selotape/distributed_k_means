@@ -14,6 +14,7 @@ COVTYPE_DATASET_FILE = os.getenv('COVTYPE_DATASET_FILE', default="data_samples/c
 POWER_DATASET_FILE = os.getenv('POWER_DATASET_FILE', default="data_samples/power/household_power_consumption.txt")
 SKIN_DATASET_FILE = os.getenv('SKIN_DATASET_FILE', default="data_samples/skin/Skin_NonSkin.txt")
 DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=100_000_000))
+SCALE_DATASET = bool(os.getenv('SCALE_DATASET', default=False))
 
 GAUSSIANS_DIMENSIONS = int(os.getenv('GAUSSIANS_DIMENSIONS', default=15))
 GAUSSIANS_K = int(os.getenv('GAUSSIANS_K', default=100))
