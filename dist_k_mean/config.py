@@ -4,11 +4,13 @@ import sys
 RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
-DATASET = os.getenv('DATASET', default='covtype')  # 'gaussian', 'kdd', 'covtype'
+DATASET = os.getenv('DATASET', default='skin')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin'
 ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'ENE'
 
 KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")
 COVTYPE_DATASET_FILE = os.getenv('COVTYPE_DATASET_FILE', default="data_samples/covtype/covtype.data")
+POWER_DATASET_FILE = os.getenv('POWER_DATASET_FILE', default="data_samples/power/household_power_consumption.txt")
+SKIN_DATASET_FILE = os.getenv('SKIN_DATASET_FILE', default="data_samples/skin/Skin_NonSkin.txt")
 DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=10_000_000))
 
 GAUSSIANS_DIMENSIONS = int(os.getenv('GAUSSIANS_DIMENSIONS', default=15))
