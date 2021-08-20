@@ -18,6 +18,8 @@ def get_dataset(dataset, logger):
         N = read_and_prep_power_consumption()
     elif dataset == 'covtype':
         N = read_and_prep_covtype()
+    elif dataset == 'bigcross':
+        N = read_and_prep_bigcross()
     elif dataset == 'skin':
         N = read_and_prep_skin()
     else:
@@ -34,6 +36,12 @@ def read_and_prep_kdd():
 
 def read_and_prep_covtype():
     full_data = pd.read_csv(COVTYPE_DATASET_FILE, nrows=DATASET_SIZE)
+    N = full_data.select_dtypes([np.number])
+    return N
+
+
+def read_and_prep_bigcross():
+    full_data = pd.read_csv(BIGCROSS_DATASET_FILE, nrows=DATASET_SIZE)
     N = full_data.select_dtypes([np.number])
     return N
 

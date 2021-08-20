@@ -4,14 +4,15 @@ import sys
 RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
-DATASET = os.getenv('DATASET', default='skin')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin'
+DATASET = os.getenv('DATASET', default='bigcross')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin', 'bigcross'
 ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'ENE'
 
 KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")
+BIGCROSS_DATASET_FILE = os.getenv('BIGCROSS_DATASET_FILE', default="data_samples/bigcross/BigCross.data")
 COVTYPE_DATASET_FILE = os.getenv('COVTYPE_DATASET_FILE', default="data_samples/covtype/covtype.data")
 POWER_DATASET_FILE = os.getenv('POWER_DATASET_FILE', default="data_samples/power/household_power_consumption.txt")
 SKIN_DATASET_FILE = os.getenv('SKIN_DATASET_FILE', default="data_samples/skin/Skin_NonSkin.txt")
-DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=10_000_000))
+DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=100_000_000))
 
 GAUSSIANS_DIMENSIONS = int(os.getenv('GAUSSIANS_DIMENSIONS', default=15))
 GAUSSIANS_K = int(os.getenv('GAUSSIANS_K', default=100))
