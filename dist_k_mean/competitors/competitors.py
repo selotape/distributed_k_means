@@ -6,9 +6,6 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
-from pyspark.ml.clustering import KMeans
-from pyspark.ml.evaluation import ClusteringEvaluator
-from pyspark.sql import SparkSession
 
 from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, risk
 from dist_k_mean.utils import SimpleTiming, Timing, keep_time, get_kept_time
@@ -136,13 +133,3 @@ class _EneClusteringCoordinator:
 
         return v
 
-
-def spark_kmeans(N, k):
-    spark = SparkSession.builder.getOrCreate()
-    dataset = spark.createDataFrame(N)
-    kmeans = KMeans().setK(k)
-    model = kmeans.fit(dataset)
-    predictions = model.transform(dataset)
-    evaluator = ClusteringEvaluator()
-    silhouette = evaluator.evaluate(predictions)
-    return silhouette
