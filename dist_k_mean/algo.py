@@ -84,7 +84,11 @@ class Coordinator:
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
         self._logger.info('starting last iteration...')
         N_remaining = pd.concat(Nis)
-        Ctmp = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)) if len(N_remaining) > self._k else N_remaining
+        if len(N_remaining) > self._k:
+            Ctmp = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)) if len(N_remaining) > self._k else N_remaining
+        else:
+            Ctmp = N_remaining
+            Ctmp.columns = self.C.columns
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
     def EstProc(self, P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
@@ -151,10 +155,10 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
         logger.info(end_of_loop)
 
     logger.info(f"Finished while-loop after {iteration} iterations")
-    if remaining_elements_count > 0:
-        coordinator.last_iteration([r.Ni for r in reducers])
-        iteration += 1
-        timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
+
+    coordinator.last_iteration([r.Ni for r in reducers])
+    iteration += 1
+    timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
 
     logger.info("Calculating C_final")
     C_weights = calculate_center_weights(coordinator, reducers)
