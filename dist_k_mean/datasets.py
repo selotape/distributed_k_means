@@ -95,7 +95,7 @@ def read_and_prep_skin():
 
 
 def read_and_prep_higgs():
-    full_data: pd.DataFrame = pd.read_csv(HIGGS_DATASET_FILE, nrows=DATASET_SIZE, sep='\t')
+    full_data: pd.DataFrame = pd.read_csv(HIGGS_DATASET_FILE, nrows=DATASET_SIZE)
     N: pd.DataFrame = full_data.select_dtypes([np.number])
     N = N.dropna()
     return N
