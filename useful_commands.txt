@@ -47,11 +47,11 @@ mkdir -p data_samples/skin && cd data_samples/skin  &&  wget https://archive.ics
 ### BIGCROSS
 mkdir -p data_samples/bigcross && cd data_samples/bigcross  &&  wget https://s3.amazonaws.com/h2o-training/clustering/BigCross.data.gz && gunzip BigCross.data.gz && cd -
 ### POWER CONSUMPTION
-mkdir -p data_samples/power && cd data_samples/power  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00235/household_power_consumption.zip && gunzip -S .zip household_power_consumption.zip && cd -
+mkdir -p data_samples/power && cd data_samples/power  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00235/household_power_consumption.zip && unzip household_power_consumption.zip && cd -
 ### Activity Recognition
-mkdir -p data_samples/activity && cd data_samples/activity  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00344/Activity%20recognition%20exp.zip Activity_recognition_exp.zip && gunzip -S .zip Activity_recognition_exp.zip && cd -
+mkdir -p data_samples/activity && cd data_samples/activity  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00344/Activity%20recognition%20exp.zip && mv Activity\ recognition\ exp.zip Activity_recognition_exp.zip && unzip Activity_recognition_exp.zip && cd -
 ### HIGGS
-mkdir -p data_samples/higgs && cd data_samples/higgs  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00280/HIGGS.csv.gz && gunzip  HIGGS.csv.gz && cd -
+mkdir -p data_samples/higgs && cd data_samples/higgs  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00280/HIGGS.csv.gz && gunzip HIGGS.csv.gz && cd -
 
 
 # use newstyle git authentication
