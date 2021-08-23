@@ -52,6 +52,8 @@ mkdir -p data_samples/power && cd data_samples/power  &&  wget https://archive.i
 mkdir -p data_samples/activity && cd data_samples/activity  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00344/Activity%20recognition%20exp.zip && mv Activity\ recognition\ exp.zip Activity_recognition_exp.zip && unzip Activity_recognition_exp.zip && cd -
 ### HIGGS
 mkdir -p data_samples/higgs && cd data_samples/higgs  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/00280/HIGGS.csv.gz && gunzip HIGGS.csv.gz && cd -
+### CENSUS1990
+mkdir -p data_samples/census1990 && cd data_samples/census1990  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/census1990-mld/USCensus1990.data.txt && cd -
 
 
 # use newstyle git authentication
