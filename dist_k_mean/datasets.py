@@ -26,6 +26,10 @@ def get_dataset(dataset, logger):
         N = read_and_prep_census1990()
     elif dataset == 'skin':
         N = read_and_prep_skin()
+    elif dataset == 'higgs':
+        N = read_and_prep_higgs()
+    elif dataset == 'activity':
+        N = read_and_prep_activity_recognition()
     else:
         raise RuntimeError(f"bad dataset {dataset}")
     logger.info(f'len(N)={len(N)}')
@@ -87,6 +91,19 @@ def read_and_prep_power_consumption():
 def read_and_prep_skin():
     full_data: pd.DataFrame = pd.read_csv(SKIN_DATASET_FILE, nrows=DATASET_SIZE, sep='\t')
     N = full_data.iloc[:, :-1]  # drop labels
+    return N
+
+
+def read_and_prep_higgs():
+    full_data: pd.DataFrame = pd.read_csv(HIGGS_DATASET_FILE, nrows=DATASET_SIZE, sep='\t')
+    N: pd.DataFrame = full_data.select_dtypes([np.number])
+    N = N.dropna()
+    return N
+
+def read_and_prep_activity_recognition():
+    full_data: pd.DataFrame = pd.read_csv(ACTIVITY_DATASET_FILE, nrows=DATASET_SIZE, sep='\t')
+    N: pd.DataFrame = full_data.select_dtypes([np.number])
+    N = N.dropna()
     return N
 
 

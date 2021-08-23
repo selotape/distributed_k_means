@@ -4,7 +4,7 @@ import sys
 RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
-DATASET = os.getenv('DATASET', default='gaussian')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin', 'bigcross', 'census1990'
+DATASET = os.getenv('DATASET', default='gaussian')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin', 'bigcross', 'census1990', 'activity', 'higgs'
 ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'ENE'
 
 KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")
@@ -13,6 +13,8 @@ BIGCROSS_DATASET_FILE = os.getenv('BIGCROSS_DATASET_FILE', default="data_samples
 COVTYPE_DATASET_FILE = os.getenv('COVTYPE_DATASET_FILE', default="data_samples/covtype/covtype.data")
 POWER_DATASET_FILE = os.getenv('POWER_DATASET_FILE', default="data_samples/power/household_power_consumption.txt")
 SKIN_DATASET_FILE = os.getenv('SKIN_DATASET_FILE', default="data_samples/skin/Skin_NonSkin.txt")
+HIGGS_DATASET_FILE = os.getenv('HIGGS_DATASET_FILE', default="data_samples/higgs/HIGGS.csv")
+ACTIVITY_DATASET_FILE = os.getenv('ACTIVITY_DATASET_FILE', default="data_samples/activity/Activity_recognition_exp.csv")
 DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=100_000_000))
 SCALE_DATASET = bool(os.getenv('SCALE_DATASET', default=False))
 
