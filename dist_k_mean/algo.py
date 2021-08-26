@@ -17,6 +17,9 @@ class DkmMeasurement(Measurement):
     total_comps_: float = 0.0
     final_iter_time: float = 0.0
     finalization_time: float = 0.0
+    iterations_: int = 0
+    num_centers_: float = -1.0
+    coord_memory_: float = -1.0
 
     def reducers_time(self):
         return sum(self.sample_times) + sum(self.remove_handled_times)
@@ -29,6 +32,15 @@ class DkmMeasurement(Measurement):
 
     def total_comps(self):
         return self.total_comps_
+
+    def coord_memory(self):
+        return self.coord_memory_
+
+    def num_centers_unfinalized(self):
+        return self.num_centers_
+
+    def iterations(self):
+        return self.iterations_
 
 
 class Reducer:
@@ -125,18 +137,13 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     alpha = alpha_formula(n, k, ep, dt, len(N))
     timing = DkmMeasurement()
     remaining_elements_count = len(N)
-    iteration = 0
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
+    timing.coord_memory_ = max_subset_size
     logger.info(f"max_subset_size:{max_subset_size}")
 
-    # if n ** ep < 4:
-    #     err_msg = f"n ** ep < 4 !! n:{n}. ep:{ep}"
-    #     logger.error(err_msg)
-    #     raise RuntimeError(err_msg)
-
     while remaining_elements_count > max_subset_size:
-        iteration += 1
-        logger.info(f"============ Starting LOOP {iteration} ============")
+        timing.iterations_ += 1
+        logger.info(f"============ Starting LOOP {timing.iterations_} ============")
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
         timing.sample_times.append(max(get_kept_time(r, 'sample_P1_P2') for r in reducers))
 
@@ -157,7 +164,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
             break
 
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
-        end_of_loop = f"============ END OF LOOP {iteration}. " + \
+        end_of_loop = f"============ END OF LOOP {timing.iterations_}. " + \
                       f"remaining_elements_count:{remaining_elements_count}." + \
                       f" alpha:{alpha}. v:{v}. len(Ctmp):{len(Ctmp)}. " + \
                       f" len(P2s):{sum(len(P2) for P2 in P2s)}. max_subset_size:{max_subset_size}" + \
@@ -165,20 +172,22 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
                       f"  ============"
         logger.info(end_of_loop)
 
-    logger.info(f"Finished while-loop after {iteration} iterations")
+    logger.info(f"Finished while-loop after {timing.iterations_} iterations")
 
     coordinator.last_iteration([r.Ni for r in reducers])
-    iteration += 1
+    timing.iterations_ += 1
     timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
 
     logger.info("Calculating C_final")
     C_weights = calculate_center_weights(coordinator, reducers)
     start = time.time()
     C_final = A_final(coordinator.C, k, C_weights)
+    timing.num_centers_unfinalized_ = len(coordinator.C)
     timing.finalization_time = time.time() - start
+    timing.num_centers_ = len(C_final)
 
-    logger.info(f'iteration: {iteration}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
-    return coordinator.C, C_final, iteration, timing
+    logger.info(f'iteration: {timing.iterations_}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
+    return coordinator.C, C_final, timing.iterations_, timing
 
 
 def calculate_center_weights(coordinator, reducers: Iterable[Reducer]):

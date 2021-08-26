@@ -7,6 +7,7 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 
+from dist_k_mean.config import SKM_ITERATIONS
 from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, risk
 from dist_k_mean.utils import SimpleMeasurement, Measurement, keep_time, get_kept_time
 
@@ -14,6 +15,7 @@ from dist_k_mean.utils import SimpleMeasurement, Measurement, keep_time, get_kep
 def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Measurement]:
     start = time.time()
     timing = SimpleMeasurement()
+    timing.iterations_ = SKM_ITERATIONS
     C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
     Ctmp = C
     prev_distances_to_C = None
@@ -28,12 +30,14 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finali
         Ctmp = N.iloc[draws]
         C = C.append(Ctmp)
 
+    timing.num_centers_unfinalized_ = len(C)
     timing.reducers_time_ = (time.time() - start) / m
 
     C_weights = measure_weights(N, C)
     start = time.time()
     C_final = finalize(C, k, C_weights)
     timing.finalization_time_ = time.time() - start
+    timing.num_centers_unfinalized_ = len(C_final)
 
     return C, C_final, timing
 
