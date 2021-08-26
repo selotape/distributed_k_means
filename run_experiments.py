@@ -1,7 +1,6 @@
 from logging import Logger
 from statistics import mean, stdev
-from time import strftime
-from typing import Tuple, Iterable, List
+from typing import Tuple, List
 
 from dist_k_mean.algo import distributed_k_means
 from dist_k_mean.black_box import A_final
@@ -11,8 +10,7 @@ from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
 from dist_k_mean.utils import setup_logger, log_config_file, Measurement
 
-log_time = strftime('%m_%d_%H_%M')
-run_name = f'{RUN_NAME}_{log_time}'
+run_name = f'{RUN_NAME}_{TIMESTAMP}'
 logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
 
 log_config_file(logger)
@@ -24,6 +22,7 @@ def main():
     logger.info(sys.argv)
 
     csv = open(f"{run_name}_results.csv", "a")
+    summary_f = open(f"{DATASET}_{K}K_{TIMESTAMP}_summary.csv", "a")
     csv.write(SINGLE_HEADER + '\n')
 
     N = get_dataset(DATASET, logger)
@@ -32,9 +31,10 @@ def main():
 
     risks, risks_final, timings = run_all_rounds(run_experiment)
 
-    print_summary(csv, risks_final, timings)
+    print_summary(summary_f, risks_final, timings)
 
     csv.close()
+    summary_f.close()
 
 
 def create_experiment_runner(N, csv):
@@ -106,7 +106,7 @@ def write_csv_line(csv, the_logger: Logger, test_name: str, k: int, dt, m: int, 
 SUMMARY_HEADER = 'algorithm,k,epsilon,coord_mem,num_centers_avg,num_centers_stdv,rounds_avg,rounds_stdv,final_risk_avg,final_risk_stdv,comps_pm_avg,comps_pm_stdv,comps_tot_avg,comps_tot_stdv'
 
 
-def print_summary(csv, risks_final, timings: List[Measurement]):
+def print_summary(summary_f, risks_final, timings: List[Measurement]):
     coordinator_memory = timings[0].coord_memory()
     rounds_avg = mean(t.iterations() for t in timings)
     rounds_stdv = stdev(t.iterations() for t in timings)
@@ -121,8 +121,7 @@ def print_summary(csv, risks_final, timings: List[Measurement]):
 
     test_summary = f'{ALGO},{K},{EPSILON},{coordinator_memory},{num_centers_avg},{num_centers_stdv},{rounds_avg},{rounds_stdv},{final_risk_avg},{final_risk_stdv},{comps_pm_avg},{comps_pm_stdv},{comps_tot_avg},{comps_tot_stdv}'
     logger.info('\n' + SUMMARY_HEADER + '\n' + test_summary)
-    csv.write('\n' + SUMMARY_HEADER + '\n')
-    csv.write(test_summary + '\n')
+    summary_f.write(test_summary + '\n')
 
 
 if __name__ == "__main__":

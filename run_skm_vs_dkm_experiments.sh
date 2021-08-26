@@ -6,6 +6,8 @@ function run_exp() {
 }
 
 
+TIMESTAMP="$(date +'%m-%d-%H-%M')"
+export TIMESTAMP
 export ALGO=SKM
 export DATASET=gaussian
 
