@@ -9,7 +9,7 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 
 from dist_k_mean.competitors.competitors import scalable_k_means
 from dist_k_mean.config import MINI_BATCH_SIZE, INNER_BLACKBOX, FINALIZATION_BLACKBOX
-from dist_k_mean.utils import Timing
+from dist_k_mean.utils import Measurement
 
 
 def getAppliedBlackBox(blackbox_name, kwargs, k):
@@ -49,7 +49,7 @@ class ScalableKMeans:
         self.iterations = iterations
         self.cluster_centers_: Union[pd.DataFrame, None] = None
         self._cluster_centers_pre_finalization: Union[pd.DataFrame, None] = None
-        self._timing: Union[Timing, None] = None
+        self._timing: Union[Measurement, None] = None
 
     def fit(self, N, sample_weight=None):
         if sample_weight:

@@ -6,6 +6,8 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from dist_k_mean.config import M
+
 formatter = logging.Formatter('%(asctime)s %(message)s')
 
 
@@ -49,7 +51,6 @@ def get_kept_time(obj, func_name):
 
 
 def log_config_file(logger):
-
     label = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode("utf-8")
     logger.info(f"git commit: {label}")
 
@@ -58,7 +59,7 @@ def log_config_file(logger):
     [logger.info(line) for line in config_txt]
 
 
-class Timing(ABC):
+class Measurement(ABC):
 
     @abstractmethod
     def reducers_time(self):
@@ -68,18 +69,33 @@ class Timing(ABC):
     def total_time(self):
         pass
 
+    @abstractmethod
+    def total_comps_per_machine(self):
+        pass
+
+    @abstractmethod
+    def total_comps(self):
+        pass
+
 
 @dataclass
-class SimpleTiming(Timing):
+class SimpleMeasurement(Measurement):
     reducers_time_: float = 0.0
     coordinator_time_: float = 0.0
     finalization_time_: float = 0.0
+    dist_comps_: float = 0.0
 
     def reducers_time(self):
         return self.reducers_time_
 
     def coordinator_time(self):
-        return self.reducers_time_
+        return self.coordinator_time_
 
     def total_time(self):
         return self.reducers_time_ + self.coordinator_time_ + self.finalization_time_
+
+    def total_comps_per_machine(self):
+        return self.dist_comps_
+
+    def total_comps(self):
+        return self.total_comps_per_machine() * M
