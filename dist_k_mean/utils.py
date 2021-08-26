@@ -77,6 +77,18 @@ class Measurement(ABC):
     def total_comps(self):
         pass
 
+    @abstractmethod
+    def iterations(self):
+        pass
+
+    @abstractmethod
+    def coord_memory(self):
+        pass
+
+    @abstractmethod
+    def num_centers_unfinalized(self):
+        pass
+
 
 @dataclass
 class SimpleMeasurement(Measurement):
@@ -84,6 +96,9 @@ class SimpleMeasurement(Measurement):
     coordinator_time_: float = 0.0
     finalization_time_: float = 0.0
     dist_comps_: float = 0.0
+    iterations_: int = 0
+    num_centers_unfinalized_: int = 0
+    coord_memory_: float = -1.0
 
     def reducers_time(self):
         return self.reducers_time_
@@ -99,3 +114,12 @@ class SimpleMeasurement(Measurement):
 
     def total_comps(self):
         return self.total_comps_per_machine() * M
+
+    def coord_memory(self):
+        return self.coord_memory_
+
+    def num_centers_unfinalized(self):
+        return self.num_centers_unfinalized_
+
+    def iterations(self):
+        return self.iterations_

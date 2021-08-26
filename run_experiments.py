@@ -1,7 +1,7 @@
 from logging import Logger
-from statistics import mean
+from statistics import mean, stdev
 from time import strftime
-from typing import Tuple, Iterable
+from typing import Tuple, Iterable, List
 
 from dist_k_mean.algo import distributed_k_means
 from dist_k_mean.black_box import A_final
@@ -18,7 +18,6 @@ logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
 log_config_file(logger)
 
 SINGLE_HEADER = "test_name,k,dt,m,ep,l,len(C),iterations,risk,risk_final,reducers_time,total_time"
-SUMMARY_HEADER = "test_name,reducers_time_avg,total_time_avg,risk_avg,risk_final_avg"
 
 
 def main():
@@ -33,7 +32,7 @@ def main():
 
     risks, risks_final, timings = run_all_rounds(run_experiment)
 
-    print_summary(csv, risks, risks_final, timings)
+    print_summary(csv, risks_final, timings)
 
     csv.close()
 
@@ -104,8 +103,23 @@ def write_csv_line(csv, the_logger: Logger, test_name: str, k: int, dt, m: int, 
     csv.flush()
 
 
-def print_summary(csv, risks, risks_final, timings: Iterable[Measurement]):
-    test_summary = ','.join(str(x) for x in [RUN_NAME, mean(t.reducers_time() for t in timings), mean(t.total_time() for t in timings), mean(risks), mean(risks_final)])
+SUMMARY_HEADER = 'algorithm,k,epsilon,coord_mem,num_centers_avg,num_centers_stdv,rounds_avg,rounds_stdv,final_risk_avg,final_risk_stdv,comps_pm_avg,comps_pm_stdv,comps_tot_avg,comps_tot_stdv'
+
+
+def print_summary(csv, risks_final, timings: List[Measurement]):
+    coordinator_memory = timings[0].coord_memory()
+    rounds_avg = mean(t.iterations() for t in timings)
+    rounds_stdv = stdev(t.iterations() for t in timings)
+    num_centers_avg = mean(t.num_centers_unfinalized() for t in timings)
+    num_centers_stdv = stdev(t.num_centers_unfinalized() for t in timings)
+    final_risk_avg = mean(risks_final)
+    final_risk_stdv = stdev(risks_final)
+    comps_pm_avg = mean(t.total_comps_per_machine() for t in timings)
+    comps_pm_stdv = stdev(t.total_comps_per_machine() for t in timings)
+    comps_tot_avg = mean(t.total_comps() for t in timings)
+    comps_tot_stdv = stdev(t.total_comps() for t in timings)
+
+    test_summary = f'{ALGO},{K},{EPSILON},{coordinator_memory},{num_centers_avg},{num_centers_stdv},{rounds_avg},{rounds_stdv},{final_risk_avg},{final_risk_stdv},{comps_pm_avg},{comps_pm_stdv},{comps_tot_avg},{comps_tot_stdv}'
     logger.info('\n' + SUMMARY_HEADER + '\n' + test_summary)
     csv.write('\n' + SUMMARY_HEADER + '\n')
     csv.write(test_summary + '\n')

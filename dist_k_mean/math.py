@@ -20,7 +20,7 @@ def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
     The size above which data doesn't fit inside a single machine,
     so clustering must be distributed.
     """
-    return MAX_SS_SIZE_C * k * pow(n, ep) * log(1.1 * k / dt)
+    return int(MAX_SS_SIZE_C * k * pow(n, ep) * log(1.1 * k / dt))
 
 
 def alpha_formula(n, k, ep, dt, N_current_size):
