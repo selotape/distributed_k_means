@@ -9,7 +9,7 @@ from dist_k_mean.competitors.competitors import ene_clustering, scalable_k_means
 from dist_k_mean.config import *
 from dist_k_mean.datasets import get_dataset
 from dist_k_mean.math import risk
-from dist_k_mean.utils import setup_logger, log_config_file, Timing
+from dist_k_mean.utils import setup_logger, log_config_file, Measurement
 
 log_time = strftime('%m_%d_%H_%M')
 run_name = f'{RUN_NAME}_{log_time}'
@@ -53,7 +53,7 @@ def create_experiment_runner(N, csv):
     return run_exp
 
 
-def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Timing]:
+def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Measurement]:
     logger.info(f"======== Starting round {the_round} of fast_clustering with len(N)={len(N)} k={k} ep={ep} & m={m} ========")
     C, C_final, iterations, timing = ene_clustering(N, k, ep, m, A_final)
     logger.info(f'fast_timing:{timing}')
@@ -63,7 +63,7 @@ def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Timing]:
     return the_risk, risk_final, timing
 
 
-def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[float, float, Timing]:
+def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[float, float, Measurement]:
     l = int(l_ratio * k)
     logger.info(f'===========Starting round {the_round} of scalable_k_mean with {skm_iters} iterations and l=={l}==============')
     skm_C, skm_C_final, timing = scalable_k_means(N, skm_iters, l, k, m, A_final)
@@ -76,7 +76,7 @@ def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[fl
     return the_risk, risk_final, timing
 
 
-def run_dkm_exp(N, csv, dt, ep, k, m, the_round) -> Tuple[float, float, Timing]:
+def run_dkm_exp(N, csv, dt, ep, k, m, the_round) -> Tuple[float, float, Measurement]:
     logger.info(f"======== Starting round {the_round} of distributed k means with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
     dkm_C, dkm_C_final, dkm_iters, timing = distributed_k_means(N, k, ep, dt, m, logger)
     logger.info(f'dkm_timing:{timing}')
@@ -104,7 +104,7 @@ def write_csv_line(csv, the_logger: Logger, test_name: str, k: int, dt, m: int, 
     csv.flush()
 
 
-def print_summary(csv, risks, risks_final, timings: Iterable[Timing]):
+def print_summary(csv, risks, risks_final, timings: Iterable[Measurement]):
     test_summary = ','.join(str(x) for x in [RUN_NAME, mean(t.reducers_time() for t in timings), mean(t.total_time() for t in timings), mean(risks), mean(risks_final)])
     logger.info('\n' + SUMMARY_HEADER + '\n' + test_summary)
     csv.write('\n' + SUMMARY_HEADER + '\n')

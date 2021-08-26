@@ -1,18 +1,20 @@
-from dataclasses import dataclass, field
 import time
+from dataclasses import dataclass, field
 from typing import List, Iterable, Tuple
 
 from dist_k_mean.black_box import A_inner, A_final
 from dist_k_mean.config import INNER_BLACKBOX_ITERATIONS, INNER_BLACKBOX_L_TO_K_RATIO
 from dist_k_mean.math import *
-from dist_k_mean.utils import keep_time, get_kept_time, Timing
+from dist_k_mean.utils import keep_time, get_kept_time, Measurement
 
 
 @dataclass
-class DkmTiming(Timing):
+class DkmMeasurement(Measurement):
     sample_times: List[float] = field(default_factory=list)
     iterate_times: List[float] = field(default_factory=list)
     remove_handled_times: List[float] = field(default_factory=list)
+    total_comps_per_machine_: float = 0.0
+    total_comps_: float = 0.0
     final_iter_time: float = 0.0
     finalization_time: float = 0.0
 
@@ -21,6 +23,12 @@ class DkmTiming(Timing):
 
     def total_time(self):
         return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time])
+
+    def total_comps_per_machine(self):
+        return self.total_comps_per_machine_
+
+    def total_comps(self):
+        return self.total_comps_
 
 
 class Reducer:
@@ -106,7 +114,7 @@ class Coordinator:
         return v_formula(self._psi, k, phi_alpha), Ta
 
 
-def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int, DkmTiming]:
+def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int, DkmMeasurement]:
     n = len(N)
     logger.info("starting to split")
     Ns = np.array_split(N, m)
@@ -115,7 +123,7 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     kp = kplus_formula(k, dt, ep)
     coordinator = Coordinator(k, kp, dt, ep, m, INNER_BLACKBOX_ITERATIONS, logger)
     alpha = alpha_formula(n, k, ep, dt, len(N))
-    timing = DkmTiming()
+    timing = DkmMeasurement()
     remaining_elements_count = len(N)
     iteration = 0
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
@@ -137,6 +145,9 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
 
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
         timing.iterate_times.append(get_kept_time(coordinator, 'iterate'))
+
+        timing.total_comps_per_machine_ += max(len(r.Ni) * len(Ctmp) for r in reducers)
+        timing.total_comps_ += remaining_elements_count * len(Ctmp)
 
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(Ctmp, v) for r in reducers)
         timing.remove_handled_times.append(max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers))

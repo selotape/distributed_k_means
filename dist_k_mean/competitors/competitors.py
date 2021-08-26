@@ -8,17 +8,18 @@ import numpy as np
 import pandas as pd
 
 from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, risk
-from dist_k_mean.utils import SimpleTiming, Timing, keep_time, get_kept_time
+from dist_k_mean.utils import SimpleMeasurement, Measurement, keep_time, get_kept_time
 
 
-def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Timing]:
+def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Measurement]:
     start = time.time()
-    timing = SimpleTiming()
+    timing = SimpleMeasurement()
     C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
     Ctmp = C
     prev_distances_to_C = None
     for i in range(iterations):
         psii = risk(N, C)
+        timing.dist_comps_ += int((len(N) * len(Ctmp)) / m)
         distances_to_Ctmp = pairwise_distances_argmin_min_squared(N, Ctmp)
         prev_distances_to_C = np.minimum(distances_to_Ctmp, prev_distances_to_C) if prev_distances_to_C is not None else distances_to_Ctmp
         probabilities = prev_distances_to_C / psii
@@ -42,7 +43,7 @@ def ene_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     Rs = np.array_split(R, m)
     reducers = [_EneClusteringReducer(Ri) for Ri in Rs]
     coordinator = _EneClusteringCoordinator(n)
-    timing = SimpleTiming()
+    timing = SimpleMeasurement()
     remaining_elements_count = len(R)
     iteration = 0
     max_subset_size = (4 / ep) * k * (n ** ep) * log(n)
