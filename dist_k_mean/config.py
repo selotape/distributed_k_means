@@ -1,11 +1,13 @@
 import os
 import sys
+from time import strftime
 
 RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
 DATASET = os.getenv('DATASET', default='gaussian')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin', 'bigcross', 'census1990', 'activity', 'higgs'
 ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'ENE'
+TIMESTAMP = os.getenv('TIMESTAMP', default=strftime('%m_%d_%H_%M'))
 
 KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")
 CENSUS1990_DATASET_FILE = os.getenv('CENSUS1990_DATASET_FILE', default="data_samples/census1990/USCensus1990.data.txt")
