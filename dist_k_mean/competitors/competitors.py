@@ -37,7 +37,6 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finali
     start = time.time()
     C_final = finalize(C, k, C_weights)
     timing.finalization_time_ = time.time() - start
-    timing.num_centers_unfinalized_ = len(C_final)
 
     return C, C_final, timing
 

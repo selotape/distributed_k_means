@@ -18,7 +18,7 @@ class DkmMeasurement(Measurement):
     final_iter_time: float = 0.0
     finalization_time: float = 0.0
     iterations_: int = 0
-    num_centers_: float = -1.0
+    num_centers_unfinalized_: int = 0
     coord_memory_: float = -1.0
 
     def reducers_time(self):
@@ -37,7 +37,7 @@ class DkmMeasurement(Measurement):
         return self.coord_memory_
 
     def num_centers_unfinalized(self):
-        return self.num_centers_
+        return self.num_centers_unfinalized_
 
     def iterations(self):
         return self.iterations_
@@ -184,7 +184,6 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     C_final = A_final(coordinator.C, k, C_weights)
     timing.num_centers_unfinalized_ = len(coordinator.C)
     timing.finalization_time = time.time() - start
-    timing.num_centers_ = len(C_final)
 
     logger.info(f'iteration: {timing.iterations_}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
     return coordinator.C, C_final, timing.iterations_, timing
