@@ -22,8 +22,11 @@ SCALE_DATASET = bool(os.getenv('SCALE_DATASET', default=False))
 
 GAUSSIANS_DIMENSIONS = int(os.getenv('GAUSSIANS_DIMENSIONS', default=15))
 GAUSSIANS_K = int(os.getenv('GAUSSIANS_K', default=100))
+GAUSSIANS_TYPE = os.getenv('GAUSSIANS_TYPE', default='exp')  # 'exp' 'alpha'
 GAUSSIANS_ALPHA = float(os.getenv('GAUSSIANS_ALPHA', default=0.0))
 GAUSSIANS_STD_DEV = float(os.getenv('GAUSSIANS_STD_DEV', default=0.1))
+GAUSSIANS_LOW = float(os.getenv('GAUSSIANS_LOW', default=0.0))
+GAUSSIANS_HIGH = float(os.getenv('GAUSSIANS_HIGH', default=1.0))
 
 ###### BLACK_BOXES ######
 INNER_BLACKBOX = os.getenv('INNER_BLACKBOX', default='KMeans')  # 'KMeans' 'MiniBatchKMeans' 'ScalableKMeans' 'FaissKMeans'
