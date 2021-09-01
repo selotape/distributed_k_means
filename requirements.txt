@@ -3,4 +3,4 @@ scikit-learn
 scikit-learn-extra
 numpy
 pandas
-faiss # conda install -c pytorch faiss-cpu
+# conda install -c pytorch faiss-cpu
