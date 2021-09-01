@@ -3,6 +3,7 @@ from functools import partial
 from typing import Union
 
 import faiss
+import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
