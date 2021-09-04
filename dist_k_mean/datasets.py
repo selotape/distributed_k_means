@@ -140,7 +140,7 @@ def determine_gaussians_k():
 
 
 def get_cluster_sizes(gaussians_k):
-    if GAUSSIANS_TYPE == 'alpha':
+    if GAUSSIANS_TYPE == 'gamma':
         the_sum = sum(i ** GAUSSIANS_GAMMA for i in range(1, gaussians_k + 1))
         cluster_sizes = [floor(DATASET_SIZE * ((i ** GAUSSIANS_GAMMA) / the_sum)) for i in range(1, gaussians_k + 1)]
     elif GAUSSIANS_TYPE == 'exp':
