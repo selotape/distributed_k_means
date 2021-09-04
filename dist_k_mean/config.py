@@ -5,7 +5,7 @@ from time import strftime
 RUN_NAME = 'SCHMOD' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
-DATASET = os.getenv('DATASET', default='gaussian')  # 'gaussian', 'kdd', 'covtype', 'power', 'skin', 'bigcross', 'census1990', 'activity', 'higgs'
+DATASET = os.getenv('DATASET', default='gaussian_100')  # 'kdd', 'covtype', 'power', 'skin', 'bigcross', 'census1990', 'activity', 'higgs', 'gaussian_25', 'gaussian_50', 'gaussian_100', 'gaussian_200'
 ALGO = os.getenv('ALGO', default='DKM')  # 'SKM', 'DKM', 'ENE'
 TIMESTAMP = os.getenv('TIMESTAMP', default=strftime('%m_%d_%H_%M'))
 
@@ -17,7 +17,7 @@ POWER_DATASET_FILE = os.getenv('POWER_DATASET_FILE', default="data_samples/power
 SKIN_DATASET_FILE = os.getenv('SKIN_DATASET_FILE', default="data_samples/skin/Skin_NonSkin.txt")
 HIGGS_DATASET_FILE = os.getenv('HIGGS_DATASET_FILE', default="data_samples/higgs/HIGGS.csv")
 ACTIVITY_DATASET_FILE = os.getenv('ACTIVITY_DATASET_FILE', default="data_samples/activity/Activity_recognition_exp.csv")
-DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=100_000_000))
+DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=10_000_000))
 SCALE_DATASET = bool(os.getenv('SCALE_DATASET', default=False))
 
 GAUSSIANS_DIMENSIONS = int(os.getenv('GAUSSIANS_DIMENSIONS', default=15))

@@ -10,28 +10,28 @@ from dist_k_mean.config import *
 
 
 @lru_cache
-def get_dataset(dataset, logger):
+def get_dataset(logger):
     logger.info(f"Loading Dataset {DATASET}...")
-    if dataset == 'kdd':
+    if DATASET == 'kdd':
         N = read_and_prep_kdd()
-    elif dataset == 'gaussian':
+    elif DATASET.startswith('gaussian'):
         N = generate_k_gaussians()
-    elif dataset == 'power':
+    elif DATASET == 'power':
         N = read_and_prep_power_consumption()
-    elif dataset == 'covtype':
+    elif DATASET == 'covtype':
         N = read_and_prep_covtype()
-    elif dataset == 'bigcross':
+    elif DATASET == 'bigcross':
         N = read_and_prep_bigcross()
-    elif dataset == 'census1990':
+    elif DATASET == 'census1990':
         N = read_and_prep_census1990()
-    elif dataset == 'skin':
+    elif DATASET == 'skin':
         N = read_and_prep_skin()
-    elif dataset == 'higgs':
+    elif DATASET == 'higgs':
         N = read_and_prep_higgs()
-    elif dataset == 'activity':
+    elif DATASET == 'activity':
         N = read_and_prep_activity_recognition()
     else:
-        raise RuntimeError(f"bad dataset {dataset}")
+        raise RuntimeError(f"bad dataset {DATASET}")
     logger.info(f'len(N)={len(N)}')
     if SCALE_DATASET:
         N = scale_dataset(N)
@@ -63,11 +63,12 @@ def read_and_prep_bigcross():
     N = full_data.select_dtypes([np.number])
     return N
 
+
 def read_and_prep_census1990():
     census = pd.read_csv(CENSUS1990_DATASET_FILE, nrows=DATASET_SIZE, skiprows=1)
     census = pd.get_dummies(census)
     census = census.dropna()
-    census = census.iloc[: , 1:]  # throw away first index column
+    census = census.iloc[:, 1:]  # throw away first index column
     return census
 
 
@@ -100,6 +101,7 @@ def read_and_prep_higgs():
     N = N.dropna()
     return N
 
+
 def read_and_prep_activity_recognition():
     full_data: pd.DataFrame = pd.read_csv(ACTIVITY_DATASET_FILE, nrows=DATASET_SIZE, sep='\t')
     N: pd.DataFrame = full_data.select_dtypes([np.number])
@@ -110,7 +112,8 @@ def read_and_prep_activity_recognition():
 def generate_k_gaussians():
     rng = np.random.RandomState(GAUSSIANS_RANDOM_SEED)
     N = rng.normal(scale=GAUSSIANS_STD_DEV, size=(DATASET_SIZE, GAUSSIANS_DIMENSIONS,))
-    centers = rng.uniform(size=(GAUSSIANS_K, GAUSSIANS_DIMENSIONS,),)
+    gaussians_k = determine_gaussians_k()
+    centers = rng.uniform(size=(gaussians_k, GAUSSIANS_DIMENSIONS,), )
     cluster_sizes = get_cluster_sizes()
     N = N[:sum(cluster_sizes)]
 
@@ -124,6 +127,16 @@ def generate_k_gaussians():
         N[cluster_slice] += centers[k]
 
     return pd.DataFrame(N)
+
+
+def determine_gaussians_k():
+    tokens = DATASET.split(sep='_')
+    if len(tokens) == 1:  # "gaussian"
+        return GAUSSIANS_K
+    elif len(tokens) == 2:
+        return int(tokens[1])  # "gaussian_25"
+    else:
+        raise NotImplementedError(f"Bad gaussian dataset name \"{DATASET}\". Should be e.g. \"gaussian_25\"")
 
 
 def get_cluster_sizes():

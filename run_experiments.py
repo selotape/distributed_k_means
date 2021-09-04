@@ -25,7 +25,7 @@ def main():
     summary_f = open(f"{DATASET}_{K}K_{TIMESTAMP}_summary.csv", "a")
     csv.write(SINGLE_HEADER + '\n')
 
-    N = get_dataset(DATASET, logger)
+    N = get_dataset(logger)
 
     run_experiment = create_experiment_runner(N, csv)
 
