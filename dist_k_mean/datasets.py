@@ -127,8 +127,8 @@ def generate_k_gaussians():
 
 def get_cluster_sizes():
     if GAUSSIANS_TYPE == 'alpha':
-        the_sum = sum(i ** GAUSSIANS_ALPHA for i in range(1, GAUSSIANS_K + 1))
-        cluster_sizes = [floor(DATASET_SIZE * ((i ** GAUSSIANS_ALPHA) / the_sum)) for i in range(1, GAUSSIANS_K + 1)]
+        the_sum = sum(i ** GAUSSIANS_GAMMA for i in range(1, GAUSSIANS_K + 1))
+        cluster_sizes = [floor(DATASET_SIZE * ((i ** GAUSSIANS_GAMMA) / the_sum)) for i in range(1, GAUSSIANS_K + 1)]
     elif GAUSSIANS_TYPE == 'exp':
         the_sum = sum(2 ** i for i in range(1, GAUSSIANS_K + 1))
         cluster_sizes = [floor(DATASET_SIZE * ((2 ** i) / the_sum)) for i in range(1, GAUSSIANS_K + 1)]

@@ -56,13 +56,13 @@ risk = risk_kmeans
 
 def phi_alpha_formula(alpha: float, k: int, dt: float, ep: float):
     """
-    The size of the already-handled clusters
+    In the paper, is equal to (d_k / alpha)
     """
     return (PHI_ALPHA_C / alpha) * log(1.1 * k / (dt * ep))
 
 
 def r_formula(alpha: float, k: int, phi_alpha: float) -> int:
-    return int(1.6 * alpha * k * phi_alpha)
+    return int(1.5 * alpha * (k + 1) * phi_alpha)
 
 
 def v_formula(psi: float, k: int, phi_alpha: float):
