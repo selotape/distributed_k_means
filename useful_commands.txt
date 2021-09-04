@@ -55,6 +55,13 @@ mkdir -p data_samples/higgs && cd data_samples/higgs  &&  wget https://archive.i
 ### CENSUS1990
 mkdir -p data_samples/census1990 && cd data_samples/census1990  &&  wget https://archive.ics.uci.edu/ml/machine-learning-databases/census1990-mld/USCensus1990.data.txt && cd -
 
+### install faiss
+#1. install conda... ... ...
+#2. then run:
+conda create --name soccer python=3.8
+conda activate soccer
+pip install -r requirements.txt
+conda install -c pytorch faiss-cpu
 
 # use newstyle git authentication
 rm ~/.git-credentials
