@@ -17,14 +17,14 @@ POWER_DATASET_FILE = os.getenv('POWER_DATASET_FILE', default="data_samples/power
 SKIN_DATASET_FILE = os.getenv('SKIN_DATASET_FILE', default="data_samples/skin/Skin_NonSkin.txt")
 HIGGS_DATASET_FILE = os.getenv('HIGGS_DATASET_FILE', default="data_samples/higgs/HIGGS.csv")
 ACTIVITY_DATASET_FILE = os.getenv('ACTIVITY_DATASET_FILE', default="data_samples/activity/Activity_recognition_exp.csv")
-DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=10_000_000))
+DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=10_000_0))
 SCALE_DATASET = bool(os.getenv('SCALE_DATASET', default=False))
 
 GAUSSIANS_DIMENSIONS = int(os.getenv('GAUSSIANS_DIMENSIONS', default=15))
 GAUSSIANS_K = int(os.getenv('GAUSSIANS_K', default=100))
 GAUSSIANS_TYPE = os.getenv('GAUSSIANS_TYPE', default='exp')  # 'exp' 'alpha'
-GAUSSIANS_GAMMA = float(os.getenv('GAUSSIANS_GAMMA', default=0.0))
-GAUSSIANS_STD_DEV = float(os.getenv('GAUSSIANS_STD_DEV', default=0.1))
+GAUSSIANS_GAMMA = float(os.getenv('GAUSSIANS_GAMMA', default=1.5))
+GAUSSIANS_STD_DEV = float(os.getenv('GAUSSIANS_STD_DEV', default=0.001))
 GAUSSIANS_LOW = float(os.getenv('GAUSSIANS_LOW', default=0.0))
 GAUSSIANS_HIGH = float(os.getenv('GAUSSIANS_HIGH', default=1.0))
 GAUSSIANS_RANDOM_SEED = int(os.getenv('GAUSSIANS_RANDOM_SEED', default=1234))
