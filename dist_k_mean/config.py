@@ -46,7 +46,7 @@ DELTA = float(os.getenv('DELTA', default=0.1))
 M = int(os.getenv('M', default=50))
 
 PHI_ALPHA_C = 6.5
-MAX_SS_SIZE_C = 38
+MAX_SS_SIZE_C = 36
 KPLUS_C = 9
 
 ###### SKM PARAMS ######
