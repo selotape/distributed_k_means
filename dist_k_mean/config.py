@@ -27,6 +27,7 @@ GAUSSIANS_GAMMA = float(os.getenv('GAUSSIANS_GAMMA', default=0.0))
 GAUSSIANS_STD_DEV = float(os.getenv('GAUSSIANS_STD_DEV', default=0.1))
 GAUSSIANS_LOW = float(os.getenv('GAUSSIANS_LOW', default=0.0))
 GAUSSIANS_HIGH = float(os.getenv('GAUSSIANS_HIGH', default=1.0))
+GAUSSIANS_RANDOM_SEED = int(os.getenv('GAUSSIANS_RANDOM_SEED', default=1234))
 
 ###### BLACK_BOXES ######
 INNER_BLACKBOX = os.getenv('INNER_BLACKBOX', default='KMeans')  # 'KMeans' 'MiniBatchKMeans' 'ScalableKMeans' 'FaissKMeans'

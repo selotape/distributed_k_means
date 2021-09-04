@@ -108,8 +108,9 @@ def read_and_prep_activity_recognition():
 
 
 def generate_k_gaussians():
-    N = np.random.normal(scale=GAUSSIANS_STD_DEV, size=(DATASET_SIZE, GAUSSIANS_DIMENSIONS,))
-    centers = np.random.uniform(size=(GAUSSIANS_K, GAUSSIANS_DIMENSIONS,))
+    rng = np.random.RandomState(GAUSSIANS_RANDOM_SEED)
+    N = rng.normal(scale=GAUSSIANS_STD_DEV, size=(DATASET_SIZE, GAUSSIANS_DIMENSIONS,))
+    centers = rng.uniform(size=(GAUSSIANS_K, GAUSSIANS_DIMENSIONS,),)
     cluster_sizes = get_cluster_sizes()
     N = N[:sum(cluster_sizes)]
 
