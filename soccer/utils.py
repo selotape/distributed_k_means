@@ -6,7 +6,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from dist_k_mean.config import M
+from soccer.config import M
 
 formatter = logging.Formatter('%(asctime)s %(message)s')
 

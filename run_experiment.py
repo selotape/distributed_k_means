@@ -2,13 +2,13 @@ from logging import Logger
 from statistics import mean, stdev
 from typing import Tuple, List
 
-from dist_k_mean.algo import distributed_k_means
-from dist_k_mean.black_box import A_final
-from dist_k_mean.competitors.competitors import ene_clustering, scalable_k_means
-from dist_k_mean.config import *
-from dist_k_mean.datasets import get_dataset
-from dist_k_mean.math import risk
-from dist_k_mean.utils import setup_logger, log_config_file, Measurement
+from soccer.algo import distributed_k_means
+from soccer.black_box import A_final
+from soccer.competitors.competitors import ene_clustering, scalable_k_means
+from soccer.config import *
+from soccer.datasets import get_dataset
+from soccer.math import risk
+from soccer.utils import setup_logger, log_config_file, Measurement
 
 run_name = f'{RUN_NAME}_{TIMESTAMP}'
 logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
@@ -38,7 +38,7 @@ def main():
 
 
 def create_experiment_runner(N, csv):
-    if ALGO == 'DKM':
+    if ALGO == 'SOCCER':
         def run_exp(the_round):
             return run_dkm_exp(N, csv, DELTA, EPSILON, K, M, the_round)
     elif ALGO == 'SKM':

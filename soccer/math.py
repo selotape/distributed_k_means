@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
 
-from dist_k_mean.config import PHI_ALPHA_C, MAX_SS_SIZE_C, KPLUS_C
+from soccer.config import PHI_ALPHA_C, MAX_SS_SIZE_C, KPLUS_C
 
 
 def kplus_formula(k: int, dt: float, ep: float):
