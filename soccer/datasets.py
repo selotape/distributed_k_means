@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler  # , StandardScaler,
 import numpy as np
 import pandas as pd
 
-from dist_k_mean.config import *
+from soccer.config import *
 
 
 @lru_cache
@@ -110,7 +110,7 @@ def read_and_prep_activity_recognition():
 
 
 def generate_k_gaussians():
-    rng = np.random.RandomState(GAUSSIANS_RANDOM_SEED)
+    rng = np.random.RandomState(GAUSSIANS_RANDOM_SEED or None)
     N = rng.normal(scale=GAUSSIANS_STD_DEV, size=(DATASET_SIZE, GAUSSIANS_DIMENSIONS,))
     gaussians_k = determine_gaussians_k()
     centers = rng.uniform(size=(gaussians_k, GAUSSIANS_DIMENSIONS,), )

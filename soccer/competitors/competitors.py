@@ -7,9 +7,9 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 
-from dist_k_mean.config import SKM_ITERATIONS
-from dist_k_mean.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, risk
-from dist_k_mean.utils import SimpleMeasurement, Measurement, keep_time, get_kept_time
+from soccer.config import SKM_ITERATIONS
+from soccer.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, risk
+from soccer.utils import SimpleMeasurement, Measurement, keep_time, get_kept_time
 
 
 def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Measurement]:

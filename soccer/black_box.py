@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
-from dist_k_mean.competitors.competitors import scalable_k_means
-from dist_k_mean.config import MINI_BATCH_SIZE, INNER_BLACKBOX, FINALIZATION_BLACKBOX
-from dist_k_mean.utils import Measurement, module_exists
+from soccer.competitors.competitors import scalable_k_means
+from soccer.config import MINI_BATCH_SIZE, INNER_BLACKBOX, FINALIZATION_BLACKBOX
+from soccer.utils import Measurement, module_exists
 
 
 faiss_is_supported = module_exists("faiss")
