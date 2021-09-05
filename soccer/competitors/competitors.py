@@ -14,14 +14,14 @@ from soccer.utils import SimpleMeasurement, Measurement, keep_time, get_kept_tim
 
 def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Measurement]:
     start = time.time()
-    timing = SimpleMeasurement()
-    timing.iterations_ = SKM_ITERATIONS
+    measurement = SimpleMeasurement()
+    measurement.iterations_ = SKM_ITERATIONS
     C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
     Ctmp = C
     prev_distances_to_C = None
     for i in range(iterations):
         psii = risk(N, C)
-        timing.dist_comps_ += int((len(N) * len(Ctmp)) / m)
+        measurement.dist_comps_ += int((len(N) * len(Ctmp)) / m)
         distances_to_Ctmp = pairwise_distances_argmin_min_squared(N, Ctmp)
         prev_distances_to_C = np.minimum(distances_to_Ctmp, prev_distances_to_C) if prev_distances_to_C is not None else distances_to_Ctmp
         probabilities = prev_distances_to_C / psii
@@ -30,15 +30,15 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finali
         Ctmp = N.iloc[draws]
         C = C.append(Ctmp)
 
-    timing.num_centers_unfinalized_ = len(C)
-    timing.reducers_time_ = (time.time() - start) / m
+    measurement.num_centers_unfinalized_ = len(C)
+    measurement.reducers_time_ = (time.time() - start) / m
 
     C_weights = measure_weights(N, C)
     start = time.time()
     C_final = finalize(C, k, C_weights)
-    timing.finalization_time_ = time.time() - start
+    measurement.finalization_time_ = time.time() - start
 
-    return C, C_final, timing
+    return C, C_final, measurement
 
 
 def ene_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
@@ -46,7 +46,7 @@ def ene_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     Rs = np.array_split(R, m)
     reducers = [_EneClusteringReducer(Ri) for Ri in Rs]
     coordinator = _EneClusteringCoordinator(n)
-    timing = SimpleMeasurement()
+    measurement = SimpleMeasurement()
     remaining_elements_count = len(R)
     iteration = 0
     max_subset_size = (4 / ep) * k * (n ** ep) * log(n)
@@ -59,7 +59,7 @@ def ene_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
         logging.info(f"============ Starting iteration {iteration} ============")
         logging.info(f"============ Sampling Ss & Hs ============")
         Ss_and_Hs = [r.sample_Ss_and_Hs(alpha_s, alpha_h) for r in reducers]
-        timing.reducers_time_ += max(get_kept_time(r, 'sample_Ss_and_Hs') for r in reducers)
+        measurement.reducers_time_ += max(get_kept_time(r, 'sample_Ss_and_Hs') for r in reducers)
         logging.info(f"============ Sampling done ============")
 
         Ss = [s_and_h[0] for s_and_h in Ss_and_Hs]
@@ -67,14 +67,14 @@ def ene_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
 
         logging.info(f"============ iterate start ============")
         v = coordinator.iterate(Ss, Hs)
-        timing.coordinator_time_ += get_kept_time(coordinator, 'iterate')
+        measurement.coordinator_time_ += get_kept_time(coordinator, 'iterate')
 
         logging.info(f"============ len(S): {len(coordinator.S)} ============")
         logging.info(f"============ iterate end ============")
 
         logging.info(f"============ remove_handled_points_and_return_remaining start ============")
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(coordinator.S, v) for r in reducers)
-        timing.reducers_time_ += max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers)
+        measurement.reducers_time_ += max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers)
         logging.info(f"============ remove_handled_points_and_return_remaining end ============")
         alpha_s, alpha_h = alpha_s_formula(k, n, ep, remaining_elements_count), alpha_h_formula(n, ep, remaining_elements_count)
         logging.info(f"============ END OF iteration {iteration}. "
@@ -91,10 +91,10 @@ def ene_clustering(R: pd.DataFrame, k: int, ep: float, m: int, finalize):
     S_weights = measure_weights(R, coordinator.S)
     start = time.time()
     S_final = finalize(coordinator.S, k, S_weights)
-    timing.finalization_time_ += time.time() - start
+    measurement.finalization_time_ += time.time() - start
 
     logging.info(f'iteration: {iteration}. len(S):{len(coordinator.S)}')
-    return coordinator.S, S_final, iteration, timing
+    return coordinator.S, S_final, iteration, measurement
 
 
 class _EneClusteringReducer:

@@ -52,15 +52,15 @@ class ScalableKMeans:
         self.iterations = iterations
         self.cluster_centers_: Union[pd.DataFrame, None] = None
         self._cluster_centers_pre_finalization: Union[pd.DataFrame, None] = None
-        self._timing: Union[Measurement, None] = None
+        self._measurement: Union[Measurement, None] = None
 
     def fit(self, N, sample_weight=None):
         if sample_weight:
             raise NotImplementedError("ScalableKMeans doesn't support sample_weights")
-        C, C_final, timing = scalable_k_means(N, self.iterations, self.l, self.k, self.m, A_final)
+        C, C_final, measurement = scalable_k_means(N, self.iterations, self.l, self.k, self.m, A_final)
         self.cluster_centers_ = C_final
         self._cluster_centers_pre_finalization = C
-        self._timing = timing
+        self._measurement = measurement
         return self
 
 
