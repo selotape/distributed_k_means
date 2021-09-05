@@ -8,6 +8,41 @@ from soccer.math import *
 from soccer.utils import keep_time, get_kept_time, Measurement
 
 
+@dataclass
+class SoccerMeasurement(Measurement):
+    sample_times: List[float] = field(default_factory=list)
+    iterate_times: List[float] = field(default_factory=list)
+    remove_handled_times: List[float] = field(default_factory=list)
+    total_comps_per_machine_: float = 0.0
+    total_comps_: float = 0.0
+    final_iter_time: float = 0.0
+    finalization_time: float = 0.0
+    iterations_: int = 0
+    num_centers_unfinalized_: int = 0
+    coord_memory_: float = -1.0
+
+    def reducers_time(self):
+        return sum(self.sample_times) + sum(self.remove_handled_times)
+
+    def total_time(self):
+        return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time])
+
+    def total_comps_per_machine(self):
+        return self.total_comps_per_machine_
+
+    def total_comps(self):
+        return self.total_comps_
+
+    def coord_memory(self):
+        return self.coord_memory_
+
+    def num_centers_unfinalized(self):
+        return self.num_centers_unfinalized_
+
+    def iterations(self):
+        return self.iterations_
+
+
 class Reducer:
 
     def __init__(self, Ni):
@@ -91,7 +126,7 @@ class Coordinator:
         return v_formula(self._psi, k, phi_alpha), Ta
 
 
-def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int, DkmMeasurement]:
+def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int, SoccerMeasurement]:
     n = len(N)
     logger.info("starting to split")
     Ns = np.array_split(N, m)
@@ -100,36 +135,36 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     kp = kplus_formula(k, dt, ep)
     coordinator = Coordinator(k, kp, dt, ep, m, INNER_BLACKBOX_ITERATIONS, logger)
     alpha = alpha_formula(n, k, ep, dt, len(N))
-    timing = DkmMeasurement()
+    measurement = SoccerMeasurement()
     remaining_elements_count = len(N)
     max_subset_size = max_subset_size_formula(n, k, ep, dt)
-    timing.coord_memory_ = max_subset_size
+    measurement.coord_memory_ = max_subset_size
     logger.info(f"max_subset_size:{max_subset_size}")
 
     while remaining_elements_count > max_subset_size:
-        timing.iterations_ += 1
-        logger.info(f"============ Starting LOOP {timing.iterations_} ============")
+        measurement.iterations_ += 1
+        logger.info(f"============ Starting LOOP {measurement.iterations_} ============")
         P1s_and_P2s = [r.sample_P1_P2(alpha) for r in reducers]
-        timing.sample_times.append(max(get_kept_time(r, 'sample_P1_P2') for r in reducers))
+        measurement.sample_times.append(max(get_kept_time(r, 'sample_P1_P2') for r in reducers))
 
         P1s = [p1p2[0] for p1p2 in P1s_and_P2s]
         P2s = [p1p2[1] for p1p2 in P1s_and_P2s]
 
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
-        timing.iterate_times.append(get_kept_time(coordinator, 'iterate'))
+        measurement.iterate_times.append(get_kept_time(coordinator, 'iterate'))
 
-        timing.total_comps_per_machine_ += max(len(r.Ni) * len(Ctmp) for r in reducers)
-        timing.total_comps_ += remaining_elements_count * len(Ctmp)
+        measurement.total_comps_per_machine_ += max(len(r.Ni) * len(Ctmp) for r in reducers)
+        measurement.total_comps_ += remaining_elements_count * len(Ctmp)
 
         remaining_elements_count = sum(r.remove_handled_points_and_return_remaining(Ctmp, v) for r in reducers)
-        timing.remove_handled_times.append(max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers))
+        measurement.remove_handled_times.append(max(get_kept_time(r, 'remove_handled_points_and_return_remaining') for r in reducers))
 
         if remaining_elements_count == 0:
             logger.info("remaining_elements_count == 0!!")
             break
 
         alpha = alpha_formula(n, k, ep, dt, remaining_elements_count)
-        end_of_loop = f"============ END OF LOOP {timing.iterations_}. " + \
+        end_of_loop = f"============ END OF LOOP {measurement.iterations_}. " + \
                       f"remaining_elements_count:{remaining_elements_count}." + \
                       f" alpha:{alpha}. v:{v}. len(Ctmp):{len(Ctmp)}. " + \
                       f" len(P2s):{sum(len(P2) for P2 in P2s)}. max_subset_size:{max_subset_size}" + \
@@ -137,56 +172,21 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
                       f"  ============"
         logger.info(end_of_loop)
 
-    logger.info(f"Finished while-loop after {timing.iterations_} iterations")
+    logger.info(f"Finished while-loop after {measurement.iterations_} iterations")
 
     coordinator.last_iteration([r.Ni for r in reducers])
-    timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
+    measurement.final_iter_time = get_kept_time(coordinator, 'last_iteration')
 
     logger.info("Calculating C_final")
     C_weights = calculate_center_weights(coordinator, reducers)
     start = time.time()
     C_final = A_final(coordinator.C, k, C_weights)
-    timing.num_centers_unfinalized_ = len(coordinator.C)
-    timing.finalization_time = time.time() - start
+    measurement.num_centers_unfinalized_ = len(coordinator.C)
+    measurement.finalization_time = time.time() - start
 
-    logger.info(f'iteration: {timing.iterations_}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
-    return coordinator.C, C_final, timing.iterations_, timing
+    logger.info(f'iteration: {measurement.iterations_}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
+    return coordinator.C, C_final, measurement.iterations_, measurement
 
 
 def calculate_center_weights(coordinator, reducers: Iterable[Reducer]):
     return np.sum([r.measure_weights(coordinator.C) for r in reducers], axis=0)
-
-
-@dataclass
-class DkmMeasurement(Measurement):
-    sample_times: List[float] = field(default_factory=list)
-    iterate_times: List[float] = field(default_factory=list)
-    remove_handled_times: List[float] = field(default_factory=list)
-    total_comps_per_machine_: float = 0.0
-    total_comps_: float = 0.0
-    final_iter_time: float = 0.0
-    finalization_time: float = 0.0
-    iterations_: int = 0
-    num_centers_unfinalized_: int = 0
-    coord_memory_: float = -1.0
-
-    def reducers_time(self):
-        return sum(self.sample_times) + sum(self.remove_handled_times)
-
-    def total_time(self):
-        return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time])
-
-    def total_comps_per_machine(self):
-        return self.total_comps_per_machine_
-
-    def total_comps(self):
-        return self.total_comps_
-
-    def coord_memory(self):
-        return self.coord_memory_
-
-    def num_centers_unfinalized(self):
-        return self.num_centers_unfinalized_
-
-    def iterations(self):
-        return self.iterations_
