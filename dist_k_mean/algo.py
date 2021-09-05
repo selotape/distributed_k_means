@@ -8,41 +8,6 @@ from dist_k_mean.math import *
 from dist_k_mean.utils import keep_time, get_kept_time, Measurement
 
 
-@dataclass
-class DkmMeasurement(Measurement):
-    sample_times: List[float] = field(default_factory=list)
-    iterate_times: List[float] = field(default_factory=list)
-    remove_handled_times: List[float] = field(default_factory=list)
-    total_comps_per_machine_: float = 0.0
-    total_comps_: float = 0.0
-    final_iter_time: float = 0.0
-    finalization_time: float = 0.0
-    iterations_: int = 0
-    num_centers_unfinalized_: int = 0
-    coord_memory_: float = -1.0
-
-    def reducers_time(self):
-        return sum(self.sample_times) + sum(self.remove_handled_times)
-
-    def total_time(self):
-        return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time])
-
-    def total_comps_per_machine(self):
-        return self.total_comps_per_machine_
-
-    def total_comps(self):
-        return self.total_comps_
-
-    def coord_memory(self):
-        return self.coord_memory_
-
-    def num_centers_unfinalized(self):
-        return self.num_centers_unfinalized_
-
-    def iterations(self):
-        return self.iterations_
-
-
 class Reducer:
 
     def __init__(self, Ni):
@@ -175,7 +140,6 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
     logger.info(f"Finished while-loop after {timing.iterations_} iterations")
 
     coordinator.last_iteration([r.Ni for r in reducers])
-    timing.iterations_ += 1
     timing.final_iter_time = get_kept_time(coordinator, 'last_iteration')
 
     logger.info("Calculating C_final")
@@ -191,3 +155,38 @@ def distributed_k_means(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, l
 
 def calculate_center_weights(coordinator, reducers: Iterable[Reducer]):
     return np.sum([r.measure_weights(coordinator.C) for r in reducers], axis=0)
+
+
+@dataclass
+class DkmMeasurement(Measurement):
+    sample_times: List[float] = field(default_factory=list)
+    iterate_times: List[float] = field(default_factory=list)
+    remove_handled_times: List[float] = field(default_factory=list)
+    total_comps_per_machine_: float = 0.0
+    total_comps_: float = 0.0
+    final_iter_time: float = 0.0
+    finalization_time: float = 0.0
+    iterations_: int = 0
+    num_centers_unfinalized_: int = 0
+    coord_memory_: float = -1.0
+
+    def reducers_time(self):
+        return sum(self.sample_times) + sum(self.remove_handled_times)
+
+    def total_time(self):
+        return sum(self.sample_times + self.iterate_times + self.remove_handled_times + [self.final_iter_time, self.finalization_time])
+
+    def total_comps_per_machine(self):
+        return self.total_comps_per_machine_
+
+    def total_comps(self):
+        return self.total_comps_
+
+    def coord_memory(self):
+        return self.coord_memory_
+
+    def num_centers_unfinalized(self):
+        return self.num_centers_unfinalized_
+
+    def iterations(self):
+        return self.iterations_
