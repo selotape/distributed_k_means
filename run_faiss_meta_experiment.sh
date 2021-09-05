@@ -21,6 +21,9 @@ export TIMESTAMP
 #unset __conda_setup
 #conda activate soccer
 
+FINALIZATION_BLACKBOX=FaissKMeans
+export FINALIZATION_BLACKBOX
+
 ALGO=SKM SKM_ITERATIONS=1 run_exp "${DATASET}_${K}K_skm_1iters"
 #ALGO=SKM SKM_ITERATIONS=2 run_exp "${DATASET}_${K}K_skm_2iters"
 #ALGO=SKM SKM_ITERATIONS=3 run_exp "${DATASET}_${K}K_skm_3iters"
