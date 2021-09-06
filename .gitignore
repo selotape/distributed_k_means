@@ -5,7 +5,7 @@
 *.gz
 **.zip
 **.data
-**.txt
+data_samples/**/*.txt
 kddcup.data
 
 *.log
