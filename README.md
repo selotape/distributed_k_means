@@ -13,13 +13,14 @@ pip install -r requirements.txt
 
 ## Experiments
 
-To show and compare SOCCER's performance, we scripted an experiment which 1. reads dataset X, 2. runs clustering algo Y and 3. prints results.
+To show and compare SOCCER's performance, we scripted an experiment which reads a chosen dataset, clusters it using a chosen 
+algorithm and prints the results. This code allows to easily reproduce all experiments reported in the paper.
 
 ### 1. Configure the experiment
 
-The experiment script is highly configurable - e.g. which algo, how exactly to run it, which dataset to use, etc. You can set different config via environment variables.
+The experiment script is highly configurable - e.g. which algorithm, how exactly to run it, which dataset to cluster, etc. The experiment is configured via environment variables.
 
-**See all config options in `soccer/config.py`.**
+**See all configuration options in `soccer/config.py`.**
 
 ### 2. Run the experiment
 
@@ -55,5 +56,5 @@ extract it. **See how to download and extract all datasets in `scripts/download_
 
 #### Gaussian Dataset Seed
 
-For reproducibility, we used a default `GAUSSIANS_RANDOM_SEED=1234` when generating gaussian datasets. To reuse our gaussian datasets, don't change the gaussians configs (just choose
+For reproducibility, we used a default `GAUSSIANS_RANDOM_SEED=1234` when generating gaussian datasets. To reuse our gaussian datasets, don't change the gaussians configurations (just choose
 e.g. `DATASET=gaussians_50`). To use a random seed (and dataset), set `GAUSSIANS_RANDOM_SEED=0`.
