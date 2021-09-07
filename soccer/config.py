@@ -30,7 +30,6 @@ SCALE_DATASET = bool(os.getenv('SCALE_DATASET', default=False))
 ###### Gaussian dataset ######
 GAUSSIANS_DIMENSIONS = int(os.getenv('GAUSSIANS_DIMENSIONS', default=15))
 GAUSSIANS_K = int(os.getenv('GAUSSIANS_K', default=100))
-GAUSSIANS_TYPE = os.getenv('GAUSSIANS_TYPE', default='gamma')  # 'exp' 'gamma'
 GAUSSIANS_GAMMA = float(os.getenv('GAUSSIANS_GAMMA', default=1.5))
 GAUSSIANS_STD_DEV = float(os.getenv('GAUSSIANS_STD_DEV', default=0.001))
 GAUSSIANS_LOW = float(os.getenv('GAUSSIANS_LOW', default=0.0))
