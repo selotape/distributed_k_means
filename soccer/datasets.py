@@ -16,20 +16,12 @@ def get_dataset(logger):
         N = read_and_prep_kdd()
     elif DATASET.startswith('gaussian'):
         N = generate_k_gaussians()
-    elif DATASET == 'power':
-        N = read_and_prep_power_consumption()
-    elif DATASET == 'covtype':
-        N = read_and_prep_covtype()
     elif DATASET == 'bigcross':
         N = read_and_prep_bigcross()
     elif DATASET == 'census1990':
         N = read_and_prep_census1990()
-    elif DATASET == 'skin':
-        N = read_and_prep_skin()
     elif DATASET == 'higgs':
         N = read_and_prep_higgs()
-    elif DATASET == 'activity':
-        N = read_and_prep_activity_recognition()
     else:
         raise RuntimeError(f"bad dataset {DATASET}")
     logger.info(f'len(N)={len(N)}')
@@ -52,12 +44,6 @@ def read_and_prep_kdd():
     return N
 
 
-def read_and_prep_covtype():
-    full_data = pd.read_csv(COVTYPE_DATASET_FILE, nrows=DATASET_SIZE)
-    N = full_data.select_dtypes([np.number])
-    return N
-
-
 def read_and_prep_bigcross():
     full_data = pd.read_csv(BIGCROSS_DATASET_FILE, nrows=DATASET_SIZE)
     N = full_data.select_dtypes([np.number])
@@ -72,38 +58,8 @@ def read_and_prep_census1990():
     return census
 
 
-def read_and_prep_power_consumption():
-    dtypes = {"Date": 'str',
-              'Time': 'str',
-              'Global_active_power': 'float64',
-              'Global_reactive_power': 'float64',
-              'Voltage': 'float64',
-              'Global_intensity': 'float64',
-              'Sub_metering_1': 'float64',
-              'Sub_metering_2': 'float64',
-              'Sub_metering_3': 'float64',
-              }
-    full_data: pd.DataFrame = pd.read_csv(POWER_DATASET_FILE, nrows=DATASET_SIZE, skiprows=1, sep=';', dtype=dtypes)
-    N: pd.DataFrame = full_data.select_dtypes([np.number])
-    N = N.dropna()
-    return N
-
-
-def read_and_prep_skin():
-    full_data: pd.DataFrame = pd.read_csv(SKIN_DATASET_FILE, nrows=DATASET_SIZE, sep='\t')
-    N = full_data.iloc[:, :-1]  # drop labels
-    return N
-
-
 def read_and_prep_higgs():
     full_data: pd.DataFrame = pd.read_csv(HIGGS_DATASET_FILE, nrows=DATASET_SIZE)
-    N: pd.DataFrame = full_data.select_dtypes([np.number])
-    N = N.dropna()
-    return N
-
-
-def read_and_prep_activity_recognition():
-    full_data: pd.DataFrame = pd.read_csv(ACTIVITY_DATASET_FILE, nrows=DATASET_SIZE, sep='\t')
     N: pd.DataFrame = full_data.select_dtypes([np.number])
     N = N.dropna()
     return N

@@ -11,7 +11,7 @@ Please set configs via environment variables.
 RUN_NAME = 'RUN_NAME' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### MAIN PARAMS ######
-DATASET = os.getenv('DATASET', default='gaussian_100')  # 'kdd', 'covtype', 'power', 'skin', 'bigcross', 'census1990', 'activity', 'higgs', 'gaussian_25', 'gaussian_50', 'gaussian_100', 'gaussian_200'
+DATASET = os.getenv('DATASET', default='gaussian_100')  # 'kdd' 'bigcross', 'census1990', 'higgs', 'gaussian_25', 'gaussian_50', 'gaussian_100', 'gaussian_200'
 ALGO = os.getenv('ALGO', default='SOCCER')  # 'SKM', 'SOCCER'
 K = int(os.getenv('K', default=50))
 
