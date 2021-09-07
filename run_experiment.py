@@ -4,7 +4,7 @@ from typing import Tuple, List
 
 from soccer.algo import run_soccer
 from soccer.black_box import A_final
-from soccer.competitors.competitors import ene_clustering, scalable_k_means
+from soccer.competitors.competitors import scalable_k_means
 from soccer.config import *
 from soccer.datasets import get_dataset
 from soccer.math import risk
@@ -44,22 +44,9 @@ def create_experiment_runner(N, csv):
     elif ALGO == 'SKM':
         def run_exp(the_round):
             return run_skm_exp(N, csv, DELTA, EPSILON, K, L_TO_K_RATIO, M, SKM_ITERATIONS, the_round)
-    elif ALGO == 'ENE':
-        def run_exp(the_round):
-            return run_fast_exp(N, csv, K, EPSILON, M, the_round)
     else:
         raise NotImplementedError(f"Algo {ALGO} is not implemented")
     return run_exp
-
-
-def run_fast_exp(N, csv, k, ep, m, the_round) -> Tuple[float, float, Measurement]:
-    logger.info(f"======== Starting round {the_round} of fast_clustering with len(N)={len(N)} k={k} ep={ep} & m={m} ========")
-    C, C_final, iterations, measurement = ene_clustering(N, k, ep, m, A_final)
-    logger.info(f'fast_measurement:{measurement}')
-    the_risk = risk(N, C)
-    risk_final = risk(N, C_final)
-    write_csv_line(csv, logger, f'fast_round_{the_round}', k, -1, m, ep, -1, len(C), iterations, the_risk, risk_final, measurement.reducers_time(), measurement.total_time())
-    return the_risk, risk_final, measurement
 
 
 def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[float, float, Measurement]:
