@@ -70,7 +70,8 @@ def generate_k_gaussians():
     N = rng.normal(scale=GAUSSIANS_STD_DEV, size=(DATASET_SIZE, GAUSSIANS_DIMENSIONS,))
     gaussians_k = determine_gaussians_k()
     centers = rng.uniform(size=(gaussians_k, GAUSSIANS_DIMENSIONS,), )
-    cluster_sizes = get_cluster_sizes(gaussians_k)
+    the_sum = sum(i ** GAUSSIANS_GAMMA for i in range(1, gaussians_k + 1))
+    cluster_sizes = [floor(DATASET_SIZE * ((i ** GAUSSIANS_GAMMA) / the_sum)) for i in range(1, gaussians_k + 1)]
     N = N[:sum(cluster_sizes)]
 
     cluster_slices = []
@@ -93,18 +94,6 @@ def determine_gaussians_k():
         return int(tokens[1])  # "gaussian_25"
     else:
         raise NotImplementedError(f"Bad gaussian dataset name \"{DATASET}\". Should be e.g. \"gaussian_25\"")
-
-
-def get_cluster_sizes(gaussians_k):
-    if GAUSSIANS_TYPE == 'gamma':
-        the_sum = sum(i ** GAUSSIANS_GAMMA for i in range(1, gaussians_k + 1))
-        cluster_sizes = [floor(DATASET_SIZE * ((i ** GAUSSIANS_GAMMA) / the_sum)) for i in range(1, gaussians_k + 1)]
-    elif GAUSSIANS_TYPE == 'exp':
-        the_sum = sum(2 ** i for i in range(1, gaussians_k + 1))
-        cluster_sizes = [floor(DATASET_SIZE * ((2 ** i) / the_sum)) for i in range(1, gaussians_k + 1)]
-    else:
-        raise NotImplementedError(f"No such gaussian type {GAUSSIANS_TYPE}")
-    return cluster_sizes
 
 
 if __name__ == '__main__':
