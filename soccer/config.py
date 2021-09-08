@@ -11,7 +11,7 @@ Please set configs via environment variables.
 RUN_NAME = 'RUN_NAME' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### MAIN PARAMS ######
-DATASET = os.getenv('DATASET', default='gaussian_100')  # 'kdd' 'bigcross', 'census1990', 'higgs', 'gaussian_25', 'gaussian_50', 'gaussian_100', 'gaussian_200'
+DATASET = os.getenv('DATASET', default='gaussian_100') if len(sys.argv) < 3 else sys.argv[2]  # '/path/to/any_data.csv', 'kdd', 'bigcross', 'census1990', 'higgs', 'gaussian_25', 'gaussian_50', 'gaussian_100', 'gaussian_200'
 ALGO = os.getenv('ALGO', default='SOCCER')  # 'SKM', 'SOCCER'
 K = int(os.getenv('K', default=50))
 
@@ -24,6 +24,10 @@ POWER_DATASET_FILE = os.getenv('POWER_DATASET_FILE', default="data_samples/power
 SKIN_DATASET_FILE = os.getenv('SKIN_DATASET_FILE', default="data_samples/skin/Skin_NonSkin.txt")
 HIGGS_DATASET_FILE = os.getenv('HIGGS_DATASET_FILE', default="data_samples/higgs/HIGGS.csv")
 ACTIVITY_DATASET_FILE = os.getenv('ACTIVITY_DATASET_FILE', default="data_samples/activity/Activity_recognition_exp.csv")
+NEW_DATASET_SKIP_HEADER = bool(os.getenv('NEW_DATASET_SKIP_HEADER', default=False))
+NEW_DATASET_CONVERT_CATEGORICAL_TO_DUMMIES = bool(os.getenv('NEW_DATASET_CONVERT_CATEGORICAL_TO_DUMMIES', default=False))
+NEW_DATASET_RETAIN_ONLY_NUMERIC_COLUMNS = bool(os.getenv('NEW_DATASET_RETAIN_ONLY_NUMERIC_COLUMNS', default=True))
+NEW_DATASET_DROP_NA = bool(os.getenv('NEW_DATASET_DROP_NA', default=True))
 DATASET_SIZE = int(os.getenv('DATASET_SIZE', default=10_000_000))
 SCALE_DATASET = bool(os.getenv('SCALE_DATASET', default=False))
 

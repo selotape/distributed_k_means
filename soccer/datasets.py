@@ -1,10 +1,10 @@
 from functools import lru_cache
 from math import floor
-
-from sklearn.preprocessing import MinMaxScaler  # , StandardScaler,
+from os import path
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
 from soccer.config import *
 
@@ -12,7 +12,9 @@ from soccer.config import *
 @lru_cache
 def get_dataset(logger):
     logger.info(f"Loading Dataset {DATASET}...")
-    if DATASET == 'kdd':
+    if path.isfile(DATASET):
+        N = read_and_prep_unknown_file(DATASET)
+    elif DATASET == 'kdd':
         N = read_and_prep_kdd()
     elif DATASET.startswith('gaussian'):
         N = generate_k_gaussians()
@@ -35,6 +37,18 @@ def scale_dataset(N):
     scaler = MinMaxScaler()
     scaler.fit(N)
     N = scaler.transform(N)
+    return N
+
+
+def read_and_prep_unknown_file(dataset_csv):
+    skip_rows = 1 if NEW_DATASET_SKIP_HEADER else 0
+    N = pd.read_csv(dataset_csv, nrows=DATASET_SIZE, skiprows=skip_rows)
+    if NEW_DATASET_CONVERT_CATEGORICAL_TO_DUMMIES:
+        N = pd.get_dummies(N)
+    if NEW_DATASET_RETAIN_ONLY_NUMERIC_COLUMNS:
+        N = N.select_dtypes([np.number])
+    if NEW_DATASET_DROP_NA:
+        N = N.dropna()
     return N
 
 
