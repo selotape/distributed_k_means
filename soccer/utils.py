@@ -1,5 +1,4 @@
 import logging
-import subprocess
 import sys
 
 import time
@@ -48,15 +47,6 @@ def keep_time(func):
 
 def get_kept_time(obj, func_name):
     return obj.__dict__[func_name + LAST_RUNTIME]
-
-
-def log_config_file(logger):
-    label = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode("utf-8")
-    logger.info(f"git commit: {label}")
-
-    with open('dist_k_mean/config.py') as config_f:
-        config_txt = config_f.readlines()
-    [logger.info(line) for line in config_txt]
 
 
 class Measurement(ABC):
