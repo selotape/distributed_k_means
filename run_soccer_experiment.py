@@ -1,3 +1,4 @@
+import argparse
 from logging import Logger
 from statistics import mean, stdev
 from typing import Tuple, List
@@ -8,21 +9,19 @@ from soccer.competitors.competitors import scalable_k_means
 from soccer.config import *
 from soccer.datasets import get_dataset
 from soccer.math import risk
-from soccer.utils import setup_logger, log_config_file, Measurement
+from soccer.utils import setup_logger, Measurement
 
 run_name = f'{RUN_NAME}_{TIMESTAMP}'
 logger = setup_logger('full_log', f'{run_name}.log', with_console=True)
-
-log_config_file(logger)
 
 SINGLE_HEADER = "test_name,k,dt,m,ep,l,len(C),iterations,risk,risk_final,reducers_time,total_time"
 
 
 def main():
-    logger.info(sys.argv)
+    parse_args()
 
     csv = open(f"{run_name}_results.csv", "a")
-    summary_f = open(f"{DATASET}_{K}K_{TIMESTAMP}_summary.csv", "a")
+    summary_f = open(f"{run_name}_summary.csv", "a")
     csv.write(SINGLE_HEADER + '\n')
 
     N = get_dataset(logger)
@@ -35,6 +34,15 @@ def main():
 
     csv.close()
     summary_f.close()
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("run_name", help="The experiment run-name for logging purposes")
+    parser.add_argument("dataset_csv", help="""The data csv to cluster. If this is not specified,
+     the dataset is chosen the envvar DATASET or the default in config.py#DATASET""", nargs='?', default=DATASET)
+    parser.parse_args()
+    logger.info(sys.argv)
 
 
 def create_experiment_runner(N, csv):
