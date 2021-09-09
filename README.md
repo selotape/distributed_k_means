@@ -8,7 +8,7 @@ SOCCER (Sampling Optimal Clustering Cost Estimation) is a fast and accurate dist
 2. Run:
 
 ```bash
-pip install -r requirements.txt
+pip install -r ./requirements.txt
 ```
 
 ## Experiments
