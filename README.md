@@ -20,32 +20,49 @@ algorithm and prints the results. This code allows to easily reproduce all exper
 
 The experiment script is highly configurable - e.g. which algorithm, how exactly to run it, which dataset to cluster, etc. The experiment is configured via environment variables.
 
+The most common configurations are:
+
+* `K` - The number of clusters to calculate
+* `DATASET` - Which known dataset to load and cluster. Alternatively, a new dataset can be specified as a csv file from commandline.
+* `EPSILON` - A value in range (0, 1) which links the coordinator size with the data set size 
+* `DELTA` - The confidence parameter.
+* `ALGO` - Which clustering algorithm to run. Supported values are "soccer" & "skm" (ScalableKMeans)
+
 **See all configuration options in `soccer/config.py`.**
 
-### 2. Run the experiment
+### 2. Usage
 
-**To run one clustering experiment**, use `run_experiment.py`, e.g.:
+#### Run SOCCER
 
+**To run one clustering experiment**, enable your virtualenv and use `run_a_soccer_experiment.py` - 
+
+e.g. - 
 ```bash
-export ALGO=SOCCER
-export DATASET=kdd
-export K=100
-python3.9 run_experiment.py "exp13___soccer_kdd_100k"
+[ CONF1=val1 CONF2=val2 ]  ./run_a_soccer_experiment.py "experiment_name" [path/to/your_data.csv]
+
+K=100 EPSILON=0.1 DELTA=0.1 DATASET=higgs ./run_a_soccer_experiment.py "soccer_with_higgs_and_100k"
+K=100 EPSILON=0.1 DELTA=0.1 ALGO=skm      ./run_a_soccer_experiment.py "skm_with_100k_on_my_data" my/custom/data.csv
 ```
 
-**To run "ScalableKMeans vs SOCCER"** with different setups, use `run_meta_experiment.sh`, e.g.:
+#### Run all experiments reported in the paper
+
+**To reproduce all the experiments reported in the SOCCER paper**, enable your virtualenv and the run:
 
 ```bash
-DATASET=gaussians_50 K=50 ./scripts/experiments/run_meta_experiment.sh
+./run_all_soccer_paper_experiments.py
 ```
+
+Note - to run all experiments you must first download the datasets (see "About Datasets" section).
 
 ### 3. Read experiment output
 
 Experiment outputs are written in 3 files:
 
-1. {run_name}.log - the full log output
-2. {run_name}_results.csv - the results of each single clustering iteration
-3. {DATASET}\_{K}K\_{TIMESTAMP}_summary.csv - summary results of all iterations
+1. {run_name}_{timestamp}.log - the full log output
+2. {run_name}_{timestamp}_results.csv - the results of each single clustering iteration (out of 10*)
+3. {run_name}_{timestamp}_summary.csv - summary results of all (10) iterations
+
+\* configuable via ITERATIONS environment variable
 
 ### About Datasets
 
