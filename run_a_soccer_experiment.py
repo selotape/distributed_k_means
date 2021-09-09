@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from logging import Logger
 from statistics import mean, stdev
@@ -18,7 +20,6 @@ SINGLE_HEADER = "test_name,k,dt,m,ep,l,len(C),iterations,risk,risk_final,reducer
 
 
 def main():
-    parse_args()
 
     csv = open(f"{run_name}_results.csv", "a")
     summary_f = open(f"{run_name}_summary.csv", "a")
@@ -37,10 +38,13 @@ def main():
 
 
 def parse_args():
+    """Define and validate the commandline arguments"""
+
     parser = argparse.ArgumentParser()
     parser.add_argument("run_name", help="The experiment run-name for logging purposes")
     parser.add_argument("dataset_csv", help="""The data csv to cluster. If this is not specified,
-     the dataset is chosen the envvar DATASET or the default in config.py#DATASET""", nargs='?', default=DATASET)
+     the dataset is chosen by the envvar \"DATASET\" or the default value in config.py#DATASET""",
+                        nargs='?', default=DATASET)
     parser.parse_args()
     logger.info(sys.argv)
 
@@ -120,4 +124,5 @@ def print_summary(summary_f, risks_final, measurements: List[Measurement]):
 
 
 if __name__ == "__main__":
+    parse_args()
     main()
