@@ -2,7 +2,7 @@
 set -eu
 
 function run_exp() {
-  nohup python3.9 run_experiment.py "$1" &
+  nohup ./run_a_soccer_experiment.py "$1" &
 }
 
 TIMESTAMP="$(date +'%m-%d-%H-%M')"
