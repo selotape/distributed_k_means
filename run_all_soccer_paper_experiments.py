@@ -24,11 +24,11 @@ def run_meta_experiment(dataset, k):
 
 
 def run_soccer(k, dataset, epsilon):
-    subprocess.run([f"K={k}", f'DATASET={dataset}', f'EPSILON={epsilon}', './run_a_soccer_experiment.py', f'{dataset}_{k}K_{epsilon}ep_soccer'])
+    subprocess.call(f"K={k} DATASET={dataset} EPSILON={epsilon} ./run_a_soccer_experiment.py {dataset}_{k}K_{epsilon}ep_soccer", shell=True)
 
 
 def run_skm(k, dataset, skm_iters):
-    subprocess.run([f"K={k}", f'DATASET={dataset}', f'SKM_ITERATIONS={skm_iters}', './run_a_soccer_experiment.py', f'{dataset}_{k}K_skm_{skm_iters}iters"'])
+    subprocess.call(f"K={k} DATASET={dataset} SKM_ITERATIONS={skm_iters} ./run_a_soccer_experiment.py {dataset}_{k}K_skm_{skm_iters}iters", shell=True)
 
 
 if __name__ == '__main__':
