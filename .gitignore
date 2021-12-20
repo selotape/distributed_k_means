@@ -12,3 +12,4 @@ kddcup.data
 *.csv
 **/__pycache__
 nohup.out
+**gradle
