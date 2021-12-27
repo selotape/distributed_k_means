@@ -13,3 +13,4 @@ kddcup.data
 **/__pycache__
 nohup.out
 **gradle
+**private**
