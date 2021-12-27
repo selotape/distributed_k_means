@@ -24,7 +24,7 @@ def run_meta_experiment(dataset, k):
 
 
 def run_soccer(k, dataset, epsilon):
-    subprocess.call(f"K={k} DATASET={dataset} EPSILON={epsilon} ./run_a_soccer_experiment.py {dataset}_{k}K_{epsilon}ep_soccer", shell=True)
+    subprocess.call(f"K={k} DATASET={dataset} INNER_BLACKBOX=FaissKMeans EPSILON={epsilon} ./run_a_soccer_experiment.py {dataset}_{k}K_{epsilon}ep_soccer", shell=True)
 
 
 def run_skm(k, dataset, skm_iters):
