@@ -54,6 +54,7 @@ DELTA = float(os.getenv('DELTA', default=0.1))
 PHI_ALPHA_C = 6.5
 MAX_SS_SIZE_C = 36
 KPLUS_C = 9
+KPLUS_SCALER = int(os.getenv('KPLUS_SCALER', default=1))
 
 ###### SKM PARAMS ######
 L_TO_K_RATIO = float(os.getenv('L_TO_K_RATIO', default=2.0))

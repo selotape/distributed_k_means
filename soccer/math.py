@@ -5,14 +5,14 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
 
-from soccer.config import PHI_ALPHA_C, MAX_SS_SIZE_C, KPLUS_C
+from soccer.config import PHI_ALPHA_C, MAX_SS_SIZE_C, KPLUS_C, KPLUS_SCALER
 
 
 def kplus_formula(k: int, dt: float, ep: float):
     """
     The allowed size of the "k+" clusters group
     """
-    return int(k + KPLUS_C * log(1.1 * k / (dt * ep)))
+    return KPLUS_SCALER * int(k + KPLUS_C * log(1.1 * k / (dt * ep)))
 
 
 def max_subset_size_formula(n: int, k: int, ep: float, dt: float):
