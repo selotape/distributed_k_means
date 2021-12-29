@@ -5,7 +5,7 @@ from itertools import product
 
 
 def main():
-    gaussian_experiments = (("gaussian_200", 200))
+    gaussian_experiments = (("gaussian_200", 200), )
     for dataset, k in gaussian_experiments:
         run_meta_experiment(dataset, k)
 
