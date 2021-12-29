@@ -61,9 +61,19 @@ def create_experiment_runner(N, csv):
     return run_exp
 
 
+def run_soccer_exp(N, csv, dt, ep, k, m, the_round) -> Tuple[float, float, Measurement]:
+    logger.info(f"======== Starting round {the_round} of SOCCER with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
+    soccer_C, soccer_C_final, soccer_iters, measurement = run_soccer(N, k, ep, dt, m, logger)
+    logger.info(f'soccer_measurement:{measurement}')
+    the_risk = risk(N, soccer_C)
+    risk_final = risk(N, soccer_C_final)
+    write_csv_line(csv, logger, f'us_round_{the_round}', k, dt, m, ep, -1, len(soccer_C), soccer_iters, the_risk, risk_final, measurement.reducers_time(), measurement.total_time())
+    return the_risk, risk_final, measurement
+
+
 def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[float, float, Measurement]:
     l = int(l_ratio * k)
-    logger.info(f'===========Starting round {the_round} of scalable_k_mean with {skm_iters} iterations and l=={l}==============')
+    logger.info(f'===========Starting round {the_round} of KMeans|| with {skm_iters} iterations and l=={l}==============')
     skm_C, skm_C_final, measurement = scalable_k_means(N, skm_iters, l, k, m, A_final)
     skm_run_name = f'{skm_iters}-iter_skm_{DATASET}_round_{the_round}'
     logger.info(f'{skm_run_name}_measurement:{measurement}')
@@ -71,16 +81,6 @@ def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round) -> Tuple[fl
     risk_final = risk(N, skm_C_final)
     logger.info(f'The scalable_k_means risk is {the_risk:,} and size of C is {len(skm_C)}')
     write_csv_line(csv, logger, f'skm_round_{the_round}', k, dt, m, ep, -1, len(skm_C), skm_iters, the_risk, risk_final, measurement.reducers_time(), measurement.total_time())
-    return the_risk, risk_final, measurement
-
-
-def run_soccer_exp(N, csv, dt, ep, k, m, the_round) -> Tuple[float, float, Measurement]:
-    logger.info(f"======== Starting round {the_round} of distributed k means with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
-    soccer_C, soccer_C_final, soccer_iters, measurement = run_soccer(N, k, ep, dt, m, logger)
-    logger.info(f'soccer_measurement:{measurement}')
-    the_risk = risk(N, soccer_C)
-    risk_final = risk(N, soccer_C_final)
-    write_csv_line(csv, logger, f'us_round_{the_round}', k, dt, m, ep, -1, len(soccer_C), soccer_iters, the_risk, risk_final, measurement.reducers_time(), measurement.total_time())
     return the_risk, risk_final, measurement
 
 
