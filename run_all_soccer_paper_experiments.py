@@ -28,7 +28,7 @@ def run_soccer(k, dataset, epsilon):
 
 
 def run_skm(k, dataset, skm_iters):
-    subprocess.call(f"K={k} DATASET={dataset} SKM_ITERATIONS={skm_iters} ./run_a_soccer_experiment.py {dataset}_{k}K_skm_{skm_iters}iters", shell=True)
+    subprocess.call(f"K={k} DATASET={dataset} ALGO=SKM SKM_ITERATIONS={skm_iters} ./run_a_soccer_experiment.py {dataset}_{k}K_skm_{skm_iters}iters", shell=True)
 
 
 if __name__ == '__main__':
