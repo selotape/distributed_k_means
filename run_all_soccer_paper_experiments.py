@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import subprocess
+import sys
 from itertools import product
 
 
@@ -15,12 +16,15 @@ def main():
 
 
 def run_meta_experiment(dataset, k):
-    for epsilon in (0.01, 0.05, 0.1, 0.2,):
-        if (k, epsilon) == (200, 0.2):
-            continue
-        run_soccer(k, dataset, epsilon)
-    for skm_iters in (1, 2, 3, 4, 5):
-        run_skm(k, dataset, skm_iters)
+    if '--no-soccer' not in sys.argv:
+        for epsilon in (0.01, 0.05, 0.1, 0.2,):
+            if (k, epsilon) == (200, 0.2):
+                continue
+            run_soccer(k, dataset, epsilon)
+
+    if '--no-skm' not in sys.argv:
+        for skm_iters in (1, 2, 3, 4, 5):
+            run_skm(k, dataset, skm_iters)
 
 
 def run_soccer(k, dataset, epsilon):

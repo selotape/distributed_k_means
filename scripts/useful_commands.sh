@@ -1,6 +1,8 @@
 # run all experiments!
 conda activate /home/tomhe/soccer3.8
 KPLUS_SCALER=2 nohup python3.8 ./run_all_soccer_paper_experiments.py &
+nohup python3.8 ./run_all_soccer_paper_experiments.py --no-skm &
+nohup python3.8 ./run_all_soccer_paper_experiments.py --no-soccer &
 
 
 # read the python output mid-run
