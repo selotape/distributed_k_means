@@ -102,7 +102,7 @@ def write_csv_line(csv, the_logger: Logger, test_name: str, k: int, dt, m: int, 
     csv.flush()
 
 
-SUMMARY_HEADER = 'algorithm,k,epsilon,coord_mem,num_centers_avg,num_centers_stdv,rounds_avg,rounds_stdv,final_risk_avg,final_risk_stdv,comps_pm_avg,comps_pm_stdv,comps_tot_avg,comps_tot_stdv'
+SUMMARY_HEADER = 'algorithm,k,epsilon,coord_mem,num_centers_avg,num_centers_stdv,rounds_avg,rounds_stdv,final_risk_avg,final_risk_stdv,comps_pm_avg,comps_pm_stdv,comps_tot_avg,comps_tot_stdv,reducers_time_avg,reducers_time_stdv,total_time_avg,total_time_stdv'
 
 
 def print_summary(summary_f, risks_final, measurements: List[Measurement]):
@@ -118,7 +118,12 @@ def print_summary(summary_f, risks_final, measurements: List[Measurement]):
     comps_tot_avg = mean(t.total_comps() for t in measurements)
     comps_tot_stdv = stdev(t.total_comps() for t in measurements)
 
-    test_summary = f'{ALGO},{K},{EPSILON},{coordinator_memory},{num_centers_avg},{num_centers_stdv},{rounds_avg},{rounds_stdv},{final_risk_avg},{final_risk_stdv},{comps_pm_avg},{comps_pm_stdv},{comps_tot_avg},{comps_tot_stdv}'
+    reducers_time_avg = mean(t.reducers_time() for t in measurements)
+    reducers_time_stdv = stdev(t.reducers_time() for t in measurements)
+    total_time_avg = mean(t.total_time() for t in measurements)
+    total_time_stdv = stdev(t.total_time() for t in measurements)
+
+    test_summary = f'{ALGO},{K},{EPSILON},{coordinator_memory},{num_centers_avg},{num_centers_stdv},{rounds_avg},{rounds_stdv},{final_risk_avg},{final_risk_stdv},{comps_pm_avg},{comps_pm_stdv},{comps_tot_avg},{comps_tot_stdv},{reducers_time_avg},{reducers_time_stdv},{total_time_avg},{total_time_stdv}'
     logger.info('\n' + SUMMARY_HEADER + '\n' + test_summary)
     summary_f.write(test_summary + '\n')
 
