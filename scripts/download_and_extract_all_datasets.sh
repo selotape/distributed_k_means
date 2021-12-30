@@ -3,7 +3,7 @@
 pushd "$(git rev-parse --show-cdup)"
 
 ### KDDCUP99
-pushd data_samples/kddcup99 && wget http://kdd.ics.uci.edu/databases/kddcup99/kddcup.data.gz && gunzip kddcup.data.gz && popd
+mkdir -p data_samples/kddcup99 && pushd data_samples/kddcup99 && wget http://kdd.ics.uci.edu/databases/kddcup99/kddcup.data.gz && gunzip kddcup.data.gz && popd
 
 ### BIGCROSS
 mkdir -p data_samples/bigcross && pushd data_samples/bigcross && wget https://s3.amazonaws.com/h2o-training/clustering/BigCross.data.gz && gunzip BigCross.data.gz && popd
