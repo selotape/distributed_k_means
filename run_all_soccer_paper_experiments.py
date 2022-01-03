@@ -10,7 +10,7 @@ def main():
     for dataset, k in gaussian_experiments:
         run_meta_experiment(dataset, k)
 
-    other_experiments = product(("higgs", "kdd", "census", "bigcross"), (25, 50, 100, 200))
+    other_experiments = product(("higgs", "kdd", "census1990", "bigcross"), (25, 50, 100, 200))
     for dataset, k in other_experiments:
         run_meta_experiment(dataset, k)
 
