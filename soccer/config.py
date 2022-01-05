@@ -38,8 +38,8 @@ GAUSSIANS_RANDOM_SEED = int(os.getenv('GAUSSIANS_RANDOM_SEED', default=1234))  #
 
 ###### BLACK_BOXES ######
 INNER_BLACKBOX = os.getenv('INNER_BLACKBOX', default='KMeans')  # 'KMeans' 'MiniBatchKMeans' 'ScalableKMeans' 'FaissKMeans'
-INNER_BLACKBOX_ITERATIONS = int(os.getenv('INNER_BLACKBOX_ITERATIONS', default=4))
-INNER_BLACKBOX_L_TO_K_RATIO = float(os.getenv('INNER_BLACKBOX_L_TO_K_RATIO', default=1))
+INNER_BLACKBOX_ITERATIONS = int(os.getenv('INNER_BLACKBOX_ITERATIONS', default=5))
+INNER_BLACKBOX_L_TO_K_RATIO = float(os.getenv('INNER_BLACKBOX_L_TO_K_RATIO', default=2))
 FINALIZATION_BLACKBOX = os.getenv('FINALIZATION_BLACKBOX', default='KMeans')
 MINI_BATCH_SIZE = int(os.getenv('MINI_BATCH_SIZE', default=1000))
 
