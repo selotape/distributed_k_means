@@ -1,4 +1,5 @@
 import inspect
+from collections import namedtuple
 from functools import partial
 from typing import Union
 
@@ -15,6 +16,10 @@ faiss_is_supported = module_exists("faiss")
 if faiss_is_supported:
     import faiss
 
+
+CentersAndMeasurement = namedtuple("CentersAndMeasurement", ['centers', 'measurement'])
+
+
 def getAppliedBlackBox(blackbox_name, kwargs, k):
     kwargs.update({'k': k})
     BlackBox = BlackBoxes[blackbox_name]
@@ -23,25 +28,25 @@ def getAppliedBlackBox(blackbox_name, kwargs, k):
     return partial(BlackBox, **relevant_kwargs)
 
 
-def A_inner(N: pd.DataFrame, k: int, sample_weight=None, **kwargs) -> pd.DataFrame:
+def A_inner(N: pd.DataFrame, k: int, sample_weight=None, **kwargs) -> CentersAndMeasurement:
     kwargs.update({'n_dims': len(N.columns)})
 
     BlackBox = getAppliedBlackBox(INNER_BLACKBOX, kwargs, k)
     return _A(N, k, BlackBox, sample_weight)
 
-
-def A_final(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
+def A_final(N: pd.DataFrame, k: int, sample_weight=None) -> CentersAndMeasurement:
     BlackBox = getAppliedBlackBox(FINALIZATION_BLACKBOX, {}, k)
-    return _A(N, k, BlackBox, sample_weight)
+    return _A(N, k, BlackBox, sample_weight).centers
 
 
-def _A(N: pd.DataFrame, k: int, Blackbox, sample_weight=None) -> pd.DataFrame:
+def _A(N: pd.DataFrame, k: int, Blackbox, sample_weight=None) -> CentersAndMeasurement:
     """
     Runs the blackbox offline clustering algorithm. Returns the k chosen clusters
     """
-    return pd.DataFrame(Blackbox(n_clusters=k)
-                        .fit(N, sample_weight=sample_weight)
-                        .cluster_centers_)
+    blackbox = Blackbox(n_clusters=k)
+    blackbox.fit(N, sample_weight=sample_weight)
+    return CentersAndMeasurement(pd.DataFrame(blackbox.cluster_centers_), getattr(blackbox, "_measurement", None))
+
 
 
 class ScalableKMeans:
