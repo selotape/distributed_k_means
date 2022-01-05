@@ -113,6 +113,8 @@ class Coordinator:
             self.inner_m = inner_m
         else:
             Ctmp = N_remaining
+            self.inner_time = None
+            self.inner_m = None
         Ctmp.columns = self.C.columns
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
@@ -198,8 +200,9 @@ def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: lo
 
 def save_iterate_time(coordinator: Coordinator, measurement, func_name='iterate'):
     iterate_wall_time = get_kept_time(coordinator, func_name)
-    if not coordinator.inner_m or not coordinator.inner_time:
+    if (coordinator.inner_m is None) or (coordinator.inner_time is None):
         measurement.iterate_times.append(iterate_wall_time)
+        return
 
     iterate_time_without_inner = iterate_wall_time - coordinator.inner_time
     iterate_time_using_inner_measurement = iterate_time_without_inner + coordinator.inner_m.total_time()
