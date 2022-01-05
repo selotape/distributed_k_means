@@ -108,7 +108,7 @@ class Coordinator:
             Ctmp = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)) if len(N_remaining) > self._k else N_remaining
         else:
             Ctmp = N_remaining
-            Ctmp.columns = self.C.columns
+        Ctmp.columns = self.C.columns
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
     def EstProc(self, P1: pd.DataFrame, P2: pd.DataFrame, alpha: float, dt: float, k: int, kp: int) -> Tuple[float, pd.DataFrame]:
