@@ -88,6 +88,8 @@ class Coordinator:
         self._psi = 0.0
         self._m = m
         self._inner_iterations = inner_iterations
+        self.inner_m: Measurement = None
+        self.inner_time: float = 0.0
 
     @keep_time
     def iterate(self, P1s: List[pd.DataFrame], P2s: List[pd.DataFrame], alpha) -> Tuple[float, pd.DataFrame]:
@@ -105,7 +107,10 @@ class Coordinator:
         self._logger.info('starting last iteration...')
         N_remaining = pd.concat(Nis)
         if len(N_remaining) > self._k:
-            Ctmp = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)) if len(N_remaining) > self._k else N_remaining
+            inner_start = time.time()
+            Ctmp, inner_m = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)) if len(N_remaining) > self._k else N_remaining
+            self.inner_time = time.time() - inner_start
+            self.inner_m = inner_m
         else:
             Ctmp = N_remaining
         Ctmp.columns = self.C.columns
@@ -116,7 +121,10 @@ class Coordinator:
         calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
         Emits the cluster and the ~risk.
         """
-        Ta = A_inner(P1, kp, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO))
+        inner_start = time.time()
+        Ta, inner_m = A_inner(P1, kp, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO))
+        self.inner_time = time.time() - inner_start
+        self.inner_m = inner_m
 
         phi_alpha = phi_alpha_formula(alpha, k, dt, self._ep)
         r = r_formula(alpha, k, phi_alpha)
@@ -151,7 +159,7 @@ def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: lo
         P2s = [p1p2[1] for p1p2 in P1s_and_P2s]
 
         v, Ctmp = coordinator.iterate(P1s, P2s, alpha)
-        measurement.iterate_times.append(get_kept_time(coordinator, 'iterate'))
+        save_iterate_time(coordinator, measurement)
 
         measurement.total_comps_per_machine_ += max(len(r.Ni) * len(Ctmp) for r in reducers)
         measurement.total_comps_ += remaining_elements_count * len(Ctmp)
@@ -175,7 +183,7 @@ def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: lo
     logger.info(f"Finished while-loop after {measurement.iterations_} iterations")
 
     coordinator.last_iteration([r.Ni for r in reducers])
-    measurement.final_iter_time = get_kept_time(coordinator, 'last_iteration')
+    save_iterate_time(coordinator, measurement, func_name='last_iteration')
 
     logger.info("Calculating C_final")
     C_weights = calculate_center_weights(coordinator, reducers)
@@ -186,6 +194,16 @@ def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: lo
 
     logger.info(f'iteration: {measurement.iterations_}. len(C):{len(coordinator.C)}. len(C_final)={len(C_final)}')
     return coordinator.C, C_final, measurement.iterations_, measurement
+
+
+def save_iterate_time(coordinator: Coordinator, measurement, func_name='iterate'):
+    iterate_wall_time = get_kept_time(coordinator, func_name)
+    if not coordinator.inner_m or not coordinator.inner_time:
+        measurement.iterate_times.append(iterate_wall_time)
+
+    iterate_time_without_inner = iterate_wall_time - coordinator.inner_time
+    iterate_time_using_inner_measurement = iterate_time_without_inner + coordinator.inner_m.total_time()
+    measurement.iterate_times.append(iterate_time_using_inner_measurement)
 
 
 def calculate_center_weights(coordinator, reducers: Iterable[Reducer]):
