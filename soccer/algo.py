@@ -92,7 +92,7 @@ class Coordinator:
     @keep_time
     def iterate(self, P1s: List[pd.DataFrame], P2s: List[pd.DataFrame], alpha) -> Tuple[float, pd.DataFrame]:
         P1 = pd.concat(P1s)
-        P2 = pd.concat(P2s)  # TODO - do these copy the data? if so, avoid it
+        P2 = pd.concat(P2s)
 
         v, Ctmp = self.EstProc(P1, P2, alpha, self._dt, self._k, self._kp)
         if v == 0.0:
