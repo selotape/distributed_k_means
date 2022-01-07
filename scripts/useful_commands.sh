@@ -3,7 +3,7 @@ conda activate /home/tomhe/soccer3.8
 KPLUS_SCALER=2 nohup python3.8 ./run_all_soccer_paper_experiments.py &
 nohup python3.8 ./run_all_soccer_paper_experiments.py --no-skm &
 nohup python3.8 ./run_all_soccer_paper_experiments.py --no-soccer &
-nohup python3.8 ./run_all_soccer_paper_experiments.py --but-only gaussian_25 & # higgs, kdd, census1990, bigcross, gaussian_25, gaussian_50, gaussian_100, gaussian_200
+nohup python3.8 ./run_all_soccer_paper_experiments.py --but-only gaussian & # higgs, kdd, census1990, bigcross, gaussian
 nohup python3.8 ./run_all_soccer_paper_experiments.py --but-only kdd --no-skm &
 
 
