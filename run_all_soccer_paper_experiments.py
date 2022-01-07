@@ -6,7 +6,7 @@ from itertools import product
 
 
 def main():
-    if len(sys.argv) == 3 and sys.argv[1] == '--but-only':
+    if len(sys.argv) >= 3 and sys.argv[1] == '--but-only':
         dataset = sys.argv[2]
         run_but_only_one_dataset(dataset)
     else:
