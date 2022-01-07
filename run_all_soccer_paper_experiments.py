@@ -4,6 +4,10 @@ import subprocess
 import sys
 from itertools import product
 
+_GAUSSIAN_EXPERIMENTS = (
+    ("gaussian_25", 25), ("gaussian_50", 50), ("gaussian_100", 100),
+    ("gaussian_200", 200))
+
 
 def main():
     if len(sys.argv) >= 3 and sys.argv[1] == '--but-only':
@@ -14,9 +18,9 @@ def main():
 
 
 def run_but_only_one_dataset(dataset):
-    if 'gaussian' in dataset:
-        k = dataset.split("_")[1]
-        run_meta_experiment(dataset, k)
+    if dataset == 'gaussian':
+        for dataset, k in _GAUSSIAN_EXPERIMENTS:
+            run_meta_experiment(dataset, k)
     else:
         other_experiments = product((dataset,), (25, 50, 100, 200))
         for dataset, k in other_experiments:
@@ -24,10 +28,8 @@ def run_but_only_one_dataset(dataset):
 
 
 def run_all_experiments():
-    gaussian_experiments = (
-    ("gaussian_25", 25), ("gaussian_50", 50), ("gaussian_100", 100),
-    ("gaussian_200", 200))
-    for dataset, k in gaussian_experiments:
+
+    for dataset, k in _GAUSSIAN_EXPERIMENTS:
         run_meta_experiment(dataset, k)
     other_experiments = product(("higgs", "kdd", "census1990", "bigcross"),
                                 (25, 50, 100, 200))
