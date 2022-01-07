@@ -34,7 +34,7 @@ def A_inner(N: pd.DataFrame, k: int, sample_weight=None, **kwargs) -> CentersAnd
     BlackBox = getAppliedBlackBox(INNER_BLACKBOX, kwargs, k)
     return _A(N, k, BlackBox, sample_weight)
 
-def A_final(N: pd.DataFrame, k: int, sample_weight=None) -> CentersAndMeasurement:
+def A_final(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
     BlackBox = getAppliedBlackBox(FINALIZATION_BLACKBOX, {}, k)
     return _A(N, k, BlackBox, sample_weight).centers
 
