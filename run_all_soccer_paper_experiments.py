@@ -22,7 +22,7 @@ def run_but_only_one_dataset(dataset):
         for dataset, k in _GAUSSIAN_EXPERIMENTS:
             run_meta_experiment(dataset, k)
     else:
-        other_experiments = product((dataset,), (100,))
+        other_experiments = product((dataset,), (25, 50, 100, 200))
         for dataset, k in other_experiments:
             run_meta_experiment(dataset, k)
 
