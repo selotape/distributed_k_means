@@ -6,11 +6,31 @@ from itertools import product
 
 
 def main():
-    gaussian_experiments = (("gaussian_25", 25), ("gaussian_50", 50), ("gaussian_100", 100), ("gaussian_200", 200))
+    if len(sys.argv) == 3 and sys.argv[1] == '--but-only':
+        dataset = sys.argv[2]
+        run_but_only_one_dataset(dataset)
+    else:
+        run_all_experiments()
+
+
+def run_but_only_one_dataset(dataset):
+    if 'gaussian' in dataset:
+        k = dataset.split("_")[1]
+        run_meta_experiment(dataset, k)
+    else:
+        other_experiments = product((dataset,), (25, 50, 100, 200))
+        for dataset, k in other_experiments:
+            run_meta_experiment(dataset, k)
+
+
+def run_all_experiments():
+    gaussian_experiments = (
+    ("gaussian_25", 25), ("gaussian_50", 50), ("gaussian_100", 100),
+    ("gaussian_200", 200))
     for dataset, k in gaussian_experiments:
         run_meta_experiment(dataset, k)
-
-    other_experiments = product(("higgs", "kdd", "census1990", "bigcross"), (25, 50, 100, 200))
+    other_experiments = product(("higgs", "kdd", "census1990", "bigcross"),
+                                (25, 50, 100, 200))
     for dataset, k in other_experiments:
         run_meta_experiment(dataset, k)
 
