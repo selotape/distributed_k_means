@@ -2,6 +2,7 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Iterable, Tuple
 
+import soccer.config
 from soccer.black_box import A_inner, A_final
 from soccer.config import INNER_BLACKBOX_ITERATIONS, INNER_BLACKBOX_L_TO_K_RATIO
 from soccer.math import *
@@ -106,15 +107,18 @@ class Coordinator:
     def last_iteration(self, Nis: Iterable[pd.DataFrame]):
         self._logger.info('starting last iteration...')
         N_remaining = pd.concat(Nis)
-        if len(N_remaining) > self._k:
-            inner_start = time.time()
-            Ctmp, inner_m = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)) if len(N_remaining) > self._k else N_remaining
-            self.inner_time = time.time() - inner_start
-            self.inner_m = inner_m
-        else:
+        l = int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)
+        if (len(N_remaining) <= self._k or
+            (soccer.config.INNER_BLACKBOX == "ScalableKMeans" and
+             len(N_remaining) <= l)):
             Ctmp = N_remaining
             self.inner_time = None
             self.inner_m = None
+        else:
+            inner_start = time.time()
+            Ctmp, inner_m = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=l)
+            self.inner_time = time.time() - inner_start
+            self.inner_m = inner_m
         Ctmp.columns = self.C.columns
         self.C = pd.concat([self.C, Ctmp], ignore_index=True)
 
