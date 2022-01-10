@@ -28,10 +28,7 @@ def run_but_only_datasets(datasets):
                 run_meta_experiment(other, k)
 
 
-
-
 def run_all_experiments():
-
     for dataset, k in _GAUSSIAN_EXPERIMENTS:
         run_meta_experiment(dataset, k)
     other_experiments = product(("higgs", "kdd", "census1990", "bigcross"),
@@ -40,20 +37,34 @@ def run_all_experiments():
         run_meta_experiment(dataset, k)
 
 
+def get_blackbox():
+    if '--skm_blackbox' in sys.argv:
+        return 'ScalableKMeans'
+    elif '--faiss_blackbox' in sys.argv:
+        return 'FaissKMeans'
+    elif '--minibatch_blackbox' in sys.argv:
+        return 'MiniBatchKMeans'
+    elif '--kmeans_blackbox' in sys.argv:
+        return 'KMeans'
+    else:
+        print('Unkown/specified blackbox. Using default KMeans.')
+        return 'KMeans'
+
 def run_meta_experiment(dataset, k):
+    blackbox = get_blackbox()
     if '--no-soccer' not in sys.argv:
         for epsilon in (0.01, 0.05, 0.1, 0.2,):
             if (k, epsilon) == (200, 0.2):
                 continue
-            run_soccer(k, dataset, epsilon)
+            run_soccer(k, dataset, epsilon, blackbox)
 
     if '--no-skm' not in sys.argv:
         for skm_iters in (1, 2, 3, 4, 5):
             run_skm(k, dataset, skm_iters)
 
 
-def run_soccer(k, dataset, epsilon):
-    subprocess.call(f"K={k} DATASET={dataset} INNER_BLACKBOX=ScalableKMeans EPSILON={epsilon} ./run_a_soccer_experiment.py {dataset}_{k}K_{os.getenv('KP_SCALER')}kpscale_{epsilon}ep_soccer", shell=True)
+def run_soccer(k, dataset, epsilon, blackbox):
+    subprocess.call(f"K={k} DATASET={dataset} INNER_BLACKBOX={blackbox} EPSILON={epsilon} ./run_a_soccer_experiment.py {dataset}_{k}K_{os.getenv('KP_SCALER')}kpscale_{epsilon}ep_soccer", shell=True)
 
 
 def run_skm(k, dataset, skm_iters):
