@@ -11,7 +11,6 @@ from soccer.competitors.competitors import scalable_k_means
 from soccer.config import MINI_BATCH_SIZE, INNER_BLACKBOX, FINALIZATION_BLACKBOX
 from soccer.utils import Measurement, module_exists
 
-
 faiss_is_supported = module_exists("faiss")
 if faiss_is_supported:
     import faiss
