@@ -27,15 +27,7 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finali
         prev_distances_to_C = np.minimum(distances_to_Ctmp, prev_distances_to_C) if prev_distances_to_C is not None else distances_to_Ctmp
         probabilities: np.ndarray = prev_distances_to_C / psii
 
-        try:
-            draws = np.random.choice(len(N), l, p=probabilities, replace=False) # probabilities do not sum to 1
-        except ValueError as e:
-            print(e)
-            if 'Fewer non-zero entries in p than size' in str(e):
-                draws = N[probabilities != 0.0]
-            else:
-                print('Major bummer. This shouldn\'t happen')
-
+        draws = draw_from_N(N, l, probabilities)
         Ctmp = N.iloc[draws]
         C = C.append(Ctmp)
 
@@ -56,9 +48,7 @@ def draw_from_N(N, l, probabilities):
     except ValueError as e:
         print(e)
         if 'Fewer non-zero entries in p than size' in str(e):
-            non_zeroes_in_p = np.count_nonzero(probabilities)
-            draws = np.random.choice(len(N), non_zeroes_in_p, p=probabilities,
-                                     replace=False)
+            draws = N[probabilities != 0.0]
         else:
             print('Major bummer. This shouldn\'t happen')
     return draws
