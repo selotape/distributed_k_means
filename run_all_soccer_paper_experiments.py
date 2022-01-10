@@ -11,20 +11,23 @@ _GAUSSIAN_EXPERIMENTS = (
 
 def main():
     if len(sys.argv) >= 3 and sys.argv[1] == '--but-only':
-        dataset = sys.argv[2]
-        run_but_only_one_dataset(dataset)
+        datasets = sys.argv[2]
+        run_but_only_datasets(datasets)
     else:
         run_all_experiments()
 
 
-def run_but_only_one_dataset(dataset):
-    if dataset == 'gaussian':
-        for dataset, k in _GAUSSIAN_EXPERIMENTS:
-            run_meta_experiment(dataset, k)
-    else:
-        other_experiments = product((dataset,), (25, 50, 100, 200))
-        for dataset, k in other_experiments:
-            run_meta_experiment(dataset, k)
+def run_but_only_datasets(datasets):
+    for dataset in datasets.split(","):
+        if dataset == 'gaussian':
+            for gaussian, k in _GAUSSIAN_EXPERIMENTS:
+                run_meta_experiment(gaussian, k)
+        else:
+            other_experiments = product((dataset,), (25, 50, 100, 200))
+            for other, k in other_experiments:
+                run_meta_experiment(other, k)
+
+
 
 
 def run_all_experiments():
