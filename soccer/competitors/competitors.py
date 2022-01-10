@@ -1,15 +1,14 @@
-import logging
 import time
-from math import log
 from random import choice
-from typing import List, Tuple
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
 
 from soccer.config import SKM_ITERATIONS
-from soccer.math import Select, pairwise_distances_argmin_min_squared, alpha_s_formula, alpha_h_formula, measure_weights, risk
-from soccer.utils import SimpleMeasurement, Measurement, keep_time, get_kept_time
+from soccer.math import pairwise_distances_argmin_min_squared, measure_weights, \
+    risk
+from soccer.utils import SimpleMeasurement, Measurement
 
 
 def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Measurement]:
@@ -28,7 +27,15 @@ def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finali
         prev_distances_to_C = np.minimum(distances_to_Ctmp, prev_distances_to_C) if prev_distances_to_C is not None else distances_to_Ctmp
         probabilities: np.ndarray = prev_distances_to_C / psii
 
-        draws = draw_from_N(N, l, probabilities)
+        try:
+            draws = np.random.choice(len(N), l, p=probabilities, replace=False) # probabilities do not sum to 1
+        except ValueError as e:
+            print(e)
+            if 'Fewer non-zero entries in p than size' in str(e):
+                draws = N[probabilities != 0.0]
+            else:
+                print('Major bummer. This shouldn\'t happen')
+
         Ctmp = N.iloc[draws]
         C = C.append(Ctmp)
 
