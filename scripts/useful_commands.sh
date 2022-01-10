@@ -4,7 +4,7 @@ KPLUS_SCALER=2 nohup python3.8 ./run_all_soccer_paper_experiments.py &
 nohup python3.8 ./run_all_soccer_paper_experiments.py --no-skm &
 nohup python3.8 ./run_all_soccer_paper_experiments.py --no-soccer &
 nohup python3.8 ./run_all_soccer_paper_experiments.py --but-only gaussian,kdd & # higgs, kdd, census1990, bigcross, gaussian
-nohup python3.8 ./run_all_soccer_paper_experiments.py --but-only kdd --no-skm &
+nohup python3.8 ./run_all_soccer_paper_experiments.py --but-only kdd --no-skm --minibatch_blackbox &  # --skm_blackbox --faiss_blackbox --minibatch_blackbox --kmeans_blackbox
 
 
 # read the python output mid-run
