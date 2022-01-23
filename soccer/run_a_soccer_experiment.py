@@ -10,7 +10,6 @@ from soccer.datasets import get_dataset
 from soccer.math import risk
 from soccer.utils import setup_logger, Measurement
 
-
 SINGLE_HEADER = "test_name,k,dt,m,ep,l,len(C),iterations,risk,risk_final,reducers_time,total_time"
 SUMMARY_HEADER = 'algorithm,k,epsilon,coord_mem,num_centers_avg,num_centers_stdv,rounds_avg,rounds_stdv,final_risk_avg,final_risk_stdv,comps_pm_avg,comps_pm_stdv,comps_tot_avg,comps_tot_stdv,reducers_time_avg,reducers_time_stdv,total_time_avg,total_time_stdv'
 

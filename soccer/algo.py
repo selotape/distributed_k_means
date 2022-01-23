@@ -2,7 +2,6 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Iterable, Tuple
 
-import soccer.config
 from soccer.black_box import A_inner, A_final
 from soccer.config import INNER_BLACKBOX_ITERATIONS, INNER_BLACKBOX_L_TO_K_RATIO
 from soccer.math import *
