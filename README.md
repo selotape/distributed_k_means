@@ -4,7 +4,7 @@ SOCCER (Sampling Optimal Clustering Cost Estimation) is a fast and accurate dist
 
 ## Install Soccer
 
-1. Install, create & activate a python 3.8+ virtualenv.
+1. Install, create & activate a python 3.8+ Anaconda virtualenv.
 2. Run:
 
 ```bash
@@ -13,61 +13,62 @@ pip install -r ./requirements.txt
 
 ## Experiments
 
-To show and compare SOCCER's performance, we scripted an experiment which reads a chosen dataset, clusters it using a chosen 
+To show and compare SOCCER's performance, we scripted an experiment which reads a dataset, clusters it using a chosen 
 algorithm and prints the results. This code allows to easily reproduce all experiments reported in the paper.
 
-### 1. Configure the experiment
+### Usage   
+```text
+usage: run_all_soccer_paper_experiments.py [-h]
+                                           [--blackbox {KMeans,MiniBatchKMeans,ScalableKMeans}]
+                                           [--datasets {kdd,bigcross,census1990,higgs} [{kdd,bigcross,census1990,higgs} ...]]
+                                           [--custom-dataset-csvs CUSTOM_DATASET_CSVS [CUSTOM_DATASET_CSVS ...]]
+Runs all SOCCER experiments. If used without any parameters, it runs all experiments exactly as reported in the paper.
 
-The experiment script is highly configurable - e.g. which algorithm, how exactly to run it, which dataset to cluster, etc. The experiment is configured via environment variables.
+The one time prerequisites are:
+1. Install Anaconda
+2. create a conda env - `conda create --name soccer python=3.8`
+3. Install requirements - `conda activate soccer && pip3 install -r requirements.txt`
+4. run `scripts/download_and_extract_all_datasets.sh`.
+Finally, remember before every run to execute - `conda activate soccer`
+
+
+Examples:
+1. *run all experiments*: `./run_all_soccer_paper_experiments.py`
+2. run one dataset with scalable-kmeans blackbox: `./run_all_soccer_paper_experiments.py --datasets kdd --blackbox ScalableKMeans`
+3. run a new custom csv dataset: `./run_all_soccer_paper_experiments.py --custom-dataset-csvs ./my/custom/data.csv`
+optional arguments:
+  -h, --help            show this help message and exit
+  --blackbox {KMeans,MiniBatchKMeans,ScalableKMeans}
+                        [optional] which internal algorithm to run as the black-box clustering algorithm used by SOCCER. The default is KMeans
+  --datasets {kdd,bigcross,census1990,higgs} [{kdd,bigcross,census1990,higgs} ...]
+                        [optional] run the experiment only on these datasets. If unspecified, runs all datasets.
+  --custom-dataset-csvs CUSTOM_DATASET_CSVS [CUSTOM_DATASET_CSVS ...]
+                        [optional] run on your custom local CSVs
+```
+
+### Configuration
+
+The experiment script is highly configurable - which algorithm, how to run it, which dataset to cluster, etc.
 
 The most common configurations are:
 
 * `K` - The number of clusters to calculate
 * `DATASET` - Which known dataset to load and cluster. Alternatively, a new dataset can be specified as a csv file from commandline.
-* `Black box` - Which internal algorithm to run as the black-box clustering algorithm used by SOCCER 
-* `EPSILON` - A value in range (0, 1) which links the coordinator size with the data set size 
+* `BLACKBOX` - Which internal algorithm to run as the black-box clustering algorithm used by SOCCER
+* `EPSILON` - A value in range (0, 1) which links the coordinator size with the data set size
 * `DELTA` - The confidence parameter.
-* `ALGO` - Which clustering algorithm to run. Supported values are "soccer" & "skm" (ScalableKMeans)
+* `ALGO` - Which clustering algorithm to run - SOCCER or Scalable KMeans.
 
-**See all configuration options in `soccer/config.py`.**
-
-### 2. Usage
-
-**To reproduce all experiments reported in the paper**, enable your virtualenv and run:
-
-```bash
-./run_all_soccer_paper_experiments.py
-```
-
-Note - to  these you must first download the datasets (see "About Datasets" section).
+You can configure many other parameters via environment variables. For the full list, see `soccer/config.py`.
 
 
-**To run one clustering experiment**, enable your virtualenv and use `run_a_soccer_experiment.py` - 
-
-e.g. - 
-```bash
-[ CONF1=val1 CONF2=val2 ]  ./run_a_soccer_experiment.py "experiment_name" [path/to/your_data.csv]
-
-K=100 EPSILON=0.1 DELTA=0.1 DATASET=higgs ./run_a_soccer_experiment.py "soccer_with_higgs_and_100k"
-K=100 EPSILON=0.1 DELTA=0.1 ALGO=skm      ./run_a_soccer_experiment.py "skm_with_100k_on_my_data" my/custom/data.csv
-```
-
-### 3. Read experiment output
+### Reading experiment output
 
 Experiment outputs are written in 3 files:
 
 1. {run_name}_{timestamp}.log - the full log output
-2. {run_name}_{timestamp}_results.csv - the results of each single clustering iteration (out of 10*)
+2. {run_name}_{timestamp}_results.csv - the results of each single clustering iteration (out of 10)
 3. {run_name}_{timestamp}_summary.csv - summary results of all (10) iterations
-
-\* configuable via ITERATIONS environment variable
-
-### About Datasets
-
-In the experiment script you can choose one of many well-known datasets. The list of supported datasets is in `soccer/config.py`. 
-
-Before using a dataset for the first time, you should download and
-extract it. **See how to download and extract all datasets in `scripts/download_and_extract_all_datasets.sh`**
 
 #### Gaussian Dataset Seed
 

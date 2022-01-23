@@ -79,7 +79,7 @@ class Reducer:
 
 class Coordinator:
 
-    def __init__(self, k, kp, dt, ep, m, inner_iterations, logger):
+    def __init__(self, k, kp, dt, ep, m, blackbox, inner_iterations, logger):
         self.C = pd.DataFrame()
         self._k = k
         self._kp = kp
@@ -89,6 +89,7 @@ class Coordinator:
         self._psi = 0.0
         self._m = m
         self._inner_iterations = inner_iterations
+        self._blackbox = blackbox
         self.inner_m: Measurement = None
         self.inner_time: float = 0.0
 
@@ -109,14 +110,14 @@ class Coordinator:
         N_remaining = pd.concat(Nis)
         l = int(self._k * INNER_BLACKBOX_L_TO_K_RATIO)
         if (len(N_remaining) <= self._k or
-            (soccer.config.INNER_BLACKBOX == "ScalableKMeans" and
+            (self._blackbox == "ScalableKMeans" and
              len(N_remaining) <= l)):
             Ctmp = N_remaining
             self.inner_time = None
             self.inner_m = None
         else:
             inner_start = time.time()
-            Ctmp, inner_m = A_inner(N_remaining, self._k, m=self._m, iterations=self._inner_iterations, l=l)
+            Ctmp, inner_m = A_inner(N_remaining, self._k, blackbox=self._blackbox, m=self._m, iterations=self._inner_iterations, l=l)
             self.inner_time = time.time() - inner_start
             self.inner_m = inner_m
         Ctmp.columns = self.C.columns
@@ -128,7 +129,7 @@ class Coordinator:
         Emits the cluster and the ~risk.
         """
         inner_start = time.time()
-        Ta, inner_m = A_inner(P1, kp, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO))
+        Ta, inner_m = A_inner(P1, kp, blackbox=self._blackbox, m=self._m, iterations=self._inner_iterations, l=int(self._k * INNER_BLACKBOX_L_TO_K_RATIO))
         self.inner_time = time.time() - inner_start
         self.inner_m = inner_m
 
@@ -140,14 +141,14 @@ class Coordinator:
         return v_formula(self._psi, k, phi_alpha), Ta
 
 
-def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int, SoccerMeasurement]:
+def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, blackbox: str, logger: logging.Logger) -> Tuple[pd.DataFrame, pd.DataFrame, int, SoccerMeasurement]:
     n = len(N)
     logger.info("starting to split")
     Ns = np.array_split(N, m)
     logger.info("finished splitting")
     reducers = [Reducer(Ni) for Ni in Ns]
     kp = kplus_formula(k, dt, ep)
-    coordinator = Coordinator(k, kp, dt, ep, m, INNER_BLACKBOX_ITERATIONS, logger)
+    coordinator = Coordinator(k, kp, dt, ep, m, blackbox, INNER_BLACKBOX_ITERATIONS, logger)
     alpha = alpha_formula(n, k, ep, dt, len(N))
     measurement = SoccerMeasurement()
     remaining_elements_count = len(N)
@@ -194,7 +195,7 @@ def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, logger: lo
     logger.info("Calculating C_final")
     C_weights = calculate_center_weights(coordinator, reducers)
     start = time.time()
-    C_final = A_final(coordinator.C, k, C_weights)
+    C_final = A_final(coordinator.C, k, blackbox, C_weights)
     measurement.num_centers_unfinalized_ = len(coordinator.C)
     measurement.finalization_time = time.time() - start
 
