@@ -24,6 +24,7 @@ The most common configurations are:
 
 * `K` - The number of clusters to calculate
 * `DATASET` - Which known dataset to load and cluster. Alternatively, a new dataset can be specified as a csv file from commandline.
+* `Black box` - Which internal algorithm to run as the black-box clustering algorithm used by SOCCER 
 * `EPSILON` - A value in range (0, 1) which links the coordinator size with the data set size 
 * `DELTA` - The confidence parameter.
 * `ALGO` - Which clustering algorithm to run. Supported values are "soccer" & "skm" (ScalableKMeans)
