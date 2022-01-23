@@ -3,15 +3,26 @@ import os
 import subprocess
 import sys
 from itertools import product
-
+from argparse import ArgumentParser
 
 
 def main():
-    if len(sys.argv) >= 3 and sys.argv[1] == '--but-only':
-        datasets = sys.argv[2]
-        run_but_only_datasets(datasets)
+
+    parser = ArgumentParser(description='Run all SOCCER experiments')
+    parser.add_argument('--blackbox', default='KMeans',
+                        choices=['KMeans', 'MiniBatchKMeans', 'ScalableKMeans'],
+                        help='Which internal algorithm to run as the black-box'
+                             ' clustering algorithm used by SOCCER')
+    parser.add_argument('--datasets', nargs='+', default=[],
+                        choices=['kdd','bigcross','census1990','higgs'],
+                        help='only run the experiment on these datasets')
+
+    args = parser.parse_args()
+
+    if args.datasets:
+        run_but_only_datasets(args.datasets, args.blackbox)
     else:
-        run_all_experiments()
+        run_all_experiments(args.blackbox)
 
 
 _GAUSSIAN_EXPERIMENTS = (
@@ -19,24 +30,24 @@ _GAUSSIAN_EXPERIMENTS = (
     ("gaussian_200", 200))
 
 
-def run_but_only_datasets(datasets):
-    for dataset in datasets.split(","):
+def run_but_only_datasets(datasets, blackbox):
+    for dataset in datasets:
         if dataset == 'gaussian':
             for gaussian, k in _GAUSSIAN_EXPERIMENTS:
-                run_meta_experiment(gaussian, k)
+                run_meta_experiment(gaussian, k, blackbox)
         else:
             other_experiments = product((dataset,), (25, 50, 100, 200))
             for other, k in other_experiments:
-                run_meta_experiment(other, k)
+                run_meta_experiment(other, k, blackbox)
 
 
-def run_all_experiments():
+def run_all_experiments(blackbox):
     for dataset, k in _GAUSSIAN_EXPERIMENTS:
-        run_meta_experiment(dataset, k)
+        run_meta_experiment(dataset, k, blackbox)
     other_experiments = product(("higgs", "kdd", "census1990", "bigcross"),
                                 (25, 50, 100, 200))
     for dataset, k in other_experiments:
-        run_meta_experiment(dataset, k)
+        run_meta_experiment(dataset, k, blackbox)
 
 
 def get_blackbox():
@@ -50,17 +61,14 @@ def get_blackbox():
         print('Unkown/specified blackbox. Using default KMeans.')
         return 'KMeans'
 
-def run_meta_experiment(dataset, k):
-    blackbox = get_blackbox()
-    if '--no-soccer' not in sys.argv:
-        for epsilon in (0.01, 0.05, 0.1, 0.2,):
-            if (k, epsilon) == (200, 0.2):
-                continue
-            run_soccer(k, dataset, epsilon, blackbox)
+def run_meta_experiment(dataset, k, blackbox):
+    for epsilon in (0.01, 0.05, 0.1, 0.2,):
+        if (k, epsilon) == (200, 0.2):
+            continue
+        run_soccer(k, dataset, epsilon, blackbox)
 
-    if '--no-skm' not in sys.argv:
-        for skm_iters in (1, 2, 3, 4, 5):
-            run_skm(k, dataset, skm_iters)
+    for skm_iters in (1, 2, 3, 4, 5):
+        run_skm(k, dataset, skm_iters)
 
 
 def run_soccer(k, dataset, epsilon, blackbox):
