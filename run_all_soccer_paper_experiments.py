@@ -42,8 +42,6 @@ def run_all_experiments():
 def get_blackbox():
     if '--skm_blackbox' in sys.argv:
         return 'ScalableKMeans'
-    elif '--faiss_blackbox' in sys.argv:
-        return 'FaissKMeans'
     elif '--minibatch_blackbox' in sys.argv:
         return 'MiniBatchKMeans'
     elif '--kmeans_blackbox' in sys.argv:

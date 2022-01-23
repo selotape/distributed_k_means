@@ -3,17 +3,12 @@ from collections import namedtuple
 from functools import partial
 from typing import Union
 
-import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
 from soccer.competitors.competitors import scalable_k_means
 from soccer.config import MINI_BATCH_SIZE, INNER_BLACKBOX, FINALIZATION_BLACKBOX
-from soccer.utils import Measurement, module_exists
-
-faiss_is_supported = module_exists("faiss")
-if faiss_is_supported:
-    import faiss
+from soccer.utils import Measurement
 
 
 CentersAndMeasurement = namedtuple("CentersAndMeasurement", ['centers', 'measurement'])
@@ -68,30 +63,8 @@ class ScalableKMeans:
         return self
 
 
-class FaissKMeans:
-    def __init__(self, n_clusters, n_dims):
-        if not faiss_is_supported:
-            raise NotImplementedError("Faiss not supported in this env")
-        self.d = n_dims
-        self.k = n_clusters
-        self.cluster_centers_: Union[pd.DataFrame, None] = None
-        self._cluster_centers_pre_finalization: Union[pd.DataFrame, None] = None
-
-    def fit(self, N, sample_weight=None):
-        if not faiss_is_supported:
-            raise NotImplementedError("Faiss not supported in this env")
-        if sample_weight:
-            raise NotImplementedError("Faiss doesn't support sample_weights")
-
-        kmeans = faiss.Kmeans(self.d, self.k)
-        kmeans.train(np.float32(np.ascontiguousarray(N)), sample_weight)
-        self.cluster_centers_ = kmeans.centroids
-        return self
-
-
 BlackBoxes = {
     'KMeans': KMeans,
     'MiniBatchKMeans': partial(MiniBatchKMeans, batch_size=MINI_BATCH_SIZE),
     'ScalableKMeans': ScalableKMeans,
-    'FaissKMeans': FaissKMeans,
 }
