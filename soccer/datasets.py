@@ -10,22 +10,23 @@ from soccer.config import *
 
 
 @lru_cache
-def get_dataset(logger):
-    logger.info(f"Loading Dataset {DATASET}...")
-    if path.isfile(DATASET):
-        N = read_and_prep_unknown_file(DATASET)
-    elif DATASET == 'kdd':
+def get_dataset(dataset, logger):
+    logger.info(f"Loading Dataset {dataset}...")
+    if path.isfile(dataset):
+        N = read_and_prep_unknown_file(dataset)
+    elif dataset == 'kdd':
         N = read_and_prep_kdd()
-    elif DATASET.startswith('gaussian'):
-        N = generate_k_gaussians()
-    elif DATASET == 'bigcross':
+    elif dataset.startswith('gaussian'):
+        gaussian_k = determine_gaussians_k(dataset)
+        N = generate_k_gaussians(gaussian_k)
+    elif dataset == 'bigcross':
         N = read_and_prep_bigcross()
-    elif DATASET == 'census1990':
+    elif dataset == 'census1990':
         N = read_and_prep_census1990()
-    elif DATASET == 'higgs':
+    elif dataset == 'higgs':
         N = read_and_prep_higgs()
     else:
-        raise RuntimeError(f"bad dataset {DATASET}")
+        raise RuntimeError(f"bad dataset {dataset}")
     logger.info(f'len(N)={len(N)}')
     if SCALE_DATASET:
         N = scale_dataset(N)
@@ -79,13 +80,12 @@ def read_and_prep_higgs():
     return N
 
 
-def generate_k_gaussians():
+def generate_k_gaussians(gaussian_k):
     rng = np.random.RandomState(GAUSSIANS_RANDOM_SEED or None)
     N = rng.normal(scale=GAUSSIANS_STD_DEV, size=(DATASET_SIZE, GAUSSIANS_DIMENSIONS,))
-    gaussians_k = determine_gaussians_k()
-    centers = rng.uniform(size=(gaussians_k, GAUSSIANS_DIMENSIONS,), )
-    the_sum = sum(i ** GAUSSIANS_GAMMA for i in range(1, gaussians_k + 1))
-    cluster_sizes = [floor(DATASET_SIZE * ((i ** GAUSSIANS_GAMMA) / the_sum)) for i in range(1, gaussians_k + 1)]
+    centers = rng.uniform(size=(gaussian_k, GAUSSIANS_DIMENSIONS,), )
+    the_sum = sum(i ** GAUSSIANS_GAMMA for i in range(1, gaussian_k + 1))
+    cluster_sizes = [floor(DATASET_SIZE * ((i ** GAUSSIANS_GAMMA) / the_sum)) for i in range(1, gaussian_k + 1)]
     N = N[:sum(cluster_sizes)]
 
     cluster_slices = []
@@ -100,15 +100,10 @@ def generate_k_gaussians():
     return pd.DataFrame(N)
 
 
-def determine_gaussians_k():
-    tokens = DATASET.split(sep='_')
-    if len(tokens) == 1:  # "gaussian"
-        return GAUSSIANS_K
-    elif len(tokens) == 2:
+def determine_gaussians_k(dataset):
+    tokens = dataset.split(sep='_')
+    if len(tokens) == 2:
         return int(tokens[1])  # "gaussian_25"
     else:
-        raise NotImplementedError(f"Bad gaussian dataset name \"{DATASET}\". Should be e.g. \"gaussian_25\"")
+        raise NotImplementedError(f"Bad gaussian dataset name \"{dataset}\". Should be e.g. \"gaussian_25\"")
 
-
-if __name__ == '__main__':
-    print(generate_k_gaussians())

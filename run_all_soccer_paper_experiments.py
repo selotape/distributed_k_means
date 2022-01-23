@@ -1,26 +1,45 @@
 #!/usr/bin/env python
-import os
-import subprocess
 import sys
 from itertools import product
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawTextHelpFormatter
+
+from soccer import run_a_soccer_experiment
+from soccer.black_box import DEFAULT_BLACKBOX
 
 
 def main():
 
-    parser = ArgumentParser(description='Run all SOCCER experiments')
-    parser.add_argument('--blackbox', default='KMeans',
+    parser = ArgumentParser(description='Runs all SOCCER experiments. If used without any parameters, it '
+                                        'runs all experiments exactly as reported in the paper.\n\n'
+                                        'The one time prerequisites are:\n'
+                                        '1. Install Anaconda\n'
+                                        '2. create a conda env - `conda create --name soccer python=3.8`\n'
+                                        '3. Install requirements - `conda activate soccer && pip3 install -r requirements.txt`\n'
+                                        '4. run `scripts/download_and_extract_all_datasets.sh`.\n'
+                                        'Finally, remember before every run to execute - `conda activate soccer`\n\n\n'
+                                        'Examples:\n'
+                                        '1. *run all experiments*: `./run_all_soccer_paper_experiments.py`\n'
+                                        '2. run one dataset with scalable-kmeans blackbox: `./run_all_soccer_paper_experiments.py --datasets kdd --blackbox ScalableKMeans`\n'
+                                        '3. run a new custom csv dataset: `./run_all_soccer_paper_experiments.py --custom-dataset-csvs ./my/custom/data.csv`',
+                            formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument('--blackbox', default=DEFAULT_BLACKBOX,
                         choices=['KMeans', 'MiniBatchKMeans', 'ScalableKMeans'],
-                        help='Which internal algorithm to run as the black-box'
-                             ' clustering algorithm used by SOCCER')
+                        help='[optional] which internal algorithm to run as the black-box'
+                             ' clustering algorithm used by SOCCER. The default is '
+                             + DEFAULT_BLACKBOX)
     parser.add_argument('--datasets', nargs='+', default=[],
                         choices=['kdd','bigcross','census1990','higgs'],
-                        help='only run the experiment on these datasets')
+                        help='[optional] run the experiment only on these datasets. '
+                             'If unspecified, runs all datasets.')
+
+    parser.add_argument('--custom-dataset-csvs', nargs='+', default=[],
+                        help='[optional] run on your custom local CSVs')
 
     args = parser.parse_args()
 
-    if args.datasets:
-        run_but_only_datasets(args.datasets, args.blackbox)
+    if args.datasets or args.custom_dataset_csvs:
+        run_but_only_datasets(args.datasets + args.custom_dataset_csvs, args.blackbox)
     else:
         run_all_experiments(args.blackbox)
 
@@ -72,11 +91,13 @@ def run_meta_experiment(dataset, k, blackbox):
 
 
 def run_soccer(k, dataset, epsilon, blackbox):
-    subprocess.call(f"K={k} DATASET={dataset} INNER_BLACKBOX={blackbox} EPSILON={epsilon} ./run_a_soccer_experiment.py {dataset}_{k}K_{os.getenv('KP_SCALER')}kpscale_{epsilon}ep_soccer", shell=True)
+    run_name = f"{dataset}_{k}K_{epsilon}ep_soccer"
+    run_a_soccer_experiment.main(run_name, 'SOCCER', k, dataset, epsilon, blackbox)
 
 
-def run_skm(k, dataset, skm_iters):
-    subprocess.call(f"K={k} DATASET={dataset} ALGO=SKM SKM_ITERATIONS={skm_iters} ./run_a_soccer_experiment.py {dataset}_{k}K_skm_{skm_iters}iters", shell=True)
+def run_skm(k, dataset, epsilon, blackbox, skm_iters):
+    run_name = f"{dataset}_{k}K_skm_{skm_iters}iters"
+    run_a_soccer_experiment.main(run_name, 'SKM', k, dataset, epsilon, blackbox, skm_iters)
 
 
 if __name__ == '__main__':

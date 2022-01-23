@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
 from soccer.competitors.competitors import scalable_k_means
-from soccer.config import MINI_BATCH_SIZE, INNER_BLACKBOX, FINALIZATION_BLACKBOX
+from soccer.config import MINI_BATCH_SIZE
 from soccer.utils import Measurement
 
 
@@ -21,15 +21,16 @@ def getAppliedBlackBox(blackbox_name, kwargs, k):
     relevant_kwargs = {kw: val for kw, val in kwargs.items() if kw in black_box_args}
     return partial(BlackBox, **relevant_kwargs)
 
+DEFAULT_BLACKBOX = 'KMeans'
 
-def A_inner(N: pd.DataFrame, k: int, sample_weight=None, **kwargs) -> CentersAndMeasurement:
+def A_inner(N: pd.DataFrame, k: int, blackbox=DEFAULT_BLACKBOX, sample_weight=None, **kwargs) -> CentersAndMeasurement:
     kwargs.update({'n_dims': len(N.columns)})
 
-    BlackBox = getAppliedBlackBox(INNER_BLACKBOX, kwargs, k)
+    BlackBox = getAppliedBlackBox(blackbox, kwargs, k)
     return _A(N, k, BlackBox, sample_weight)
 
-def A_final(N: pd.DataFrame, k: int, sample_weight=None) -> pd.DataFrame:
-    BlackBox = getAppliedBlackBox(FINALIZATION_BLACKBOX, {}, k)
+def A_final(N: pd.DataFrame, k: int, blackbox=DEFAULT_BLACKBOX, sample_weight=None) -> pd.DataFrame:
+    BlackBox = getAppliedBlackBox(blackbox, {}, k)
     return _A(N, k, BlackBox, sample_weight).centers
 
 
@@ -61,6 +62,7 @@ class ScalableKMeans:
         self._cluster_centers_pre_finalization = C
         self._measurement = measurement
         return self
+
 
 
 BlackBoxes = {
