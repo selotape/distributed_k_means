@@ -106,4 +106,3 @@ def determine_gaussians_k(dataset):
         return int(tokens[1])  # "gaussian_25"
     else:
         raise NotImplementedError(f"Bad gaussian dataset name \"{dataset}\". Should be e.g. \"gaussian_25\"")
-

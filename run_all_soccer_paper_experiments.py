@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 import sys
-from itertools import product
 from argparse import ArgumentParser, RawTextHelpFormatter
+from itertools import product
 
 from soccer import run_a_soccer_experiment
 from soccer.black_box import DEFAULT_BLACKBOX
 
 
 def main():
-
     parser = ArgumentParser(description='Runs all SOCCER experiments. If used without any parameters, it '
                                         'runs all experiments exactly as reported in the paper.\n\n'
                                         'The one time prerequisites are:\n'
@@ -29,7 +28,7 @@ def main():
                              ' clustering algorithm used by SOCCER. The default is '
                              + DEFAULT_BLACKBOX)
     parser.add_argument('--datasets', nargs='+', default=[],
-                        choices=['kdd','bigcross','census1990','higgs'],
+                        choices=['kdd', 'bigcross', 'census1990', 'higgs'],
                         help='[optional] run the experiment only on these datasets. '
                              'If unspecified, runs all datasets.')
 
@@ -79,6 +78,7 @@ def get_blackbox():
     else:
         print('Unkown/specified blackbox. Using default KMeans.')
         return 'KMeans'
+
 
 def run_meta_experiment(dataset, k, blackbox):
     for epsilon in (0.01, 0.05, 0.1, 0.2,):
