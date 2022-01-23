@@ -4,9 +4,6 @@ import subprocess
 import sys
 from itertools import product
 
-_GAUSSIAN_EXPERIMENTS = (
-    ("gaussian_25", 25), ("gaussian_50", 50), ("gaussian_100", 100),
-    ("gaussian_200", 200))
 
 
 def main():
@@ -15,6 +12,11 @@ def main():
         run_but_only_datasets(datasets)
     else:
         run_all_experiments()
+
+
+_GAUSSIAN_EXPERIMENTS = (
+    ("gaussian_25", 25), ("gaussian_50", 50), ("gaussian_100", 100),
+    ("gaussian_200", 200))
 
 
 def run_but_only_datasets(datasets):

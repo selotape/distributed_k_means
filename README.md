@@ -32,7 +32,14 @@ The most common configurations are:
 
 ### 2. Usage
 
-#### Run SOCCER
+**To reproduce all experiments reported in the paper**, enable your virtualenv and run:
+
+```bash
+./run_all_soccer_paper_experiments.py
+```
+
+Note - to  these you must first download the datasets (see "About Datasets" section).
+
 
 **To run one clustering experiment**, enable your virtualenv and use `run_a_soccer_experiment.py` - 
 
@@ -43,16 +50,6 @@ e.g. -
 K=100 EPSILON=0.1 DELTA=0.1 DATASET=higgs ./run_a_soccer_experiment.py "soccer_with_higgs_and_100k"
 K=100 EPSILON=0.1 DELTA=0.1 ALGO=skm      ./run_a_soccer_experiment.py "skm_with_100k_on_my_data" my/custom/data.csv
 ```
-
-#### Run all experiments reported in the paper
-
-**To reproduce all the experiments reported in the SOCCER paper**, enable your virtualenv and the run:
-
-```bash
-./run_all_soccer_paper_experiments.py
-```
-
-Note - to run all experiments you must first download the datasets (see "About Datasets" section).
 
 ### 3. Read experiment output
 

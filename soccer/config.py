@@ -16,10 +16,10 @@ ALGO = os.getenv('ALGO', default='SOCCER')  # 'SKM', 'SOCCER'
 K = int(os.getenv('K', default=50))
 
 ###### DATA SETS ######
-KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="data_samples/kddcup99/kddcup.data")
-CENSUS1990_DATASET_FILE = os.getenv('CENSUS1990_DATASET_FILE', default="data_samples/census1990/USCensus1990.data.txt")
-BIGCROSS_DATASET_FILE = os.getenv('BIGCROSS_DATASET_FILE', default="data_samples/bigcross/BigCross.data")
-HIGGS_DATASET_FILE = os.getenv('HIGGS_DATASET_FILE', default="data_samples/higgs/HIGGS.csv")
+KDD_DATASET_FILE = os.getenv('KDD_DATASET_FILE', default="datasets/kddcup99/kddcup.data")
+CENSUS1990_DATASET_FILE = os.getenv('CENSUS1990_DATASET_FILE', default="datasets/census1990/USCensus1990.data.txt")
+BIGCROSS_DATASET_FILE = os.getenv('BIGCROSS_DATASET_FILE', default="datasets/bigcross/BigCross.data")
+HIGGS_DATASET_FILE = os.getenv('HIGGS_DATASET_FILE', default="datasets/higgs/HIGGS.csv")
 NEW_DATASET_SKIP_HEADER = bool(os.getenv('NEW_DATASET_SKIP_HEADER', default=False))
 NEW_DATASET_CONVERT_CATEGORICAL_TO_DUMMIES = bool(os.getenv('NEW_DATASET_CONVERT_CATEGORICAL_TO_DUMMIES', default=False))
 NEW_DATASET_RETAIN_ONLY_NUMERIC_COLUMNS = bool(os.getenv('NEW_DATASET_RETAIN_ONLY_NUMERIC_COLUMNS', default=True))
