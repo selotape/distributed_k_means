@@ -20,7 +20,7 @@ algorithm and prints the results. This code allows to easily reproduce all exper
 ```text
 usage: run_all_soccer_paper_experiments.py [-h]
                                            [--blackbox {KMeans,MiniBatchKMeans,ScalableKMeans}]
-                                           [--datasets {kdd,bigcross,census1990,higgs} [{kdd,bigcross,census1990,higgs} ...]]
+                                           [--datasets {kdd,bigcross,census1990,higgs,gaussian} [{kdd,bigcross,census1990,higgs,gaussian} ...]]
                                            [--custom-dataset-csvs CUSTOM_DATASET_CSVS [CUSTOM_DATASET_CSVS ...]]
 Runs all SOCCER experiments. If used without any parameters, it runs all experiments exactly as reported in the paper.
 
@@ -40,7 +40,7 @@ optional arguments:
   -h, --help            show this help message and exit
   --blackbox {KMeans,MiniBatchKMeans,ScalableKMeans}
                         [optional] which internal algorithm to run as the black-box clustering algorithm used by SOCCER. The default is KMeans
-  --datasets {kdd,bigcross,census1990,higgs} [{kdd,bigcross,census1990,higgs} ...]
+  --datasets {kdd,bigcross,census1990,higgs,gaussian} [{kdd,bigcross,census1990,higgs,gaussian} ...]
                         [optional] run the experiment only on these datasets. If unspecified, runs all datasets.
   --custom-dataset-csvs CUSTOM_DATASET_CSVS [CUSTOM_DATASET_CSVS ...]
                         [optional] run on your custom local CSVs
