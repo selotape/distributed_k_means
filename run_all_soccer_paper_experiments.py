@@ -54,7 +54,7 @@ def run_but_only_datasets(datasets, blackbox):
             for gaussian, k in _GAUSSIAN_EXPERIMENTS:
                 run_meta_experiment(gaussian, k, blackbox)
         else:
-            other_experiments = product((dataset,), (25, 50, 100, 200))
+            other_experiments = product((dataset,), (10,15,30))
             for other, k in other_experiments:
                 run_meta_experiment(other, k, blackbox)
 
@@ -87,7 +87,7 @@ def run_meta_experiment(dataset, k, blackbox):
         run_soccer(k, dataset, epsilon, blackbox)
 
     for skm_iters in (1, 2, 3, 4, 5):
-        run_skm(k, dataset, skm_iters)
+        run_skm(k, dataset, skm_iters, blackbox, skm_iters)
 
 
 def run_soccer(k, dataset, epsilon, blackbox):
