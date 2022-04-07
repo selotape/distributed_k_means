@@ -28,7 +28,7 @@ def main():
                              ' clustering algorithm used by SOCCER. The default is '
                              + DEFAULT_BLACKBOX)
     parser.add_argument('--datasets', nargs='+', default=[],
-                        choices=['kdd', 'bigcross', 'census1990', 'higgs', 'gaussian'],
+                        choices=['kdd', 'bigcross', 'census1990', 'higgs', 'gaussian', 'mnist'],
                         help='[optional] run the experiment only on these datasets. '
                              'If unspecified, runs all datasets.')
 

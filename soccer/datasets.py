@@ -19,6 +19,8 @@ def get_dataset(dataset, logger):
     elif dataset.startswith('gaussian'):
         gaussian_k = determine_gaussians_k(dataset)
         N = generate_k_gaussians(gaussian_k)
+    elif dataset == 'mnist':
+        N = read_and_prep_mnist()
     elif dataset == 'bigcross':
         N = read_and_prep_bigcross()
     elif dataset == 'census1990':
@@ -71,6 +73,14 @@ def read_and_prep_census1990():
     census = census.dropna()
     census = census.iloc[:, 1:]  # throw away first index column
     return census
+
+
+def read_and_prep_mnist():
+    from keras.datasets import mnist
+    (train_X, train_y), (test_X, test_y) = mnist.load_data()
+    X = train_X.reshape(len(train_X),-1)
+    X = X.astype(float) / 255.
+    return pd.DataFrame(X)
 
 
 def read_and_prep_higgs():
