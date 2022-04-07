@@ -3,3 +3,5 @@ scikit-learn
 scikit-learn-extra
 numpy
 pandas
+keras
+tensorflow
