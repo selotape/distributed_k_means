@@ -5,7 +5,6 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-from soccer.config import SKM_ITERATIONS
 from soccer.math import pairwise_distances_argmin_min_squared, measure_weights, \
     risk
 from soccer.utils import SimpleMeasurement, Measurement
@@ -14,7 +13,7 @@ from soccer.utils import SimpleMeasurement, Measurement
 def scalable_k_means(N: pd.DataFrame, iterations: int, l: int, k: int, m, finalize) -> Tuple[pd.DataFrame, pd.DataFrame, Measurement]:
     start = time.time()
     measurement = SimpleMeasurement()
-    measurement.iterations_ = SKM_ITERATIONS
+    measurement.iterations_ = iterations
     C = pd.DataFrame().append(N.iloc[[choice(range(len(N)))]])
     Ctmp = C
     prev_distances_to_C = None

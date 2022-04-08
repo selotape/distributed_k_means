@@ -1,12 +1,9 @@
 import os
-import sys
 from time import strftime
 
 """
 The default config values. Override these via ENVIRONMENT VARIABLES.
 """
-
-RUN_NAME = 'RUN_NAME' if len(sys.argv) < 2 else sys.argv[1]
 
 ###### DATA SETS ######
 KDD_DATASET_FILE = "datasets/kddcup99/kddcup.data"
@@ -40,7 +37,6 @@ M = int(os.getenv('M', default=50))
 TIMESTAMP = os.getenv('TIMESTAMP', default=strftime('%m_%d_%H_%M'))
 
 ##### SOCCER CONSTS ######
-EPSILON = float(os.getenv('EPSILON', default=0.1))  # 0.2
 DELTA = float(os.getenv('DELTA', default=0.1))
 PHI_ALPHA_C = 6.5
 MAX_SS_SIZE_C = 36
@@ -49,4 +45,3 @@ KPLUS_SCALER = int(os.getenv('KPLUS_SCALER', default=1))
 
 ###### SKM PARAMS ######
 L_TO_K_RATIO = float(os.getenv('L_TO_K_RATIO', default=2.0))
-SKM_ITERATIONS = int(os.getenv('SKM_ITERATIONS', default=5))
