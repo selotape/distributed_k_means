@@ -47,6 +47,9 @@ _GAUSSIAN_EXPERIMENTS = (
     ("gaussian_25", 25), ("gaussian_50", 50), ("gaussian_100", 100),
     ("gaussian_200", 200))
 
+Ks = (25, 50, 100, 200)
+mnist_Ks = (10, 30,)
+
 
 def run_but_only_datasets(datasets, blackbox):
     for dataset in datasets:
@@ -54,7 +57,8 @@ def run_but_only_datasets(datasets, blackbox):
             for gaussian, k in _GAUSSIAN_EXPERIMENTS:
                 run_meta_experiment(gaussian, k, blackbox)
         else:
-            other_experiments = product((dataset,), (10,15,30))
+            Ks_to_use = Ks if dataset != 'mnist' else mnist_Ks
+            other_experiments = product((dataset,), Ks_to_use)
             for other, k in other_experiments:
                 run_meta_experiment(other, k, blackbox)
 
@@ -62,7 +66,7 @@ def run_but_only_datasets(datasets, blackbox):
 def run_all_experiments(blackbox):
     for dataset, k in _GAUSSIAN_EXPERIMENTS:
         run_meta_experiment(dataset, k, blackbox)
-    other_experiments = product(("higgs", "kdd", "census1990", "bigcross"),
+    other_experiments = product(("higgs", "kdd", "census1990", "bigcross", "mnist"),
                                 (25, 50, 100, 200))
     for dataset, k in other_experiments:
         run_meta_experiment(dataset, k, blackbox)

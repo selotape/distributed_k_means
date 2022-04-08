@@ -194,7 +194,7 @@ def run_soccer(N: pd.DataFrame, k: int, ep: float, dt: float, m: int, blackbox: 
     logger.info("Calculating C_final")
     C_weights = calculate_center_weights(coordinator, reducers)
     start = time.time()
-    C_final = A_final(coordinator.C, k, blackbox, C_weights)
+    C_final = A_final(coordinator.C, k, C_weights, blackbox)
     measurement.num_centers_unfinalized_ = len(coordinator.C)
     measurement.finalization_time = time.time() - start
 

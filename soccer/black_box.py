@@ -31,7 +31,7 @@ def A_inner(N: pd.DataFrame, k: int, blackbox=DEFAULT_BLACKBOX, sample_weight=No
     return _A(N, k, BlackBox, sample_weight)
 
 
-def A_final(N: pd.DataFrame, k: int, blackbox=DEFAULT_BLACKBOX, sample_weight=None) -> pd.DataFrame:
+def A_final(N: pd.DataFrame, k: int, sample_weight=None, blackbox=DEFAULT_BLACKBOX) -> pd.DataFrame:
     BlackBox = getAppliedBlackBox(blackbox, {}, k)
     return _A(N, k, BlackBox, sample_weight).centers
 
