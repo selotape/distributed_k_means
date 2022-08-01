@@ -24,7 +24,7 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.ml.util._
-import org.apache.spark.mllib.clustering.MyMLlibSoccerKMeans
+import org.apache.spark.mllib.clustering.MLlibSoccerKMeans
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DoubleType, StructType}
@@ -38,12 +38,12 @@ import org.apache.spark.storage.StorageLevel
  * @see <a href="https://doi.org/10.14778/2180912.2180915">Bahmani et al., Scalable k-means++.</a>
  */
 @Since("1.5.0")
-class MyKMeans @Since("1.5.0")(
+class SoccerKMeans @Since("1.5.0")(
                                 @Since("1.5.0") override val uid: String)
   extends Estimator[KMeansModel] with KMeansParams with DefaultParamsWritable {
 
   @Since("1.5.0")
-  override def copy(extra: ParamMap): MyKMeans = defaultCopy(extra)
+  override def copy(extra: ParamMap): SoccerKMeans = defaultCopy(extra)
 
   @Since("1.5.0")
   def this() = this(Identifiable.randomUID("kmeans"))
@@ -102,7 +102,7 @@ class MyKMeans @Since("1.5.0")(
     instr.logDataset(dataset)
     instr.logParams(this, featuresCol, predictionCol, k, initMode, initSteps, distanceMeasure,
       maxIter, seed, tol, weightCol)
-    val algo = new MyMLlibSoccerKMeans()
+    val algo = new MLlibSoccerKMeans()
       .setK($(k))
       .setInitializationMode($(initMode))
       .setInitializationSteps($(initSteps))
@@ -143,10 +143,10 @@ class MyKMeans @Since("1.5.0")(
 }
 
 @Since("1.6.0")
-object MyKMeans extends DefaultParamsReadable[MyKMeans] {
+object SoccerKMeans extends DefaultParamsReadable[SoccerKMeans] {
 
   @Since("1.6.0")
-  override def load(path: String): MyKMeans = super.load(path)
+  override def load(path: String): SoccerKMeans = super.load(path)
 }
 
 

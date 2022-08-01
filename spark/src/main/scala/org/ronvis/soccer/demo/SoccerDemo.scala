@@ -2,7 +2,7 @@ package org.ronvis.soccer.demo
 
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.apache.spark.ml.clustering.{KMeans, MyKMeans}
+import org.apache.spark.ml.clustering.{KMeans, SoccerKMeans}
 import org.apache.spark.ml.evaluation.ClusteringEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.{Estimator, Model}
@@ -25,7 +25,7 @@ object SoccerDemo {
 
     val seed = 1L
     val k = 10
-    val myKmeans = new MyKMeans().setK(k).setSeed(seed)
+    val myKmeans = new SoccerKMeans().setK(k).setSeed(seed)
     fitAndEvaluate(myKmeans, dataset)
 
     val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)

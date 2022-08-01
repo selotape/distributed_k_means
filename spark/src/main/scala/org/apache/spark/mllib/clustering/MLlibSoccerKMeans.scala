@@ -21,7 +21,7 @@ import org.apache.spark.util.random.XORShiftRandom
  * to it should be cached by the user.
  */
 @Since("0.8.0")
-class MyMLlibSoccerKMeans private(
+class MLlibSoccerKMeans private(
                        private var k: Int,
                        private var maxIterations: Int,
                        private var initializationMode: String,
@@ -427,7 +427,7 @@ class MyMLlibSoccerKMeans private(
  * Top-level methods for calling K-means clustering.
  */
 @Since("0.8.0")
-object MyMLlibSoccerKMeans {
+object MLlibSoccerKMeans {
 
   /**
    * Trains a k-means model using the given set of parameters.
@@ -447,7 +447,7 @@ object MyMLlibSoccerKMeans {
              maxIterations: Int,
              initializationMode: String,
              seed: Long): KMeansModel = {
-    new MyMLlibSoccerKMeans().setK(k)
+    new MLlibSoccerKMeans().setK(k)
       .setMaxIterations(maxIterations)
       .setInitializationMode(initializationMode)
       .setSeed(seed)
@@ -469,7 +469,7 @@ object MyMLlibSoccerKMeans {
              k: Int,
              maxIterations: Int,
              initializationMode: String): KMeansModel = {
-    new MyMLlibSoccerKMeans().setK(k)
+    new MLlibSoccerKMeans().setK(k)
       .setMaxIterations(maxIterations)
       .setInitializationMode(initializationMode)
       .run(data)
@@ -483,7 +483,7 @@ object MyMLlibSoccerKMeans {
              data: RDD[Vector],
              k: Int,
              maxIterations: Int): KMeansModel = {
-    new MyMLlibSoccerKMeans().setK(k)
+    new MLlibSoccerKMeans().setK(k)
       .setMaxIterations(maxIterations)
       .run(data)
   }
