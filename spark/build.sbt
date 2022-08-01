@@ -8,3 +8,5 @@ lazy val root = (project in file("."))
   )
 
 libraryDependencies ++= Seq( "org.apache.spark" % "spark-core_2.13" % "3.3.0")
+libraryDependencies ++= Seq( "org.apache.spark" % "spark-mllib_2.13" % "3.3.0")
+libraryDependencies ++= Seq( "org.apache.spark" % "spark-sql_2.13" % "3.3.0")
