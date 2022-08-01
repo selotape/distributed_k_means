@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration>
+    <Appenders>
+        <Console name="stdout" immediateFlush="false">
+            <PatternLayout pattern="%d{ABSOLUTE} [%5p] [%c{1}] %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="warn">
+            <AppenderRef ref="stdout"/>
+        </Root>
+        <Logger name="org.ronvis" level="debug"/>
+        <Logger name="org.apache.spark.ml" level="debug"/>
+        <Logger name="org.apache.spark.mllib" level="debug"/>
+    </Loggers>
+
+</Configuration>
+
