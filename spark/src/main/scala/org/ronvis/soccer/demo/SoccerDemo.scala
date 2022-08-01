@@ -11,10 +11,8 @@ object SoccerDemo {
       .builder()
       .master("local[*]")
       .appName("SOCCER example")
-//      .config("spark.some.config.option", "some-value")
       .getOrCreate()
 
-//    val dataset = spark.read.format("libsvm").load("../datasets/kddcup99/kddcup.data")
     val dataset = spark.read.format("libsvm").load("../datasets/sample_kmeans_data.txt")
 
     // Trains a k-means model.
