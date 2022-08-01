@@ -1,5 +1,5 @@
 **/kddcup.data_10_percent_corrected.csv
-.idea
+**/.idea
 *.iml
 
 *.gz
@@ -14,3 +14,5 @@ kddcup.data
 nohup.out
 **gradle
 **private**
+**/target
+**/.bsp
