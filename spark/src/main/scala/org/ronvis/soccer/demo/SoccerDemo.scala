@@ -1,5 +1,7 @@
 package org.ronvis.soccer.demo
 
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import org.apache.spark.ml.clustering.{KMeans, MyKMeans}
 import org.apache.spark.ml.evaluation.ClusteringEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
@@ -7,6 +9,8 @@ import org.apache.spark.ml.{Estimator, Model}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object SoccerDemo {
+  lazy val log: Logger = LogManager.getLogger(this.getClass)
+
 
   def main(args: Array[String]): Unit = {
 
@@ -33,7 +37,7 @@ object SoccerDemo {
     val predictions = model.transform(dataset)
     val evaluator = new ClusteringEvaluator()
     val silhouette = evaluator.evaluate(predictions)
-    println(s"Silhouette with squared euclidean distance = $silhouette")
+    log.info(s"Silhouette with squared euclidean distance = $silhouette")
   }
 
   def getSampleKMeansDataset(spark: SparkSession): DataFrame = {
