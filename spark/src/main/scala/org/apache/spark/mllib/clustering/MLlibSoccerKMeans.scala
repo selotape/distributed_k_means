@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.annotation.Since
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.clustering.SoccerFormulae.{DELTA_DEFAULT, kplus_formula}
+import org.apache.spark.ml.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula}
 import org.apache.spark.ml.util.Instrumentation
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.mllib.linalg.BLAS.axpy
@@ -243,10 +243,11 @@ class MLlibSoccerKMeans private(
                                       data: RDD[VectorWithNorm],
                                       instr: Option[Instrumentation]): KMeansModel = {
 
-    val sc = data.sparkContext
-
     val kp = kplus_formula(k, delta, epsilon)
-
+    val len_N = data.count()
+    val remaining_elements_count = len_N
+    val alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
+    val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
     val initStartTime = System.nanoTime()
 
     val distanceMeasureInstance = DistanceMeasure.decodeFromString(this.distanceMeasure)
@@ -261,24 +262,26 @@ class MLlibSoccerKMeans private(
           initKMeansParallel(data, distanceMeasureInstance)
         }
     }
+
     val numFeatures = centers.head.vector.size
     val initTimeInSeconds = (System.nanoTime() - initStartTime) / 1e9
     logInfo(f"Initialization with $initializationMode took $initTimeInSeconds%.3f seconds.")
-
     var converged = false
+
     var cost = 0.0
     var iteration = 0
-
     val iterationStartTime = System.nanoTime()
 
-    instr.foreach(_.logNumFeatures(numFeatures))
 
+    instr.foreach(_.logNumFeatures(numFeatures))
     val shouldComputeStats =
       DistanceMeasure.shouldComputeStatistics(centers.length)
+
     val shouldComputeStatsLocally =
       DistanceMeasure.shouldComputeStatisticsLocally(centers.length, numFeatures)
 
-    // Execute iterations of Lloyd's algorithm until converged
+    val sc = data.sparkContext
+    // Execute iterations of SOCCER algorithm until converged
     while (iteration < maxIterations && !converged) {
       val bcCenters = sc.broadcast(centers)
       val stats = if (shouldComputeStats) {

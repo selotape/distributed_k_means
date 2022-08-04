@@ -28,14 +28,14 @@ object SoccerFormulae {
    * The size above which data doesn't fit inside a single machine,
    * so clustering must be distributed.
    */
-  def max_subset_size_formula(n: Int, k: Int, ep: Double, dt: Double): Int = {
+  def max_subset_size_formula(n: Long, k: Int, ep: Double, dt: Double): Long = {
     (MAX_SS_SIZE_C * k * math.pow(n, ep) * math.log(1.1 * k / dt)).toInt
   }
 
   /** *
    * The probability to draw a datum into P1/P2 samples
    */
-  def alpha_formula(n: Int, k: Int, ep: Double, dt: Double, N_current_size: Int): Int = {
+  def alpha_formula(n: Long, k: Int, ep: Double, dt: Double, N_current_size: Long): Long = {
     max_subset_size_formula(n, k, ep, dt) / N_current_size
   }
 
