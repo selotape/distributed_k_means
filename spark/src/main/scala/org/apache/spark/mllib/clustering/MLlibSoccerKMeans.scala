@@ -1,10 +1,10 @@
 package org.apache.spark.mllib.clustering
 
 import scala.collection.mutable.ArrayBuffer
-
 import org.apache.spark.annotation.Since
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.internal.Logging
+import org.apache.spark.ml.clustering.SoccerFormulae.{DELTA_DEFAULT, kplus_formula}
 import org.apache.spark.ml.util.Instrumentation
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.mllib.linalg.BLAS.axpy
@@ -23,6 +23,7 @@ import org.apache.spark.util.random.XORShiftRandom
 @Since("0.8.0")
 class MLlibSoccerKMeans private(
                        private var k: Int,
+                       private var delta: Double,
                        private var maxIterations: Int,
                        private var initializationMode: String,
                        private var initializationSteps: Int,
@@ -31,9 +32,9 @@ class MLlibSoccerKMeans private(
                        private var distanceMeasure: String) extends Serializable with Logging {
 
   @Since("0.8.0")
-  private def this(k: Int, maxIterations: Int, initializationMode: String, initializationSteps: Int,
+  private def this(k: Int, delta: Double, ep: Double, maxIterations: Int, initializationMode: String, initializationSteps: Int,
                    epsilon: Double, seed: Long) =
-    this(k, maxIterations, initializationMode, initializationSteps,
+    this(k, delta, maxIterations, initializationMode, initializationSteps,
       epsilon, seed, DistanceMeasure.EUCLIDEAN)
 
   /**
@@ -42,7 +43,7 @@ class MLlibSoccerKMeans private(
    * distanceMeasure: "euclidean"}.
    */
   @Since("0.8.0")
-  def this() = this(2, 20, KMeans.K_MEANS_PARALLEL, 2, 1e-4, Utils.random.nextLong(),
+  def this() = this(2, DELTA_DEFAULT, 20, KMeans.K_MEANS_PARALLEL, 2, 1e-4, Utils.random.nextLong(),
     DistanceMeasure.EUCLIDEAN)
 
   /**
@@ -122,6 +123,7 @@ class MLlibSoccerKMeans private(
   }
 
   /**
+   * TODO - fix this
    * The distance threshold within which we've consider centers to have converged.
    */
   @Since("1.4.0")
@@ -136,6 +138,23 @@ class MLlibSoccerKMeans private(
     require(epsilon >= 0,
       s"Distance threshold must be nonnegative but got ${epsilon}")
     this.epsilon = epsilon
+    this
+  }
+
+  /**
+   * TODO
+   */
+  @Since("1.4.0")
+  def getDelta: Double = delta
+
+  /**
+   * TODO
+   */
+  @Since("0.8.0")
+  def setDelta(delta: Double): this.type = {
+    require(delta >= 0,
+      s"Distance threshold must be nonnegative but got ${epsilon}") // TODO
+    this.delta = delta
     this
   }
 
@@ -218,13 +237,15 @@ class MLlibSoccerKMeans private(
   }
 
   /**
-   * Implementation of K-Means algorithm.
+   * Implementation of SOCCER K-Means algorithm.
    */
   private def runAlgorithmWithWeight(
                                       data: RDD[VectorWithNorm],
                                       instr: Option[Instrumentation]): KMeansModel = {
 
     val sc = data.sparkContext
+
+    val kp = kplus_formula(k, delta, epsilon)
 
     val initStartTime = System.nanoTime()
 
@@ -447,7 +468,10 @@ object MLlibSoccerKMeans {
              maxIterations: Int,
              initializationMode: String,
              seed: Long): KMeansModel = {
-    new MLlibSoccerKMeans().setK(k)
+    new MLlibSoccerKMeans()
+      .setK(k)
+      .setDelta(k)
+      .setEpsilon(k)
       .setMaxIterations(maxIterations)
       .setInitializationMode(initializationMode)
       .setSeed(seed)
@@ -455,7 +479,7 @@ object MLlibSoccerKMeans {
   }
 
   /**
-   * Trains a k-means model using the given set of parameters.
+   * Trains a soccer k-means model using the given set of parameters.
    *
    * @param data Training points as an `RDD` of `Vector` types.
    * @param k Number of clusters to create.
