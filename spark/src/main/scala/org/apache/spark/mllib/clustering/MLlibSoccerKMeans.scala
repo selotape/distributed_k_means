@@ -32,7 +32,7 @@ class MLlibSoccerKMeans private(
                        private var distanceMeasure: String) extends Serializable with Logging {
 
   @Since("0.8.0")
-  private def this(k: Int, delta: Double, ep: Double, maxIterations: Int, initializationMode: String, initializationSteps: Int,
+  private def this(k: Int, delta: Double, maxIterations: Int, initializationMode: String, initializationSteps: Int,
                    epsilon: Double, seed: Long) =
     this(k, delta, maxIterations, initializationMode, initializationSteps,
       epsilon, seed, DistanceMeasure.EUCLIDEAN)
@@ -64,7 +64,7 @@ class MLlibSoccerKMeans private(
   @Since("0.8.0")
   def setK(k: Int): this.type = {
     require(k > 0,
-      s"Number of clusters must be positive but got ${k}")
+      s"Number of clusters must be positive but got $k")
     this.k = k
     this
   }
@@ -81,7 +81,7 @@ class MLlibSoccerKMeans private(
   @Since("0.8.0")
   def setMaxIterations(maxIterations: Int): this.type = {
     require(maxIterations >= 0,
-      s"Maximum of iterations must be nonnegative but got ${maxIterations}")
+      s"Maximum of iterations must be nonnegative but got $maxIterations")
     this.maxIterations = maxIterations
     this
   }
@@ -117,7 +117,7 @@ class MLlibSoccerKMeans private(
   @Since("0.8.0")
   def setInitializationSteps(initializationSteps: Int): this.type = {
     require(initializationSteps > 0,
-      s"Number of initialization steps must be positive but got ${initializationSteps}")
+      s"Number of initialization steps must be positive but got $initializationSteps")
     this.initializationSteps = initializationSteps
     this
   }
@@ -136,7 +136,7 @@ class MLlibSoccerKMeans private(
   @Since("0.8.0")
   def setEpsilon(epsilon: Double): this.type = {
     require(epsilon >= 0,
-      s"Distance threshold must be nonnegative but got ${epsilon}")
+      s"Distance threshold must be nonnegative but got $epsilon")
     this.epsilon = epsilon
     this
   }
@@ -153,7 +153,7 @@ class MLlibSoccerKMeans private(
   @Since("0.8.0")
   def setDelta(delta: Double): this.type = {
     require(delta >= 0,
-      s"Distance threshold must be nonnegative but got ${epsilon}") // TODO
+      s"Distance threshold must be nonnegative but got $epsilon") // TODO
     this.delta = delta
     this
   }
@@ -365,7 +365,7 @@ class MLlibSoccerKMeans private(
   private def initRandom(data: RDD[VectorWithNorm]): Array[VectorWithNorm] = {
     // Select without replacement; may still produce duplicates if the data has < k distinct
     // points, so deduplicate the centroids to match the behavior of k-means|| in the same situation
-    data.takeSample(false, k, new XORShiftRandom(this.seed).nextInt())
+    data.takeSample(withReplacement = false, k, new XORShiftRandom(this.seed).nextInt())
       .map(_.vector).distinct.map(new VectorWithNorm(_))
   }
 
@@ -385,7 +385,7 @@ class MLlibSoccerKMeans private(
 
     // Initialize the first center to a random point.
     val seed = new XORShiftRandom(this.seed).nextInt()
-    val sample = data.takeSample(false, 1, seed)
+    val sample = data.takeSample(withReplacement = false, 1, seed)
     // Could be empty if data is empty; fail with a better message early:
     require(sample.nonEmpty, s"No samples available from $data")
 
