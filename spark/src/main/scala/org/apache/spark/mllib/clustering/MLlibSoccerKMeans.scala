@@ -1,17 +1,14 @@
 package org.apache.spark.mllib.clustering
 
-import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.annotation.Since
-import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula}
 import org.apache.spark.ml.util.Instrumentation
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.mllib.linalg.BLAS.axpy
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.Utils
-import org.apache.spark.util.random.XORShiftRandom
 
 /**
  * K-means clustering with a k-means++ like initialization mode
@@ -25,17 +22,13 @@ class MLlibSoccerKMeans private(
                        private var k: Int,
                        private var delta: Double,
                        private var maxIterations: Int,
-                       private var initializationMode: String,
-                       private var initializationSteps: Int,
                        private var epsilon: Double,
                        private var seed: Long,
                        private var distanceMeasure: String) extends Serializable with Logging {
 
   @Since("0.8.0")
-  private def this(k: Int, delta: Double, maxIterations: Int, initializationMode: String, initializationSteps: Int,
-                   epsilon: Double, seed: Long) =
-    this(k, delta, maxIterations, initializationMode, initializationSteps,
-      epsilon, seed, DistanceMeasure.EUCLIDEAN)
+  private def this(k: Int, delta: Double, maxIterations: Int, epsilon: Double, seed: Long) =
+    this(k, delta, maxIterations, epsilon, seed, DistanceMeasure.EUCLIDEAN)
 
   /**
    * Constructs a SoccerKMeans instance with default parameters: {k: 2, maxIterations: 20,
@@ -43,8 +36,7 @@ class MLlibSoccerKMeans private(
    * distanceMeasure: "euclidean"}.
    */
   @Since("0.8.0")
-  def this() = this(2, DELTA_DEFAULT, 20, KMeans.K_MEANS_PARALLEL, 2, 1e-4, Utils.random.nextLong(),
-    DistanceMeasure.EUCLIDEAN)
+  def this() = this(2, DELTA_DEFAULT, 20, 1e-4, Utils.random.nextLong(), DistanceMeasure.EUCLIDEAN)
 
   /**
    * Number of clusters to create (k).
@@ -83,42 +75,6 @@ class MLlibSoccerKMeans private(
     require(maxIterations >= 0,
       s"Maximum of iterations must be nonnegative but got $maxIterations")
     this.maxIterations = maxIterations
-    this
-  }
-
-  /**
-   * The initialization algorithm. This can be either "random" or "k-means||".
-   */
-  @Since("1.4.0")
-  def getInitializationMode: String = initializationMode
-
-  /**
-   * Set the initialization algorithm. This can be either "random" to choose random points as
-   * initial cluster centers, or "k-means||" to use a parallel variant of k-means++
-   * (Bahmani et al., Scalable K-Means++, VLDB 2012). Default: k-means||.
-   */
-  @Since("0.8.0")
-  def setInitializationMode(initializationMode: String): this.type = {
-    KMeans.validateInitMode(initializationMode)
-    this.initializationMode = initializationMode
-    this
-  }
-
-  /**
-   * Number of steps for the k-means|| initialization mode
-   */
-  @Since("1.4.0")
-  def getInitializationSteps: Int = initializationSteps
-
-  /**
-   * Set the number of steps for the k-means|| initialization mode. This is an advanced
-   * setting -- the default of 2 is almost always enough. Default: 2.
-   */
-  @Since("0.8.0")
-  def setInitializationSteps(initializationSteps: Int): this.type = {
-    require(initializationSteps > 0,
-      s"Number of initialization steps must be positive but got $initializationSteps")
-    this.initializationSteps = initializationSteps
     this
   }
 
@@ -252,20 +208,11 @@ class MLlibSoccerKMeans private(
 
     val distanceMeasureInstance = DistanceMeasure.decodeFromString(this.distanceMeasure)
 
-    val centers = initialModel match {
-      case Some(kMeansCenters) =>
-        kMeansCenters.clusterCenters.map(new VectorWithNorm(_))
-      case None =>
-        if (initializationMode == KMeans.RANDOM) {
-          initRandom(data)
-        } else {
-          initKMeansParallel(data, distanceMeasureInstance)
-        }
-    }
+    val centers = new Array[VectorWithNorm](0)
+    val numFeatures = data.first().vector.size
 
-    val numFeatures = centers.head.vector.size
     val initTimeInSeconds = (System.nanoTime() - initStartTime) / 1e9
-    logInfo(f"Initialization with $initializationMode took $initTimeInSeconds%.3f seconds.")
+    logInfo(f"Initialization took $initTimeInSeconds%.3f seconds.")
     var converged = false
 
     var cost = 0.0
@@ -362,88 +309,6 @@ class MLlibSoccerKMeans private(
     new KMeansModel(centers.map(_.vector), distanceMeasure, cost, iteration)
   }
 
-  /**
-   * Initialize a set of cluster centers at random.
-   */
-  private def initRandom(data: RDD[VectorWithNorm]): Array[VectorWithNorm] = {
-    // Select without replacement; may still produce duplicates if the data has < k distinct
-    // points, so deduplicate the centroids to match the behavior of k-means|| in the same situation
-    data.takeSample(withReplacement = false, k, new XORShiftRandom(this.seed).nextInt())
-      .map(_.vector).distinct.map(new VectorWithNorm(_))
-  }
-
-  /**
-   * Initialize a set of cluster centers using the k-means|| algorithm by Bahmani et al.
-   * (Bahmani et al., Scalable K-Means++, VLDB 2012). This is a variant of k-means++ that tries
-   * to find dissimilar cluster centers by starting with a random center and then doing
-   * passes where more centers are chosen with probability proportional to their squared distance
-   * to the current cluster set. It results in a provable approximation to an optimal clustering.
-   *
-   * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
-   */
-  private[clustering] def initKMeansParallel(data: RDD[VectorWithNorm],
-                                             distanceMeasureInstance: DistanceMeasure): Array[VectorWithNorm] = {
-    // Initialize empty centers and point costs.
-    var costs = data.map(_ => Double.PositiveInfinity)
-
-    // Initialize the first center to a random point.
-    val seed = new XORShiftRandom(this.seed).nextInt()
-    val sample = data.takeSample(withReplacement = false, 1, seed)
-    // Could be empty if data is empty; fail with a better message early:
-    require(sample.nonEmpty, s"No samples available from $data")
-
-    val centers = ArrayBuffer[VectorWithNorm]()
-    var newCenters = Array(sample.head.toDense)
-    centers ++= newCenters
-
-    // On each step, sample 2 * k points on average with probability proportional
-    // to their squared distance from the centers. Note that only distances between points
-    // and new centers are computed in each iteration.
-    var step = 0
-    val bcNewCentersList = ArrayBuffer[Broadcast[_]]()
-    while (step < initializationSteps) {
-      val bcNewCenters = data.context.broadcast(newCenters)
-      bcNewCentersList += bcNewCenters
-      val preCosts = costs
-      costs = data.zip(preCosts).map { case (point, cost) =>
-        math.min(distanceMeasureInstance.pointCost(bcNewCenters.value, point), cost)
-      }.persist(StorageLevel.MEMORY_AND_DISK)
-      val sumCosts = costs.sum()
-
-      bcNewCenters.unpersist()
-      preCosts.unpersist()
-
-      val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointCosts) =>
-        val rand = new XORShiftRandom(seed ^ (step << 16) ^ index)
-        pointCosts.filter { case (_, c) => rand.nextDouble() < 2.0 * c * k / sumCosts }.map(_._1)
-      }.collect()
-      newCenters = chosen.map(_.toDense)
-      centers ++= newCenters
-      step += 1
-    }
-
-    costs.unpersist()
-    bcNewCentersList.foreach(_.destroy())
-
-    val distinctCenters = centers.map(_.vector).distinct.map(new VectorWithNorm(_)).toArray
-
-    if (distinctCenters.length <= k) {
-      distinctCenters
-    } else {
-      // Finally, we might have a set of more than k distinct candidate centers; weight each
-      // candidate by the number of points in the dataset mapping to it and run a local k-means++
-      // on the weighted centers to pick k of them
-      val bcCenters = data.context.broadcast(distinctCenters)
-      val countMap = data
-        .map(distanceMeasureInstance.findClosest(bcCenters.value, _)._1)
-        .countByValue()
-
-      bcCenters.destroy()
-
-      val myWeights = distinctCenters.indices.map(countMap.getOrElse(_, 0L).toDouble).toArray
-      LocalKMeans.kMeansPlusPlus(0, distinctCenters, myWeights, k, 30)
-    }
-  }
 }
 
 
@@ -476,7 +341,6 @@ object MLlibSoccerKMeans {
       .setDelta(k)
       .setEpsilon(k)
       .setMaxIterations(maxIterations)
-      .setInitializationMode(initializationMode)
       .setSeed(seed)
       .run(data)
   }
@@ -498,7 +362,6 @@ object MLlibSoccerKMeans {
              initializationMode: String): KMeansModel = {
     new MLlibSoccerKMeans().setK(k)
       .setMaxIterations(maxIterations)
-      .setInitializationMode(initializationMode)
       .run(data)
   }
 
