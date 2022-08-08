@@ -104,8 +104,6 @@ class SoccerKMeans @Since("1.5.0")(
       maxIter, seed, tol, weightCol)
     val algo = new MLlibSoccerKMeans()
       .setK($(k))
-      .setInitializationMode($(initMode))
-      .setInitializationSteps($(initSteps))
       .setMaxIterations($(maxIter))
       .setSeed($(seed))
       .setEpsilon($(tol))
@@ -142,11 +140,13 @@ class SoccerKMeans @Since("1.5.0")(
   }
 }
 
-@Since("1.6.0")
-object SoccerKMeans extends DefaultParamsReadable[SoccerKMeans] {
 
-  @Since("1.6.0")
-  override def load(path: String): SoccerKMeans = super.load(path)
-}
-
-
+// TODO - uncomment and fix
+//@Since("1.6.0")
+//object SoccerKMeans extends DefaultParamsReadable[SoccerKMeans] {
+//
+//  @Since("1.6.0")
+//  override def load(path: String): SoccerKMeans = super.load(path)
+//}
+//
+//
