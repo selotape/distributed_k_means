@@ -25,8 +25,12 @@ object SoccerDemo {
 
     val seed = 1L
     val k = 10
-    val myKmeans = new SoccerKMeans().setK(k).setSeed(seed)
-    fitAndEvaluate(myKmeans, dataset)
+    val soccerKmeans = new SoccerKMeans()
+      .setK(k)
+      .setM(6)
+      .setSeed(seed)
+      .setMaxIter(3)
+    fitAndEvaluate(soccerKmeans, dataset)
 
     val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
     fitAndEvaluate(boringOldschoolKmeans, dataset)

@@ -10,7 +10,10 @@ class SoccerFormulae {
 object SoccerFormulae {
 
   // TODO
+  val MAX_ITERATIONS_DEFAULT = 123
+
   val DELTA_DEFAULT = 123.0
+  val EPSILON_DEFAULT = 123.0
   val KPLUS_SCALER = 123
   val KPLUS_C = 1.23
   val MAX_SS_SIZE_C = 123

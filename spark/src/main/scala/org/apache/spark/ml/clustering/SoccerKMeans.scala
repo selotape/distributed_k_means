@@ -60,6 +60,25 @@ class SoccerKMeans @Since("1.5.0")(
   @Since("1.5.0")
   def setK(value: Int): this.type = set(k, value)
 
+  /**
+   * The number of clusters to create (k). Must be &gt; 1. Note that it is possible for fewer than
+   * k clusters to be returned, for example, if there are fewer than k distinct points to cluster.
+   * Default: 2.
+   * @group param
+   */
+  @Since("1.5.0")
+  final val m = new IntParam(this, "k", "The number of available machines. " +
+    "Must be >= 1.", ParamValidators.gt(0))
+
+  /** @group getParam */
+  @Since("1.5.0")
+  def getM: Int = $(m)
+
+
+  /** @group setParam */
+  @Since("1.5.0")
+  def setM(value: Int): this.type = set(m, value)
+
   /** @group expertSetParam */
   @Since("1.5.0")
   def setInitMode(value: String): this.type = set(initMode, value)
@@ -104,6 +123,7 @@ class SoccerKMeans @Since("1.5.0")(
       maxIter, seed, tol, weightCol)
     val algo = new MLlibSoccerKMeans()
       .setK($(k))
+      .setM($(m))
       .setMaxIterations($(maxIter))
       .setSeed($(seed))
       .setEpsilon($(tol))
@@ -118,7 +138,7 @@ class SoccerKMeans @Since("1.5.0")(
       .rdd.map { case Row(point: Vector, weight: Double) => (OldVectors.fromML(point), weight) }
 
     val handlePersistence = dataset.storageLevel == StorageLevel.NONE
-    val parentModel = algo.runWithWeight(instances, handlePersistence, Some(instr))
+    val parentModel = algo.runWithWeight(instances)
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
 
     val summary = new KMeansSummary(

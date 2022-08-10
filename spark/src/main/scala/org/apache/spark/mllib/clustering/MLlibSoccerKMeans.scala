@@ -3,11 +3,8 @@ package org.apache.spark.mllib.clustering
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula}
-import org.apache.spark.ml.util.Instrumentation
-import org.apache.spark.mllib.linalg.BLAS.axpy
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.Utils
 
 /**
@@ -19,16 +16,17 @@ import org.apache.spark.util.Utils
  */
 @Since("0.8.0")
 class MLlibSoccerKMeans private(
-                       private var k: Int,
-                       private var delta: Double,
-                       private var maxIterations: Int,
-                       private var epsilon: Double,
-                       private var seed: Long,
-                       private var distanceMeasure: String) extends Serializable with Logging {
+                                 private var k: Int,
+                                 private var m: Int,
+                                 private var delta: Double,
+                                 private var maxIterations: Int,
+                                 private var epsilon: Double,
+                                 private var seed: Long,
+                                 private var distanceMeasure: String) extends Serializable with Logging {
 
   @Since("0.8.0")
-  private def this(k: Int, delta: Double, maxIterations: Int, epsilon: Double, seed: Long) =
-    this(k, delta, maxIterations, epsilon, seed, DistanceMeasure.EUCLIDEAN)
+  private def this(k: Int, m: Int, delta: Double, maxIterations: Int, epsilon: Double, seed: Long) =
+    this(k, m, delta, maxIterations, epsilon, seed, DistanceMeasure.EUCLIDEAN)
 
   /**
    * Constructs a SoccerKMeans instance with default parameters: {k: 2, maxIterations: 20,
@@ -36,13 +34,13 @@ class MLlibSoccerKMeans private(
    * distanceMeasure: "euclidean"}.
    */
   @Since("0.8.0")
-  def this() = this(2, DELTA_DEFAULT, 20, 1e-4, Utils.random.nextLong(), DistanceMeasure.EUCLIDEAN)
+  def this() = this(2, 10, DELTA_DEFAULT, 20, 1e-4, Utils.random.nextLong(), DistanceMeasure.EUCLIDEAN)
 
   /**
    * Number of clusters to create (k).
    *
    * @note It is possible for fewer than k clusters to
-   * be returned, for example, if there are fewer than k distinct points to cluster.
+   *       be returned, for example, if there are fewer than k distinct points to cluster.
    */
   @Since("1.4.0")
   def getK: Int = k
@@ -51,13 +49,30 @@ class MLlibSoccerKMeans private(
    * Set the number of clusters to create (k).
    *
    * @note It is possible for fewer than k clusters to
-   * be returned, for example, if there are fewer than k distinct points to cluster. Default: 2.
+   *       be returned, for example, if there are fewer than k distinct points to cluster. Default: 2.
    */
   @Since("0.8.0")
   def setK(k: Int): this.type = {
     require(k > 0,
       s"Number of clusters must be positive but got $k")
     this.k = k
+    this
+  }
+
+  /**
+   * Number of machines/workers available.
+   */
+  @Since("1.4.0")
+  def getM: Int = m
+
+  /**
+   * Set the number of machines/workers available.
+   */
+  @Since("0.8.0")
+  def setM(m: Int): this.type = {
+    require(m > 0,
+      s"Number of machines must be positive but got $m")
+    this.m = m
     this
   }
 
@@ -168,26 +183,15 @@ class MLlibSoccerKMeans private(
   @Since("0.8.0")
   def run(data: RDD[Vector]): KMeansModel = {
     val instances = data.map(point => (point, 1.0))
-    val handlePersistence = data.getStorageLevel == StorageLevel.NONE
-    runWithWeight(instances, handlePersistence, None)
+    runWithWeight(instances)
   }
 
   private[spark] def runWithWeight(
-                                    instances: RDD[(Vector, Double)],
-                                    handlePersistence: Boolean,
-                                    instr: Option[Instrumentation]): KMeansModel = {
+                                    instances: RDD[(Vector, Double)]): KMeansModel = {
     val norms = instances.map { case (v, _) => Vectors.norm(v, 2.0) }
     val vectors = instances.zip(norms)
       .map { case ((v, w), norm) => new VectorWithNorm(v, norm, w) }
-
-    if (handlePersistence) {
-      vectors.persist(StorageLevel.MEMORY_AND_DISK)
-    } else {
-      // Compute squared norms and cache them.
-      norms.persist(StorageLevel.MEMORY_AND_DISK)
-    }
-    val model = runAlgorithmWithWeight(vectors, instr)
-    if (handlePersistence) { vectors.unpersist() } else { norms.unpersist() }
+    val model = runAlgorithmWithWeight(vectors)
 
     model
   }
@@ -195,108 +199,47 @@ class MLlibSoccerKMeans private(
   /**
    * Implementation of SOCCER K-Means algorithm.
    */
-  private def runAlgorithmWithWeight(
-                                      data: RDD[VectorWithNorm],
-                                      instr: Option[Instrumentation]): KMeansModel = {
+  private def runAlgorithmWithWeight(data: RDD[VectorWithNorm]): KMeansModel = {
 
-    val kp = kplus_formula(k, delta, epsilon)
     val len_N = data.count()
+    val kp = kplus_formula(k, delta, epsilon)
     val remaining_elements_count = len_N
     val alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
-    val initStartTime = System.nanoTime()
+    logInfo(f"max_subset_size:${max_subset_size}")
 
     val distanceMeasureInstance = DistanceMeasure.decodeFromString(this.distanceMeasure)
-
-    val centers = new Array[VectorWithNorm](0)
-    val numFeatures = data.first().vector.size
-
-    val initTimeInSeconds = (System.nanoTime() - initStartTime) / 1e9
-    logInfo(f"Initialization took $initTimeInSeconds%.3f seconds.")
-    var converged = false
+    //
+    var centers = new Array[VectorWithNorm](0)
 
     var cost = 0.0
     var iteration = 0
-    val iterationStartTime = System.nanoTime()
 
-
-    instr.foreach(_.logNumFeatures(numFeatures))
-    val shouldComputeStats =
-      DistanceMeasure.shouldComputeStatistics(centers.length)
-
-    val shouldComputeStatsLocally =
-      DistanceMeasure.shouldComputeStatisticsLocally(centers.length, numFeatures)
 
     val sc = data.sparkContext
-    // Execute iterations of SOCCER algorithm until converged
-    while (iteration < maxIterations && !converged) {
-      val bcCenters = sc.broadcast(centers)
-      val stats = if (shouldComputeStats) {
-        if (shouldComputeStatsLocally) {
-          Some(distanceMeasureInstance.computeStatistics(centers))
-        } else {
-          Some(distanceMeasureInstance.computeStatisticsDistributedly(sc, bcCenters))
-        }
-      } else {
-        None
-      }
-      val bcStats = sc.broadcast(stats)
 
+    val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed)
+
+
+    // TODO - consider using pyspark
+    // TODO - persist RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
+    while (iteration < maxIterations && remaining_elements_count > max_subset_size) {
+      val bcCenters = sc.broadcast(centers)
       val costAccum = sc.doubleAccumulator
 
-      // Find the new centers
-      val collected = data.mapPartitions { points =>
-        val centers = bcCenters.value
-        val stats = bcStats.value
-        val dims = centers.head.vector.size
+      val (p1: Array[VectorWithNorm], p2: Array[VectorWithNorm]) = sample_P1_P2(splits)
 
-        val sums = Array.fill(centers.length)(Vectors.zeros(dims))
+      val (v: Double, cTmp: Array[VectorWithNorm]) = iterate(p1, p2, alpha)
 
-        // clusterWeightSum is needed to calculate cluster center
-        // cluster center =
-        //     sample1 * weight1/clusterWeightSum + sample2 * weight2/clusterWeightSum + ...
-        val clusterWeightSum = Array.ofDim[Double](centers.length)
+      centers = centers.concat(cTmp)
 
-        points.foreach { point =>
-          val (bestCenter, cost) = distanceMeasureInstance.findClosest(centers, stats, point)
-          costAccum.add(cost * point.weight)
-          distanceMeasureInstance.updateClusterSum(point, sums(bestCenter))
-          clusterWeightSum(bestCenter) += point.weight
-        }
-
-        Iterator.tabulate(centers.length)(j => (j, (sums(j), clusterWeightSum(j))))
-          .filter(_._2._2 > 0)
-      }.reduceByKey { (sumweight1, sumweight2) =>
-        axpy(1.0, sumweight2._1, sumweight1._1)
-        (sumweight1._1, sumweight1._2 + sumweight2._2)
-      }.collectAsMap()
-
-      if (iteration == 0) {
-        instr.foreach(_.logNumExamples(costAccum.count))
-        instr.foreach(_.logSumOfWeights(collected.values.map(_._2).sum))
-      }
 
       bcCenters.destroy()
-      bcStats.destroy()
-
-      // Update the cluster centers and costs
-      converged = true
-      collected.foreach { case (j, (sum, weightSum)) =>
-        val newCenter = distanceMeasureInstance.centroid(sum, weightSum)
-        if (converged &&
-          !distanceMeasureInstance.isCenterConverged(centers(j), newCenter, epsilon)) {
-          converged = false
-        }
-        centers(j) = newCenter
-      }
 
       cost = costAccum.value
-      instr.foreach(_.logNamedValue(s"Cost@iter=$iteration", s"$cost"))
       iteration += 1
     }
 
-    val iterationTimeInSeconds = (System.nanoTime() - iterationStartTime) / 1e9
-    logInfo(f"Iterations took $iterationTimeInSeconds%.3f seconds.")
 
     if (iteration == maxIterations) {
       logInfo(s"SoccerKMeans reached the max number of iterations: $maxIterations.")
@@ -308,6 +251,15 @@ class MLlibSoccerKMeans private(
 
     new KMeansModel(centers.map(_.vector), distanceMeasure, cost, iteration)
   }
+
+  def sample_P1_P2(splits: Array[RDD[VectorWithNorm]]): (Array[VectorWithNorm], Array[VectorWithNorm]) = {
+    (splits(0).collect(), splits(1).collect())
+  }
+
+  def iterate(p1: Array[VectorWithNorm], p2: Array[VectorWithNorm], alpha: Long): (Double, Array[VectorWithNorm]) = {
+    (1.0, p1.take(5))
+  }
+
 
 }
 
@@ -321,13 +273,13 @@ object MLlibSoccerKMeans {
   /**
    * Trains a k-means model using the given set of parameters.
    *
-   * @param data Training points as an `RDD` of `Vector` types.
-   * @param k Number of clusters to create.
-   * @param maxIterations Maximum number of iterations allowed.
+   * @param data               Training points as an `RDD` of `Vector` types.
+   * @param k                  Number of clusters to create.
+   * @param maxIterations      Maximum number of iterations allowed.
    * @param initializationMode The initialization algorithm. This can either be "random" or
    *                           "k-means||". (default: "k-means||")
-   * @param seed Random seed for cluster initialization. Default is to generate seed based
-   *             on system time.
+   * @param seed               Random seed for cluster initialization. Default is to generate seed based
+   *                           on system time.
    */
   @Since("2.1.0")
   def train(
@@ -348,9 +300,9 @@ object MLlibSoccerKMeans {
   /**
    * Trains a soccer k-means model using the given set of parameters.
    *
-   * @param data Training points as an `RDD` of `Vector` types.
-   * @param k Number of clusters to create.
-   * @param maxIterations Maximum number of iterations allowed.
+   * @param data               Training points as an `RDD` of `Vector` types.
+   * @param k                  Number of clusters to create.
+   * @param maxIterations      Maximum number of iterations allowed.
    * @param initializationMode The initialization algorithm. This can either be "random" or
    *                           "k-means||". (default: "k-means||")
    */
