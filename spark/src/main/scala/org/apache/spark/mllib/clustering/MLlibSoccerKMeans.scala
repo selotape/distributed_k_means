@@ -3,9 +3,12 @@ package org.apache.spark.mllib.clustering
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula}
+import org.apache.spark.mllib.clustering.SoccerBlackboxes.A_final
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.Utils
+
+import scala.util.control.Breaks.break
 
 /**
  * K-means clustering with a k-means++ like initialization mode
@@ -203,10 +206,10 @@ class MLlibSoccerKMeans private(
 
     val len_N = data.count()
     val kp = kplus_formula(k, delta, epsilon)
-    val remaining_elements_count = len_N
-    val alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
+    var remaining_elements_count = len_N
+    var alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
-    logInfo(f"max_subset_size:${max_subset_size}")
+    logInfo(f"max_subset_size:$max_subset_size")
 
     val distanceMeasureInstance = DistanceMeasure.decodeFromString(this.distanceMeasure)
     //
@@ -234,33 +237,56 @@ class MLlibSoccerKMeans private(
       centers = centers.concat(cTmp)
 
 
+      remaining_elements_count = remove_handled_points_and_return_remaining(splits, cTmp, v)
+
+      if (remaining_elements_count == 0) {
+        log.info("remaining_elements_count == 0!!")
+        break
+      }
+
+
+      alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
+
+
       bcCenters.destroy()
 
       cost = costAccum.value
       iteration += 1
     }
 
+    val cTmp = last_iteration(splits)
+    centers = centers.concat(cTmp)
 
-    if (iteration == maxIterations) {
-      logInfo(s"SoccerKMeans reached the max number of iterations: $maxIterations.")
-    } else {
-      logInfo(s"SoccerKMeans converged in $iteration iterations.")
-    }
+    val C_weights: Array[Double] = calculate_center_weights(centers, splits)
+    val C_final = A_final(centers, k, C_weights)
 
     logInfo(s"The cost is $cost.")
 
-    new KMeansModel(centers.map(_.vector), distanceMeasure, cost, iteration)
+    new KMeansModel(C_final.map(_.vector), distanceMeasure, cost, iteration)
   }
 
   def sample_P1_P2(splits: Array[RDD[VectorWithNorm]]): (Array[VectorWithNorm], Array[VectorWithNorm]) = {
     (splits(0).collect(), splits(1).collect())
   }
 
-  def iterate(p1: Array[VectorWithNorm], p2: Array[VectorWithNorm], alpha: Long): (Double, Array[VectorWithNorm]) = {
+  def iterate(p1: Array[VectorWithNorm], p2: Array[VectorWithNorm], alpha: Double): (Double, Array[VectorWithNorm]) = {
     (1.0, p1.take(5))
   }
 
+  def remove_handled_points_and_return_remaining(splits: Array[RDD[VectorWithNorm]], cTmp: Array[VectorWithNorm], v: Double): Long = {
+    1
+  }
 
+  def last_iteration(splits: Array[RDD[VectorWithNorm]]): Array[VectorWithNorm] = {
+    splits(0).take(5)
+  }
+
+  def calculate_center_weights(centers: Array[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
+    val len_b = splits.map(s => s.count()).sum.toInt
+    var b = Array.ofDim[Double](len_b)
+    b = b.map(f=> 0.1)
+    b
+  }
 }
 
 

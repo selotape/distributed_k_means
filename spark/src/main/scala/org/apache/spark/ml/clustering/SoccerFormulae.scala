@@ -38,7 +38,7 @@ object SoccerFormulae {
   /** *
    * The probability to draw a datum into P1/P2 samples
    */
-  def alpha_formula(n: Long, k: Int, ep: Double, dt: Double, N_current_size: Long): Long = {
+  def alpha_formula(n: Long, k: Int, ep: Double, dt: Double, N_current_size: Long): Double = {
     max_subset_size_formula(n, k, ep, dt) / N_current_size
   }
 
