@@ -52,7 +52,7 @@ object SoccerDemo {
 
   def getKddCup99Dataset(spark: SparkSession): DataFrame = {
     // TODO - change to "drop all none numeric columns"
-    val frame = spark.read.format("csv").option("inferSchema", "true").load("../datasets/kddcup99/kddcup.data").drop("_c1", "_c2", "_c3", "_c41")
+    val frame = spark.read.format("csv").option("inferSchema", "true").load("../datasets/kddcup99/kddcup.data").drop("_c1", "_c2", "_c3", "_c41").limit(10000)
     val assembler = new VectorAssembler().setInputCols(frame.columns).setOutputCol("features")
     assembler.transform(frame)
   }
