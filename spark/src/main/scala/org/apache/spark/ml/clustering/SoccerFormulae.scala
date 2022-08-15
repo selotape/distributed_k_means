@@ -12,12 +12,14 @@ object SoccerFormulae {
   // TODO
   val MAX_ITERATIONS_DEFAULT = 123
 
-  val DELTA_DEFAULT = 123.0
-  val EPSILON_DEFAULT = 123.0
-  val KPLUS_SCALER = 123
-  val KPLUS_C = 1.23
-  val MAX_SS_SIZE_C = 123
-  val PHI_ALPHA_C = 123
+  val DELTA_DEFAULT = 0.1
+  val EPSILON_DEFAULT = 0.1
+  val PHI_ALPHA_C = 6.5
+  val MAX_SS_SIZE_C = 36
+  val KPLUS_C = 9
+  val KPLUS_SCALER = 1
+
+  val L_TO_K_RATIO = 2.0
 
 
   /** *
