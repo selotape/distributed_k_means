@@ -1,6 +1,5 @@
 package org.apache.spark.mllib.clustering
 
-import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.mllib.clustering.SoccerBlackboxes.A_final
 import org.apache.spark.mllib.clustering.SoccerFormulae._
@@ -17,7 +16,7 @@ import scala.util.control.Breaks.break
  * This is an iterative algorithm that will make multiple passes over the data, so any RDDs given
  * to it should be cached by the user.
  */
-@Since("0.8.0")
+
 class MLlibSoccerKMeans private(
                                  private var k: Int,
                                  private var m: Int,
@@ -28,7 +27,7 @@ class MLlibSoccerKMeans private(
                                  private var distanceMeasure: String,
                                  private var psi: Double = 0) extends Serializable with Logging {
 
-  @Since("0.8.0")
+
   private def this(k: Int, m: Int, delta: Double, maxIterations: Int, epsilon: Double, seed: Long) =
     this(k, m, delta, maxIterations, epsilon, seed, DistanceMeasure.EUCLIDEAN)
 
@@ -37,7 +36,6 @@ class MLlibSoccerKMeans private(
    * initializationMode: "k-means||", initializationSteps: 2, epsilon: 1e-4, seed: random,
    * distanceMeasure: "euclidean"}.
    */
-  @Since("0.8.0")
   def this() = this(2, 10, DELTA_DEFAULT, 20, 1e-4, Utils.random.nextLong(), DistanceMeasure.EUCLIDEAN)
 
   /**
@@ -46,7 +44,6 @@ class MLlibSoccerKMeans private(
    * @note It is possible for fewer than k clusters to
    *       be returned, for example, if there are fewer than k distinct points to cluster.
    */
-  @Since("1.4.0")
   def getK: Int = k
 
   /**
@@ -55,7 +52,6 @@ class MLlibSoccerKMeans private(
    * @note It is possible for fewer than k clusters to
    *       be returned, for example, if there are fewer than k distinct points to cluster. Default: 2.
    */
-  @Since("0.8.0")
   def setK(k: Int): this.type = {
     require(k > 0,
       s"Number of clusters must be positive but got $k")
@@ -66,13 +62,12 @@ class MLlibSoccerKMeans private(
   /**
    * Number of machines/workers available.
    */
-  @Since("1.4.0")
   def getM: Int = m
 
   /**
+   * TODO - make this autodiscorevable
    * Set the number of machines/workers available.
    */
-  @Since("0.8.0")
   def setM(m: Int): this.type = {
     require(m > 0,
       s"Number of machines must be positive but got $m")
@@ -83,13 +78,11 @@ class MLlibSoccerKMeans private(
   /**
    * Maximum number of iterations allowed.
    */
-  @Since("1.4.0")
   def getMaxIterations: Int = maxIterations
 
   /**
    * Set maximum number of iterations allowed. Default: 20.
    */
-  @Since("0.8.0")
   def setMaxIterations(maxIterations: Int): this.type = {
     require(maxIterations >= 0,
       s"Maximum of iterations must be nonnegative but got $maxIterations")
@@ -98,17 +91,14 @@ class MLlibSoccerKMeans private(
   }
 
   /**
-   * TODO - fix this
-   * The distance threshold within which we've consider centers to have converged.
+   * TODO
    */
-  @Since("1.4.0")
   def getEpsilon: Double = epsilon
 
   /**
    * Set the distance threshold within which we've consider centers to have converged.
    * If all centers move less than this Euclidean distance, we stop iterating one run.
    */
-  @Since("0.8.0")
   def setEpsilon(epsilon: Double): this.type = {
     require(epsilon >= 0,
       s"Distance threshold must be nonnegative but got $epsilon")
@@ -119,13 +109,11 @@ class MLlibSoccerKMeans private(
   /**
    * TODO
    */
-  @Since("1.4.0")
   def getDelta: Double = delta
 
   /**
    * TODO
    */
-  @Since("0.8.0")
   def setDelta(delta: Double): this.type = {
     require(delta >= 0,
       s"Distance threshold must be nonnegative but got $epsilon") // TODO
@@ -136,13 +124,11 @@ class MLlibSoccerKMeans private(
   /**
    * The random seed for cluster initialization.
    */
-  @Since("1.4.0")
   def getSeed: Long = seed
 
   /**
    * Set the random seed for cluster initialization.
    */
-  @Since("1.4.0")
   def setSeed(seed: Long): this.type = {
     this.seed = seed
     this
@@ -151,7 +137,6 @@ class MLlibSoccerKMeans private(
   /**
    * The distance suite used by the algorithm.
    */
-  @Since("2.4.0")
   def getDistanceMeasure: String = distanceMeasure
 
   private var distanceMeasureInstance: DistanceMeasure = DistanceMeasure.decodeFromString(distanceMeasure)
@@ -159,7 +144,6 @@ class MLlibSoccerKMeans private(
   /**
    * Set the distance suite used by the algorithm.
    */
-  @Since("2.4.0")
   def setDistanceMeasure(distanceMeasure: String): this.type = {
     DistanceMeasure.validateDistanceMeasure(distanceMeasure)
     this.distanceMeasure = distanceMeasure
@@ -176,7 +160,6 @@ class MLlibSoccerKMeans private(
    * The condition model.k == this.k must be met, failure results
    * in an IllegalArgumentException.
    */
-  @Since("1.4.0")
   def setInitialModel(model: KMeansModel): this.type = {
     require(model.k == k, "mismatched cluster count")
     initialModel = Some(model)
@@ -187,7 +170,6 @@ class MLlibSoccerKMeans private(
    * Train a K-means model on the given set of points; `data` should be cached for high
    * performance, because this is an iterative algorithm.
    */
-  @Since("0.8.0")
   def run(data: RDD[Vector]): KMeansModel = {
     val instances = data.map(point => (point, 1.0))
     runWithWeight(instances)
@@ -353,7 +335,6 @@ class MLlibSoccerKMeans private(
 /**
  * Top-level methods for calling K-means clustering.
  */
-@Since("0.8.0")
 object MLlibSoccerKMeans {
 
   /**
@@ -367,7 +348,7 @@ object MLlibSoccerKMeans {
    * @param seed               Random seed for cluster initialization. Default is to generate seed based
    *                           on system time.
    */
-  @Since("2.1.0")
+
   def train(
              data: RDD[Vector],
              k: Int,
@@ -392,7 +373,6 @@ object MLlibSoccerKMeans {
    * @param initializationMode The initialization algorithm. This can either be "random" or
    *                           "k-means||". (default: "k-means||")
    */
-  @Since("2.1.0")
   def train(
              data: RDD[Vector],
              k: Int,
@@ -406,7 +386,7 @@ object MLlibSoccerKMeans {
   /**
    * Trains a k-means model using specified parameters and the default values for unspecified.
    */
-  @Since("0.8.0")
+
   def train(
              data: RDD[Vector],
              k: Int,
