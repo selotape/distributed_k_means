@@ -1,5 +1,6 @@
-package org.apache.spark.ml.clustering
+package org.apache.spark.mllib.clustering
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 
 
@@ -53,7 +54,7 @@ object SoccerFormulae {
     //    return np.sum(distances)
   }
 
-  def risk_truncated(P2: DataFrame, C: DataFrame, r: Int): Double = {
+  def risk_truncated(p2: RDD[VectorWithNorm], C: RDD[VectorWithNorm], r: Int): Double = {
     ???
     //      distances = pairwise_distances_argmin_min_squared(P2, C)
     //      distances.sort()

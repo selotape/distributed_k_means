@@ -19,6 +19,9 @@ object SoccerBlackboxes {
   //    val model = kmeans.fit(N)
   //    model.clusterCenters.map(v=> new VectorWithNorm(v)) // TODO - make sure this is cheap
   //  }
+  def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
+    n
+  }
   def A_final(centers: RDD[VectorWithNorm], k: Int, center_weights: Array[Double]): RDD[VectorWithNorm] = {
     centers
   }

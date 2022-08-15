@@ -2,8 +2,8 @@ package org.apache.spark.mllib.clustering
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula}
-import org.apache.spark.mllib.clustering.SoccerBlackboxes.A_final
+import org.apache.spark.mllib.clustering.SoccerBlackboxes.{A_final, A_inner}
+import org.apache.spark.mllib.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula, phi_alpha_formula, r_formula, risk_truncated, v_formula}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.Utils
@@ -25,7 +25,8 @@ class MLlibSoccerKMeans private(
                                  private var maxIterations: Int,
                                  private var epsilon: Double,
                                  private var seed: Long,
-                                 private var distanceMeasure: String) extends Serializable with Logging {
+                                 private var distanceMeasure: String,
+                                 private var psi: Double = 0) extends Serializable with Logging {
 
   @Since("0.8.0")
   private def this(k: Int, m: Int, delta: Double, maxIterations: Int, epsilon: Double, seed: Long) =
@@ -205,7 +206,7 @@ class MLlibSoccerKMeans private(
   private def runAlgorithmWithWeight(data: RDD[VectorWithNorm]): KMeansModel = {
 
     val len_N = data.count()
-    val kp = kplus_formula(k, delta, epsilon)
+    val kplus = kplus_formula(k, delta, epsilon) // TODO - calc this in ctor
     var remaining_elements_count = len_N
     var alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
@@ -230,7 +231,8 @@ class MLlibSoccerKMeans private(
 
       val (p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm]) = sample_P1_P2(splits, alpha)
 
-      val (v: Double, cTmp: RDD[VectorWithNorm]) = iterate(p1, p2, alpha)
+      val (v, cTmp) = EstProc(p1, p2, alpha, k, kplus)
+      if (v == 0.0) log.error("Bad! v == 0.0")
 
       centers = centers.union(cTmp)
 
@@ -265,13 +267,13 @@ class MLlibSoccerKMeans private(
 
   private def sample_P1_P2(splits: Array[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
     // TODO - run these two ops together
-    val p1 = splits.map(s=> {
+    val p1 = splits.map(s => {
       val samp = s.sample(withReplacement = false, alpha, seed)
       // TODO - clean up logging
       log.info(f"p1 sample size: ${samp.count()}.")
       samp
     }).reduce((r1, r2) => r1.union(r2))
-    val p2 = splits.map(s=>{
+    val p2 = splits.map(s => {
       val samp = s.sample(withReplacement = false, alpha, seed)
       log.info(f"p2 sample size: ${samp.count()}.")
       samp
@@ -279,19 +281,32 @@ class MLlibSoccerKMeans private(
     (p1, p2)
   }
 
-  def iterate(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double): (Double, RDD[VectorWithNorm]) = {
-    (1.0, p1.sample(withReplacement = false, 1.0, seed))
+
+  /** *
+   * calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
+   * Emits the cluster and the ~risk.
+   */
+  private def EstProc(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double, k: Int, kp: Int): (Double, RDD[VectorWithNorm]) = {
+
+    val t_a = A_inner(p1, kp)
+
+    val phi_alpha = phi_alpha_formula(alpha, k, delta, epsilon)
+    val r = r_formula(alpha, k, phi_alpha)
+    val Rr = risk_truncated(p2, t_a, r)
+
+    psi = Math.max((2 / (3 * alpha)) * Rr, psi)
+    (v_formula(psi, k, phi_alpha), t_a)
   }
 
-  def remove_handled_points_and_return_remaining(splits: Array[RDD[VectorWithNorm]], cTmp: RDD[VectorWithNorm], v: Double): Long = {
+  private def remove_handled_points_and_return_remaining(splits: Array[RDD[VectorWithNorm]], cTmp: RDD[VectorWithNorm], v: Double): Long = {
     1
   }
 
-  def last_iteration(splits: Array[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
+  private def last_iteration(splits: Array[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
     splits(0).sample(withReplacement = false, 1.0, seed)
   }
 
-  def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
+  private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
     val len_b = splits.map(s => s.count()).sum.toInt
     var b = Array.ofDim[Double](len_b)
     b = b.map(_ => 0.1)
