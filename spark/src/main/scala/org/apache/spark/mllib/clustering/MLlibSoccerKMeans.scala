@@ -2,8 +2,8 @@ package org.apache.spark.mllib.clustering
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
-import org.apache.spark.mllib.clustering.SoccerBlackboxes.{A_final, A_inner}
-import org.apache.spark.mllib.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula, phi_alpha_formula, r_formula, v_formula}
+import org.apache.spark.mllib.clustering.SoccerBlackboxes.A_final
+import org.apache.spark.mllib.clustering.SoccerFormulae._
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.Utils
@@ -298,6 +298,19 @@ class MLlibSoccerKMeans private(
 
     psi = Math.max((2 / (3 * alpha)) * Rr, psi)
     (v_formula(psi, k, phi_alpha), t_a)
+  }
+
+  def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
+    val algo = new KMeans()
+      .setK(k)
+      .setSeed(seed)
+
+    // TODO - optimize?
+    val sc = n.context
+    log.info("================================= starting A_inner =================================")
+    val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
+    log.info("=================================    ended A_inner =================================")
+    sc.parallelize(inner_centers)
   }
 
 
