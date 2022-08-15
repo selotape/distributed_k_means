@@ -213,13 +213,11 @@ class MLlibSoccerKMeans private(
 
     val distanceMeasureInstance = DistanceMeasure.decodeFromString(this.distanceMeasure)
     //
-    var centers = new Array[VectorWithNorm](0)
 
     var cost = 0.0
     var iteration = 0
-
-
     val sc = data.sparkContext
+    var centers = sc.emptyRDD[VectorWithNorm]
 
     val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed)
 
@@ -227,14 +225,14 @@ class MLlibSoccerKMeans private(
     // TODO - consider using pyspark
     // TODO - persist RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
     while (iteration < maxIterations && remaining_elements_count > max_subset_size) {
-      val bcCenters = sc.broadcast(centers)
+      val bcCenters = sc.broadcast(centers.collect())
       val costAccum = sc.doubleAccumulator
 
-      val (p1: Array[VectorWithNorm], p2: Array[VectorWithNorm]) = sample_P1_P2(splits)
+      val (p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm]) = sample_P1_P2(splits, alpha)
 
-      val (v: Double, cTmp: Array[VectorWithNorm]) = iterate(p1, p2, alpha)
+      val (v: Double, cTmp: RDD[VectorWithNorm]) = iterate(p1, p2, alpha)
 
-      centers = centers.concat(cTmp)
+      centers = centers.union(cTmp)
 
 
       remaining_elements_count = remove_handled_points_and_return_remaining(splits, cTmp, v)
@@ -255,36 +253,38 @@ class MLlibSoccerKMeans private(
     }
 
     val cTmp = last_iteration(splits)
-    centers = centers.concat(cTmp)
+    centers = centers.union(cTmp)
 
     val C_weights: Array[Double] = calculate_center_weights(centers, splits)
     val C_final = A_final(centers, k, C_weights)
 
     logInfo(s"The cost is $cost.")
 
-    new KMeansModel(C_final.map(_.vector), distanceMeasure, cost, iteration)
+    new KMeansModel(C_final.take(Integer.MAX_VALUE).map(_.vector), distanceMeasure, cost, iteration)
   }
 
-  def sample_P1_P2(splits: Array[RDD[VectorWithNorm]]): (Array[VectorWithNorm], Array[VectorWithNorm]) = {
-    (splits(0).collect(), splits(1).collect())
+  private def sample_P1_P2(splits: Array[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
+    val p1 = splits.map(s=>s.sample(false, alpha, seed)).reduce((r1, r2) => r1.union(r2))
+    val p2 = splits.map(s=>s.sample(false, alpha, seed)).reduce((r1, r2) => r1.union(r2))
+    (p1, p2)
   }
 
-  def iterate(p1: Array[VectorWithNorm], p2: Array[VectorWithNorm], alpha: Double): (Double, Array[VectorWithNorm]) = {
-    (1.0, p1.take(5))
+  def iterate(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double): (Double, RDD[VectorWithNorm]) = {
+    (1.0, p1.sample(false, 1.0, seed))
   }
 
-  def remove_handled_points_and_return_remaining(splits: Array[RDD[VectorWithNorm]], cTmp: Array[VectorWithNorm], v: Double): Long = {
+  def remove_handled_points_and_return_remaining(splits: Array[RDD[VectorWithNorm]], cTmp: RDD[VectorWithNorm], v: Double): Long = {
     1
   }
 
-  def last_iteration(splits: Array[RDD[VectorWithNorm]]): Array[VectorWithNorm] = {
-    splits(0).take(5)
+  def last_iteration(splits: Array[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
+    splits(0).sample(false, 1.0, seed)
   }
 
-  def calculate_center_weights(centers: Array[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
+  def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
     val len_b = splits.map(s => s.count()).sum.toInt
     var b = Array.ofDim[Double](len_b)
-    b = b.map(f=> 0.1)
+    b = b.map(_ => 0.1)
     b
   }
 }
