@@ -42,11 +42,12 @@ def risk_kmeans(N: pd.DataFrame, C: pd.DataFrame):
 
 
 def risk_truncated(P2, C, r):
-    distances = pairwise_distances_argmin_min_squared(P2, C)
-    distances.sort()
 
     if r >= len(P2):
         return 0  # The "trivial risk"
+
+    distances = pairwise_distances_argmin_min_squared(P2, C)
+    distances.sort()
 
     return np.sum(distances[:len(distances) - r])
 
