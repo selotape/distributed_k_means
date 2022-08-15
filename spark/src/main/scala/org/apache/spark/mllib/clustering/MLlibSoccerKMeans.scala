@@ -16,7 +16,6 @@ import scala.util.control.Breaks.break
  * This is an iterative algorithm that will make multiple passes over the data, so any RDDs given
  * to it should be cached by the user.
  */
-
 class MLlibSoccerKMeans private(
                                  private var k: Int,
                                  private var m: Int,
@@ -326,81 +325,6 @@ class MLlibSoccerKMeans private(
     X.map { point =>
       val (bestCenter, cost) = distanceMeasureInstance.findClosest(ys, point)
       Math.pow(cost, 2)
-    }
-  }
-
-}
-
-
-/**
- * Top-level methods for calling K-means clustering.
- */
-object MLlibSoccerKMeans {
-
-  /**
-   * Trains a k-means model using the given set of parameters.
-   *
-   * @param data               Training points as an `RDD` of `Vector` types.
-   * @param k                  Number of clusters to create.
-   * @param maxIterations      Maximum number of iterations allowed.
-   * @param initializationMode The initialization algorithm. This can either be "random" or
-   *                           "k-means||". (default: "k-means||")
-   * @param seed               Random seed for cluster initialization. Default is to generate seed based
-   *                           on system time.
-   */
-
-  def train(
-             data: RDD[Vector],
-             k: Int,
-             maxIterations: Int,
-             initializationMode: String,
-             seed: Long): KMeansModel = {
-    new MLlibSoccerKMeans()
-      .setK(k)
-      .setDelta(k)
-      .setEpsilon(k)
-      .setMaxIterations(maxIterations)
-      .setSeed(seed)
-      .run(data)
-  }
-
-  /**
-   * Trains a soccer k-means model using the given set of parameters.
-   *
-   * @param data               Training points as an `RDD` of `Vector` types.
-   * @param k                  Number of clusters to create.
-   * @param maxIterations      Maximum number of iterations allowed.
-   * @param initializationMode The initialization algorithm. This can either be "random" or
-   *                           "k-means||". (default: "k-means||")
-   */
-  def train(
-             data: RDD[Vector],
-             k: Int,
-             maxIterations: Int,
-             initializationMode: String): KMeansModel = {
-    new MLlibSoccerKMeans().setK(k)
-      .setMaxIterations(maxIterations)
-      .run(data)
-  }
-
-  /**
-   * Trains a k-means model using specified parameters and the default values for unspecified.
-   */
-
-  def train(
-             data: RDD[Vector],
-             k: Int,
-             maxIterations: Int): KMeansModel = {
-    new MLlibSoccerKMeans().setK(k)
-      .setMaxIterations(maxIterations)
-      .run(data)
-  }
-
-  private[spark] def validateInitMode(initMode: String): Boolean = {
-    initMode match {
-      case KMeans.RANDOM => true
-      case KMeans.K_MEANS_PARALLEL => true
-      case _ => false
     }
   }
 }
