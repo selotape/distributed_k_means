@@ -3,6 +3,7 @@ from math import log, pow
 
 import numpy as np
 import pandas as pd
+from numpy import ndarray
 from sklearn.metrics.pairwise import pairwise_distances_argmin_min, pairwise_distances_argmin
 
 from soccer.config import PHI_ALPHA_C, MAX_SS_SIZE_C, KPLUS_C, KPLUS_SCALER
@@ -70,7 +71,7 @@ def v_formula(psi: float, k: int, phi_alpha: float):
     return psi / (k * phi_alpha)
 
 
-def pairwise_distances_argmin_min_squared(X, Y):
+def pairwise_distances_argmin_min_squared(X, Y) -> ndarray:
     linear_dists = pairwise_distances_argmin_min(X, Y)[1]
     square_dists = np.square(linear_dists)
     return square_dists
