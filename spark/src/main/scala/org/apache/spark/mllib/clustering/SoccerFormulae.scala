@@ -54,20 +54,6 @@ object SoccerFormulae {
     //    return np.sum(distances)
   }
 
-  def risk_truncated(p2: RDD[VectorWithNorm], C: RDD[VectorWithNorm], r: Int): Double = {
-    ???
-//    var distances = MLlibSoccerKMeans.pairwise_distances_argmin_min_squared(p2, C)
-//    distances.sort()
-//
-//    if r >= len(P2):
-//    return 0
-//    #The
-//    "trivial risk"
-//
-//    return np.sum(distances[: len(distances) - r
-//    ] )
-  }
-
   //risk = risk_kmeans
 
   def phi_alpha_formula(alpha: Double, k: Int, dt: Double, ep: Double): Double = {

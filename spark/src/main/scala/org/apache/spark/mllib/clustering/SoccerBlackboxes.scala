@@ -22,8 +22,8 @@ object SoccerBlackboxes {
   def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
     n
   }
-  def A_final(centers: RDD[VectorWithNorm], k: Int, center_weights: Array[Double]): RDD[VectorWithNorm] = {
-    centers
+  def A_final(centers: RDD[VectorWithNorm], k: Int, center_weights: Array[Double]): Array[VectorWithNorm] = {
+    centers.take(k)
   }
 
 }

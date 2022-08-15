@@ -3,7 +3,7 @@ package org.apache.spark.mllib.clustering
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.mllib.clustering.SoccerBlackboxes.{A_final, A_inner}
-import org.apache.spark.mllib.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula, phi_alpha_formula, r_formula, risk_truncated, v_formula}
+import org.apache.spark.mllib.clustering.SoccerFormulae.{DELTA_DEFAULT, alpha_formula, kplus_formula, max_subset_size_formula, phi_alpha_formula, r_formula, v_formula}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.Utils
@@ -263,7 +263,7 @@ class MLlibSoccerKMeans private(
 
     logInfo(s"The cost is $cost.")
 
-    new KMeansModel(C_final.take(Integer.MAX_VALUE).map(_.vector), distanceMeasure, cost, iteration)
+    new KMeansModel(C_final.map(_.vector), distanceMeasure, cost, iteration)
   }
 
   private def sample_P1_P2(splits: Array[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
@@ -298,6 +298,16 @@ class MLlibSoccerKMeans private(
 
     psi = Math.max((2 / (3 * alpha)) * Rr, psi)
     (v_formula(psi, k, phi_alpha), t_a)
+  }
+
+
+  def risk_truncated(p2: RDD[VectorWithNorm], C: RDD[VectorWithNorm], r: Int): Double = {
+    if (r >= p2.count()) {
+      return 0 // The "trivial risk"
+    }
+
+    val distances = pairwise_distances_argmin_min_squared(p2, C)
+    distances.takeOrdered(distances.count().toInt - r).sum
   }
 
   private def remove_handled_points_and_return_remaining(splits: Array[RDD[VectorWithNorm]], cTmp: RDD[VectorWithNorm], v: Double): Long = {

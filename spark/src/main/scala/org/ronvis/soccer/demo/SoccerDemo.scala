@@ -32,8 +32,10 @@ object SoccerDemo {
       .setDelta(0.1)
       .setSeed(seed)
       .setMaxIter(3)
+    log.info("================== STARTING SOCCER KMEANS ==================")
     fitAndEvaluate(soccerKmeans, dataset)
 
+    log.info("================== STARTING LEGACY KMEANS ==================")
     val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
     fitAndEvaluate(boringOldschoolKmeans, dataset)
   }
