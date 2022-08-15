@@ -266,13 +266,13 @@ class MLlibSoccerKMeans private(
   private def sample_P1_P2(splits: Array[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
     // TODO - run these two ops together
     val p1 = splits.map(s=> {
-      val samp = s.sample(false, alpha, seed)
+      val samp = s.sample(withReplacement = false, alpha, seed)
       // TODO - clean up logging
       log.info(f"p1 sample size: ${samp.count()}.")
       samp
     }).reduce((r1, r2) => r1.union(r2))
     val p2 = splits.map(s=>{
-      val samp = s.sample(false, alpha, seed)
+      val samp = s.sample(withReplacement = false, alpha, seed)
       log.info(f"p2 sample size: ${samp.count()}.")
       samp
     }).reduce((r1, r2) => r1.union(r2))
@@ -280,7 +280,7 @@ class MLlibSoccerKMeans private(
   }
 
   def iterate(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double): (Double, RDD[VectorWithNorm]) = {
-    (1.0, p1.sample(false, 1.0, seed))
+    (1.0, p1.sample(withReplacement = false, 1.0, seed))
   }
 
   def remove_handled_points_and_return_remaining(splits: Array[RDD[VectorWithNorm]], cTmp: RDD[VectorWithNorm], v: Double): Long = {
@@ -288,7 +288,7 @@ class MLlibSoccerKMeans private(
   }
 
   def last_iteration(splits: Array[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
-    splits(0).sample(false, 1.0, seed)
+    splits(0).sample(withReplacement = false, 1.0, seed)
   }
 
   def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
