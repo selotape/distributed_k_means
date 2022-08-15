@@ -154,6 +154,8 @@ class MLlibSoccerKMeans private(
   @Since("2.4.0")
   def getDistanceMeasure: String = distanceMeasure
 
+  private var distanceMeasureInstance: DistanceMeasure = DistanceMeasure.decodeFromString(distanceMeasure)
+
   /**
    * Set the distance suite used by the algorithm.
    */
@@ -161,6 +163,7 @@ class MLlibSoccerKMeans private(
   def setDistanceMeasure(distanceMeasure: String): this.type = {
     DistanceMeasure.validateDistanceMeasure(distanceMeasure)
     this.distanceMeasure = distanceMeasure
+    this.distanceMeasureInstance = DistanceMeasure.decodeFromString(this.distanceMeasure)
     this
   }
 
@@ -212,7 +215,6 @@ class MLlibSoccerKMeans private(
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
     logInfo(f"max_subset_size:$max_subset_size")
 
-    val distanceMeasureInstance = DistanceMeasure.decodeFromString(this.distanceMeasure)
     //
 
     var cost = 0.0
@@ -246,7 +248,6 @@ class MLlibSoccerKMeans private(
 
 
       alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
-
 
       bcCenters.destroy()
 
@@ -313,6 +314,16 @@ class MLlibSoccerKMeans private(
     b = b.map(_ => 0.1)
     b
   }
+
+
+  private def pairwise_distances_argmin_min_squared(X: RDD[VectorWithNorm], Y: RDD[VectorWithNorm]): RDD[Double] = { // TODO - consider using Arrays here to be explicitly local
+    val ys = Y.collect()
+    X.map { point =>
+      val (bestCenter, cost) = distanceMeasureInstance.findClosest(ys, point)
+      Math.pow(cost, 2)
+    }
+  }
+
 }
 
 

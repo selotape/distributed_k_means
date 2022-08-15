@@ -56,13 +56,16 @@ object SoccerFormulae {
 
   def risk_truncated(p2: RDD[VectorWithNorm], C: RDD[VectorWithNorm], r: Int): Double = {
     ???
-    //      distances = pairwise_distances_argmin_min_squared(P2, C)
-    //      distances.sort()
-    //
-    //      if r >= len(P2):
-    //          return 0  # The "trivial risk"
-    //
-    //      return np.sum(distances[:len(distances) - r])
+//    var distances = MLlibSoccerKMeans.pairwise_distances_argmin_min_squared(p2, C)
+//    distances.sort()
+//
+//    if r >= len(P2):
+//    return 0
+//    #The
+//    "trivial risk"
+//
+//    return np.sum(distances[: len(distances) - r
+//    ] )
   }
 
   //risk = risk_kmeans
@@ -77,13 +80,6 @@ object SoccerFormulae {
 
   def v_formula(psi: Double, k: Int, phi_alpha: Double): Double = {
     psi / (k * phi_alpha)
-  }
-
-  def pairwise_distances_argmin_min_squared(X: DataFrame, Y: DataFrame): DataFrame = {
-    ???
-    //      linear_dists = pairwise_distances_argmin_min(X, Y)[1]
-    //    square_dists = np.square(linear_dists)
-    //    return square_dists
   }
 
   def alpha_s_formula(k: Int, n: Int, ep: Double, len_R: Int): Double = {
