@@ -288,6 +288,7 @@ class MLlibSoccerKMeans private(
    */
   private def EstProc(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double, k: Int, kp: Int): (Double, RDD[VectorWithNorm]) = {
 
+
     val t_a = A_inner(p1, kp)
 
     val phi_alpha = phi_alpha_formula(alpha, k, delta, epsilon)
