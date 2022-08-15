@@ -79,6 +79,23 @@ class SoccerKMeans @Since("1.5.0")(
   @Since("1.5.0")
   def setM(value: Int): this.type = set(m, value)
 
+
+  /**
+   * TODO - document
+   */
+  @Since("1.5.0")
+  final val delta = new DoubleParam(this, "delta", "TODO" +
+    "Must be >= 1.", ParamValidators.gt(0))
+
+  /** @group getParam */
+  @Since("1.5.0")
+  def getDelta: Double = $(delta)
+
+
+  /** @group setParam */
+  @Since("1.5.0")
+  def setDelta(value: Double): this.type = set(delta, value)
+
   /** @group expertSetParam */
   @Since("1.5.0")
   def setInitMode(value: String): this.type = set(initMode, value)
@@ -120,13 +137,14 @@ class SoccerKMeans @Since("1.5.0")(
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     instr.logParams(this, featuresCol, predictionCol, k, initMode, initSteps, distanceMeasure,
-      maxIter, seed, tol, weightCol)
+      maxIter, seed, tol, weightCol, delta)
     val algo = new MLlibSoccerKMeans()
       .setK($(k))
       .setM($(m))
       .setMaxIterations($(maxIter))
       .setSeed($(seed))
       .setEpsilon($(tol))
+      .setDelta($(delta))
       .setDistanceMeasure($(distanceMeasure))
 
     val w = if (isDefined(weightCol) && $(weightCol).nonEmpty) {

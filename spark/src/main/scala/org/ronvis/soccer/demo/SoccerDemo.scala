@@ -20,14 +20,16 @@ object SoccerDemo {
       .appName("SOCCER example")
       .getOrCreate()
 
-    val dataset = getSampleKMeansDataset(spark)
-    //    val dataset = getKddCup99Dataset(spark)
+    //    val dataset = getSampleKMeansDataset(spark)
+    val dataset = getKddCup99Dataset(spark)
 
     val seed = 1L
     val k = 10
     val soccerKmeans = new SoccerKMeans()
       .setK(k)
-      .setM(6)
+      .setM(10)
+      .setTol(0.1) // aka - epsilon
+      .setDelta(0.1)
       .setSeed(seed)
       .setMaxIter(3)
     fitAndEvaluate(soccerKmeans, dataset)

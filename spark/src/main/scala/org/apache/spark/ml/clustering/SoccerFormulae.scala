@@ -33,8 +33,8 @@ object SoccerFormulae {
    * The size above which data doesn't fit inside a single machine,
    * so clustering must be distributed.
    */
-  def max_subset_size_formula(n: Long, k: Int, ep: Double, dt: Double): Long = {
-    (MAX_SS_SIZE_C * k * math.pow(n, ep) * math.log(1.1 * k / dt)).toInt
+  def max_subset_size_formula(n: Long, k: Int, ep: Double, dt: Double): Double = {
+    MAX_SS_SIZE_C * k * math.pow(n, ep) * math.log(1.1 * k / dt)
   }
 
   /** *

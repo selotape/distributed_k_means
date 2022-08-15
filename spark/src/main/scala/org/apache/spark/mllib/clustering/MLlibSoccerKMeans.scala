@@ -264,8 +264,18 @@ class MLlibSoccerKMeans private(
   }
 
   private def sample_P1_P2(splits: Array[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
-    val p1 = splits.map(s=>s.sample(false, alpha, seed)).reduce((r1, r2) => r1.union(r2))
-    val p2 = splits.map(s=>s.sample(false, alpha, seed)).reduce((r1, r2) => r1.union(r2))
+    // TODO - run these two ops together
+    val p1 = splits.map(s=> {
+      val samp = s.sample(false, alpha, seed)
+      // TODO - clean up logging
+      log.info(f"p1 sample size: ${samp.count()}.")
+      samp
+    }).reduce((r1, r2) => r1.union(r2))
+    val p2 = splits.map(s=>{
+      val samp = s.sample(false, alpha, seed)
+      log.info(f"p2 sample size: ${samp.count()}.")
+      samp
+    }).reduce((r1, r2) => r1.union(r2))
     (p1, p2)
   }
 
