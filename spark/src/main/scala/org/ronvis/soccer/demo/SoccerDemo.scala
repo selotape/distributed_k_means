@@ -1,8 +1,7 @@
 package org.ronvis.soccer.demo
 
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
-import org.apache.spark.ml.clustering.{KMeans, SoccerKMeans}
+import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.spark.ml.clustering.SoccerKMeans
 import org.apache.spark.ml.evaluation.ClusteringEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.{Estimator, Model}
@@ -34,10 +33,11 @@ object SoccerDemo {
       .setMaxIter(3)
     log.info("================== STARTING SOCCER KMEANS ==================")
     fitAndEvaluate(soccerKmeans, dataset)
+    log.info("================== FINISHED SOCCER KMEANS ==================")
 
-    log.info("================== STARTING LEGACY KMEANS ==================")
-    val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
-    fitAndEvaluate(boringOldschoolKmeans, dataset)
+//    log.info("================== STARTING LEGACY KMEANS ==================")
+    //    val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
+    //    fitAndEvaluate(boringOldschoolKmeans, dataset)
   }
 
   def fitAndEvaluate(kmeans: Estimator[_ <: Model[_]], dataset: DataFrame): Unit = {
