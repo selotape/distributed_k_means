@@ -59,8 +59,6 @@ class Reducer:
         """
         removes from _Ni all points further than v from C.
         returns the number of remaining elements.
-
-        TODO - measure distance to Ctmp and do min with the prev distances (to C before adding Ctmp)
         """
         if len(self.Ni) == 0:
             return 0
