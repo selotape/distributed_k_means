@@ -213,9 +213,6 @@ class MLlibSoccerKMeans private(
 
       val (v, cTmp) = EstProc(p1, p2, alpha, k, kplus)
 
-      if (v == 0.0) log.error("Bad! v == 0.0")
-
-
 
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
       remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
@@ -270,7 +267,9 @@ class MLlibSoccerKMeans private(
     val Rr = risk_truncated(p2, cTmp, r)
 
     psi = Math.max((2 / (3 * alpha)) * Rr, psi)
-    (v_formula(psi, k, phi_alpha), cTmp)
+    val v = v_formula(psi, k, phi_alpha)
+    if (v == 0.0) log.error("Bad! v == 0.0")
+    (v, cTmp)
   }
 
   def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
@@ -303,7 +302,16 @@ class MLlibSoccerKMeans private(
   }
 
   private def last_iteration(splits: Array[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
-    splits(0).sample(withReplacement = false, 1.0, seed)
+    logInfo("Starting last iteration")
+    val remaining_data = splits.reduce((s1, s2) => s1.union(s2))
+    val l = k * INNER_BLACKBOX_L_TO_K_RATIO
+    val cTmp =
+      if (remaining_data.count() <= k) // TODO - support this - or (self._blackbox == "ScalableKMeans" andlen(N_remaining) <= l)):
+        remaining_data
+      else
+        A_inner(remaining_data, k /* TODO - should this be kplus?*/)
+    logInfo("Finished last iteration")
+    cTmp
   }
 
   private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {

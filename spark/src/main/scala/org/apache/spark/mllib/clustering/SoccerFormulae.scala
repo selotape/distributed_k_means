@@ -1,8 +1,5 @@
 package org.apache.spark.mllib.clustering
 
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.DataFrame
-
 
 class SoccerFormulae {
 
@@ -21,6 +18,7 @@ object SoccerFormulae {
   val KPLUS_SCALER = 1
 
   val L_TO_K_RATIO = 2.0
+  val INNER_BLACKBOX_L_TO_K_RATIO = 2
 
 
   /** *
@@ -45,7 +43,7 @@ object SoccerFormulae {
     max_subset_size_formula(n, k, ep, dt) / N_current_size
   }
 
-def phi_alpha_formula(alpha: Double, k: Int, dt: Double, ep: Double): Double = {
+  def phi_alpha_formula(alpha: Double, k: Int, dt: Double, ep: Double): Double = {
     (PHI_ALPHA_C / alpha) * math.log(1.1 * k / (dt * ep))
   }
 
