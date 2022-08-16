@@ -197,7 +197,7 @@ class MLlibSoccerKMeans private(
 
     var iteration = 0
     val sc = data.sparkContext
-    var centers = new Array[VectorWithNorm](0)
+    var centers = sc.emptyRDD[VectorWithNorm]
 
     // TODO - automatically detect the best number of splits
     var unhandled_data_splits = data.randomSplit(Array.fill(m)(1.0 / m), seed)
@@ -223,14 +223,14 @@ class MLlibSoccerKMeans private(
       }
 
       alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
-      centers ++= cTmp.collect()
+      centers ++= cTmp
       iteration += 1
     }
 
     val cTmp = last_iteration(unhandled_data_splits)
-    centers ++= cTmp.collect()
+    centers ++= cTmp
 
-    val C_weights = calculate_center_weights(centers, unhandled_data_splits)
+    val C_weights = calculate_center_weights(centers, data)
     val C_final = A_final(centers, k, C_weights)
 
     val trainingCost = 1000.0 // TODO
@@ -282,8 +282,16 @@ class MLlibSoccerKMeans private(
     sc.parallelize(inner_centers)
   }
 
-  private def A_final(centers: Array[VectorWithNorm], k: Int, center_weights: Array[Double]): Array[VectorWithNorm] = {
-    centers.take(k)
+  private def A_final(centers: RDD[VectorWithNorm], k: Int, center_weights: RDD[Double]): Array[VectorWithNorm] = {
+    val algo = new KMeans()
+      .setK(k)
+      .setSeed(seed)
+
+    log.info("================================= starting A_final =================================")
+    val weighted_centers = centers.map(c => c.vector).zip(center_weights)
+    val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
+    log.info("================================= finished A_final =================================")
+    final_centers
   }
 
 
@@ -314,11 +322,8 @@ class MLlibSoccerKMeans private(
     cTmp
   }
 
-  private def calculate_center_weights(centers: Array[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
-    val len_b = splits.map(s => s.count()).sum.toInt
-    var b = Array.ofDim[Double](len_b)
-    b = b.map(_ => 0.1)
-    b
+  private def calculate_center_weights(centers: RDD[VectorWithNorm], full_data: RDD[VectorWithNorm]): RDD[Double] = {
+    centers.map(_ => 1.0)
   }
 
 
