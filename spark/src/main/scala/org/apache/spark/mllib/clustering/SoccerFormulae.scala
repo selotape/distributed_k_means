@@ -45,18 +45,7 @@ object SoccerFormulae {
     max_subset_size_formula(n, k, ep, dt) / N_current_size
   }
 
-  /** *
-   * Sum of distances of samples to their closest cluster center.
-   */
-  def risk_kmeans(N: DataFrame, C: DataFrame): DataFrame = {
-    ???
-    //    distances = pairwise_distances_argmin_min_squared(N, C)
-    //    return np.sum(distances)
-  }
-
-  //risk = risk_kmeans
-
-  def phi_alpha_formula(alpha: Double, k: Int, dt: Double, ep: Double): Double = {
+def phi_alpha_formula(alpha: Double, k: Int, dt: Double, ep: Double): Double = {
     (PHI_ALPHA_C / alpha) * math.log(1.1 * k / (dt * ep))
   }
 
