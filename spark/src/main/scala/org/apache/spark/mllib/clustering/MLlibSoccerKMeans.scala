@@ -1,7 +1,6 @@
 package org.apache.spark.mllib.clustering
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.mllib.clustering.SoccerBlackboxes.A_final
 import org.apache.spark.mllib.clustering.SoccerFormulae._
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
@@ -196,10 +195,9 @@ class MLlibSoccerKMeans private(
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
     logInfo(f"max_subset_size:$max_subset_size")
 
-    var cost = 0.0
     var iteration = 0
     val sc = data.sparkContext
-    var centers = sc.emptyRDD[VectorWithNorm]
+    var centers = new Array[VectorWithNorm](0)
 
     // TODO - automatically detect the best number of splits
     var unhandled_data_splits = data.randomSplit(Array.fill(m)(1.0 / m), seed)
@@ -225,19 +223,18 @@ class MLlibSoccerKMeans private(
       }
 
       alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
-      centers = centers.union(cTmp)
+      centers ++= cTmp.collect()
       iteration += 1
     }
 
     val cTmp = last_iteration(unhandled_data_splits)
-    centers = centers.union(cTmp)
+    centers ++= cTmp.collect()
 
     val C_weights = calculate_center_weights(centers, unhandled_data_splits)
     val C_final = A_final(centers, k, C_weights)
 
-    logInfo(s"The cost is $cost.")
-
-    new KMeansModel(C_final.map(_.vector), distanceMeasure, cost, iteration)
+    val trainingCost = 1000.0 // TODO
+    new KMeansModel(C_final.map(_.vector), distanceMeasure, trainingCost, iteration)
   }
 
   private def sample_P1_P2(splits: Array[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
@@ -272,7 +269,7 @@ class MLlibSoccerKMeans private(
     (v, cTmp)
   }
 
-  def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
+  private def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
     val algo = new KMeans()
       .setK(k)
       .setSeed(seed)
@@ -283,6 +280,10 @@ class MLlibSoccerKMeans private(
     val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
     log.info("=================================    ended A_inner =================================")
     sc.parallelize(inner_centers)
+  }
+
+  private def A_final(centers: Array[VectorWithNorm], k: Int, center_weights: Array[Double]): Array[VectorWithNorm] = {
+    centers.take(k)
   }
 
 
@@ -304,7 +305,6 @@ class MLlibSoccerKMeans private(
   private def last_iteration(splits: Array[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
     logInfo("Starting last iteration")
     val remaining_data = splits.reduce((s1, s2) => s1.union(s2))
-    val l = k * INNER_BLACKBOX_L_TO_K_RATIO
     val cTmp =
       if (remaining_data.count() <= k) // TODO - support this - or (self._blackbox == "ScalableKMeans" andlen(N_remaining) <= l)):
         remaining_data
@@ -314,7 +314,7 @@ class MLlibSoccerKMeans private(
     cTmp
   }
 
-  private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
+  private def calculate_center_weights(centers: Array[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): Array[Double] = {
     val len_b = splits.map(s => s.count()).sum.toInt
     var b = Array.ofDim[Double](len_b)
     b = b.map(_ => 0.1)
