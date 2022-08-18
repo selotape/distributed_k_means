@@ -246,7 +246,7 @@ class MLlibSoccerKMeans private(
       .reduce((r1, r2) => r1.union(r2))
 
     val p2 = splits
-      .map(s => s.sample(withReplacement = false, alpha, seed))
+      .map(s => s.sample(withReplacement = false, alpha, seed + 1)) // TODO - discuss with Tom
       .reduce((r1, r2) => r1.union(r2))
 
     (p1, p2)
