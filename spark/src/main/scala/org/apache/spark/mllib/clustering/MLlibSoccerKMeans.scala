@@ -289,7 +289,7 @@ class MLlibSoccerKMeans private(
       .setSeed(seed)
 
     log.info("================================= starting A_final =================================")
-    val weighted_centers = centers.map(c => c.vector).zip(center_weights)
+    val weighted_centers = centers.repartition(1).map(c => c.vector).zip(center_weights.repartition(1))
     val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
     log.info("================================= finished A_final =================================")
     final_centers
