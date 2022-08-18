@@ -200,7 +200,8 @@ class MLlibSoccerKMeans private(
     var centers = sc.emptyRDD[VectorWithNorm]
 
     // TODO - automatically detect the best number of splits
-    var unhandled_data_splits = data.randomSplit(Array.fill(m)(1.0 / m), seed)
+    val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed)
+    var unhandled_data_splits = splits
 
 
     // TODO - persist RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
@@ -230,7 +231,7 @@ class MLlibSoccerKMeans private(
     val cTmp = last_iteration(unhandled_data_splits)
     centers ++= cTmp
 
-    val C_weights = calculate_center_weights(centers, data)
+    val C_weights = calculate_center_weights(centers, splits)
     val C_final = A_final(centers, k, C_weights)
 
     val trainingCost = 1000.0 // TODO
@@ -322,15 +323,32 @@ class MLlibSoccerKMeans private(
     cTmp
   }
 
-  private def calculate_center_weights(centers: RDD[VectorWithNorm], full_data: RDD[VectorWithNorm]): RDD[Double] = {
-    centers.map(_ => 1.0)
+  private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): RDD[Double] = {
+    val collected_centers = centers.collect()
+    val final_center_counts = splits.map(s => {
+      val center_counts_map = collection.mutable.Map[Int, Double]().withDefaultValue(0.0)
+      s.foreach(p => {
+        val (bestCenter, _) = distanceMeasureInstance.findClosest(collected_centers, p)
+        center_counts_map(bestCenter) = center_counts_map(bestCenter) + 1
+      })
+      center_counts_map
+    }).reduce((m1, m2) => reduceCountsMap(m1, m2))
+    val sc = centers.context
+    sc.parallelize(final_center_counts.toSeq.sorted.map(_._2))
+  }
+
+  def reduceCountsMap(m1: collection.mutable.Map[Int, Double], m2: collection.mutable.Map[Int, Double]): collection.mutable.Map[Int, Double] = {
+    val merged = m1.toSeq ++ m2.toSeq
+    val grouped = merged.groupBy(_._1)
+    val recounted = collection.mutable.Map(grouped.view.mapValues(_.map(_._2).sum).toSeq: _*)
+    recounted
   }
 
 
   private def pairwise_distances_argmin_min_squared(X: RDD[VectorWithNorm], Y: RDD[VectorWithNorm]): RDD[Double] = { // TODO - consider using Arrays here to be explicitly local
     val ys = Y.collect()
     X.map { point =>
-      val (bestCenter, cost) = distanceMeasureInstance.findClosest(ys, point)
+      val (_, cost) = distanceMeasureInstance.findClosest(ys, point)
       Math.pow(cost, 2)
     }
   }
