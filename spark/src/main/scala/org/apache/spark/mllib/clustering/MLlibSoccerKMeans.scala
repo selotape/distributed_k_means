@@ -308,7 +308,7 @@ class MLlibSoccerKMeans private(
 
   private def removeHandled(s: RDD[VectorWithNorm], cTmp: RDD[VectorWithNorm], v: Double): RDD[VectorWithNorm] = {
     val centers = cTmp.collect()
-    s.filter(p => distanceMeasureInstance.pointCost(centers, p) < v)
+    s.filter(p => distanceMeasureInstance.pointCost(centers, p) > v)
   }
 
   private def last_iteration(splits: Array[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
