@@ -325,22 +325,29 @@ class MLlibSoccerKMeans private(
 
   private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): RDD[Double] = {
     val collected_centers = centers.collect()
-    val final_center_counts = splits.map(s => {
-      val center_counts_map = collection.mutable.Map[Int, Double]().withDefaultValue(0.0)
-      s.foreach(p => {
-        val (bestCenter, _) = distanceMeasureInstance.findClosest(collected_centers, p)
-        center_counts_map(bestCenter) = center_counts_map(bestCenter) + 1
-      })
-      center_counts_map
-    }).reduce((m1, m2) => reduceCountsMap(m1, m2))
+    val final_center_counts =
+      splits.map(
+        s => {
+          s.map(
+            p => {
+              val (bestCenter, _) = distanceMeasureInstance.findClosest(collected_centers, p)
+              bestCenter
+            })
+            .countByValue()
+        }).reduce(
+        (m1, m2) => reduceCountsMap(m1, m2))
     val sc = centers.context
-    sc.parallelize(final_center_counts.toSeq.sorted.map(_._2))
+    val weights = List.range(0, collected_centers.length).map(i => final_center_counts.getOrElse(i, 0L)).map(l => l.doubleValue)
+    if (weights.contains(0.0)) {
+      logError("Bad! weights contain a 0.0")
+    }
+    sc.parallelize(weights)
   }
 
-  def reduceCountsMap(m1: collection.mutable.Map[Int, Double], m2: collection.mutable.Map[Int, Double]): collection.mutable.Map[Int, Double] = {
+  def reduceCountsMap(m1: scala.collection.Map[Int, Long], m2: scala.collection.Map[Int, Long]): scala.collection.Map[Int, Long] = {
     val merged = m1.toSeq ++ m2.toSeq
     val grouped = merged.groupBy(_._1)
-    val recounted = collection.mutable.Map(grouped.view.mapValues(_.map(_._2).sum).toSeq: _*)
+    val recounted = scala.collection.Map(grouped.view.mapValues(_.map(_._2).sum).toSeq: _*)
     recounted
   }
 
