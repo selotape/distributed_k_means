@@ -10,8 +10,7 @@ import org.apache.spark.util.random.XORShiftRandom
 import scala.util.control.Breaks.break
 
 /**
- * K-means clustering with a k-means++ like initialization mode
- * (the k-means|| algorithm by Bahmani et al).
+ * TODO - write this doc
  *
  * This is an iterative algorithm that will make multiple passes over the data, so any RDDs given
  * to it should be cached by the user.
@@ -151,7 +150,6 @@ class MLlibSoccerKMeans private(
   }
 
 
-
   /**
    * Train a K-means model on the given set of points; `data` should be cached for high
    * performance, because this is an iterative algorithm.
@@ -181,13 +179,10 @@ class MLlibSoccerKMeans private(
     var alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
     logInfo(f"max_subset_size:$max_subset_size")
-
     var iteration = 0
     val sc = data.sparkContext
     var centers = sc.emptyRDD[VectorWithNorm]
-
-    // TODO - automatically detect the best number of splits
-    val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed1)
+    val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed1) // TODO - automatically detect the best number of splits instead of relying on m
     var unhandled_data_splits = splits
 
 
@@ -273,7 +268,7 @@ class MLlibSoccerKMeans private(
     final_centers
   }
 
-  def createInnerKMeans(innerK: Int): KMeans = {
+  private def createInnerKMeans(innerK: Int): KMeans = {
     new KMeans()
       .setK(innerK)
       .setSeed(seed2)
@@ -339,7 +334,7 @@ class MLlibSoccerKMeans private(
   }
 
 
-  def reduceCountsMap(m1: scala.collection.Map[Int, Long], m2: scala.collection.Map[Int, Long]): scala.collection.Map[Int, Long] = {
+  private def reduceCountsMap(m1: scala.collection.Map[Int, Long], m2: scala.collection.Map[Int, Long]): scala.collection.Map[Int, Long] = {
     val merged = m1.toSeq ++ m2.toSeq
     val grouped = merged.groupBy(_._1)
     val recounted = scala.collection.Map(grouped.view.mapValues(_.map(_._2).sum).toSeq: _*)
