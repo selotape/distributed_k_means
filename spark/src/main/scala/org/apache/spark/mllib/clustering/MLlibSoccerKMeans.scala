@@ -26,12 +26,11 @@ class MLlibSoccerKMeans private(
                                  private var distanceMeasure: String,
                                  private var psi: Double = 0) extends Serializable with Logging {
 
-  val xorShiftRandom = new XORShiftRandom(this.seed)
-  val seed1: Long = xorShiftRandom.nextInt() // TODO - remove this.seed and keep only seed1 & 2
-  val seed2: Long = xorShiftRandom.nextInt()
-
-  private def this(k: Int, m: Int, delta: Double, maxIterations: Int, epsilon: Double, seed: Long) =
-    this(k, m, delta, maxIterations, epsilon, seed, DistanceMeasure.EUCLIDEAN)
+  private val xorShiftRandom = new XORShiftRandom(this.seed)
+  private val seed1: Long = xorShiftRandom.nextInt() // TODO - remove this.seed and keep only seed1 & 2
+  private val seed2: Long = xorShiftRandom.nextInt()
+  private val kplus: Int = kplus_formula(k, delta, epsilon)
+  private var distanceMeasureInstance: DistanceMeasure = DistanceMeasure.decodeFromString(distanceMeasure)
 
   /**
    * Constructs a SoccerKMeans instance with default parameters: {k: 2, maxIterations: 20,
@@ -141,8 +140,6 @@ class MLlibSoccerKMeans private(
    */
   def getDistanceMeasure: String = distanceMeasure
 
-  private var distanceMeasureInstance: DistanceMeasure = DistanceMeasure.decodeFromString(distanceMeasure)
-
   /**
    * Set the distance suite used by the algorithm.
    */
@@ -153,20 +150,7 @@ class MLlibSoccerKMeans private(
     this
   }
 
-  // Initial cluster centers can be provided as a KMeansModel object rather than using the
-  // random or k-means|| initializationMode
-  private var initialModel: Option[KMeansModel] = None
 
-  /**
-   * Set the initial starting point, bypassing the random initialization or k-means||
-   * The condition model.k == this.k must be met, failure results
-   * in an IllegalArgumentException.
-   */
-  def setInitialModel(model: KMeansModel): this.type = {
-    require(model.k == k, "mismatched cluster count")
-    initialModel = Some(model)
-    this
-  }
 
   /**
    * Train a K-means model on the given set of points; `data` should be cached for high
@@ -193,7 +177,6 @@ class MLlibSoccerKMeans private(
   private def runAlgorithmWithWeight(data: RDD[VectorWithNorm]): KMeansModel = {
 
     val len_N = data.count()
-    val kplus = kplus_formula(k, delta, epsilon) // TODO - calc this in ctor
     var remaining_elements_count = len_N
     var alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
@@ -214,7 +197,7 @@ class MLlibSoccerKMeans private(
 
       val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
 
-      val (v, cTmp) = EstProc(p1, p2, alpha, k, kplus)
+      val (v, cTmp) = EstProc(p1, p2, alpha)
 
 
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
@@ -236,21 +219,20 @@ class MLlibSoccerKMeans private(
     centers ++= cTmp
 
     val C_weights = calculate_center_weights(centers, splits)
-    val C_final = A_final(centers, k, C_weights)
+    val C_final = A_final(centers, C_weights)
 
     val trainingCost = 1000.0 // TODO
     new KMeansModel(C_final.map(_.vector), distanceMeasure, trainingCost, iteration)
   }
 
   private def sample_P1_P2(splits: Array[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
-    // TODO - run these two ops together
-    // Maybe take |p1+p2| elems and then shuffle them here on the coordinator
+    // TODO - run these two ops together. Maybe take |p1+p2| elems and then shuffle them here on the coordinator
     val p1 = splits
       .map(s => s.sample(withReplacement = false, alpha, seed1))
       .reduce((r1, r2) => r1.union(r2))
 
     val p2 = splits
-      .map(s => s.sample(withReplacement = false, alpha, seed2)) // TODO - discuss with Tom
+      .map(s => s.sample(withReplacement = false, alpha, seed2))
       .reduce((r1, r2) => r1.union(r2))
 
     (p1, p2)
@@ -261,8 +243,8 @@ class MLlibSoccerKMeans private(
    * calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
    * Emits the cluster and the ~risk.
    */
-  private def EstProc(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double, k: Int, kp: Int): (Double, RDD[VectorWithNorm]) = {
-    val cTmp = A_inner(p1, kp)
+  private def EstProc(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double) = {
+    val cTmp = A_inner(p1)
 
     val phi_alpha = phi_alpha_formula(alpha, k, delta, epsilon)
     val r = r_formula(alpha, k, phi_alpha)
@@ -274,26 +256,26 @@ class MLlibSoccerKMeans private(
     (v, cTmp)
   }
 
-  private def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
+  private def A_inner(n: RDD[VectorWithNorm]): RDD[VectorWithNorm] = {
     log.info("================================= starting A_inner =================================")
-    val algo = createInnerKMeans()
+    val algo = createInnerKMeans(kplus)
     val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0))) // TODO - optimize multiple mappings and object creations?
     log.info(f"================================= ended A_inner with ${inner_centers.length} centers =================================")
     n.context.parallelize(inner_centers)
   }
 
-  private def A_final(centers: RDD[VectorWithNorm], k: Int, center_weights: RDD[Double]): Array[VectorWithNorm] = {
+  private def A_final(centers: RDD[VectorWithNorm], center_weights: RDD[Double]) = {
     log.info("================================= starting A_final =================================")
-    val algo = createInnerKMeans()
+    val algo = createInnerKMeans(this.k)
     val weighted_centers = centers.repartition(1).map(c => c.vector).zip(center_weights.repartition(1))
     val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
     log.info(f"================================= finished A_final with ${final_centers.length} centers =================================")
     final_centers
   }
 
-  def createInnerKMeans(): KMeans = {
+  def createInnerKMeans(innerK: Int): KMeans = {
     new KMeans()
-      .setK(k)
+      .setK(innerK)
       .setSeed(seed2)
       .setInitializationMode(KMEANS_INIT_MODE)
 
@@ -327,10 +309,10 @@ class MLlibSoccerKMeans private(
     logInfo("Starting last iteration")
     val remaining_data = splits.reduce((s1, s2) => s1.union(s2))
     val cTmp =
-      if (remaining_data.count() <= k) // TODO - support this - or (self._blackbox == "ScalableKMeans" andlen(N_remaining) <= l)):
+      if (remaining_data.count() <= k) // TODO - support this - or (self._blackbox == "ScalableKMeans" and len(N_remaining) <= l)):
         remaining_data
       else
-        A_inner(remaining_data, k /* TODO - should this be kplus?*/)
+        A_inner(remaining_data) // TODO - should this use kplus?
     logInfo("Finished last iteration")
     cTmp
   }
