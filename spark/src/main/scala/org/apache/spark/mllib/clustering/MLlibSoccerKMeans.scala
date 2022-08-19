@@ -281,7 +281,7 @@ class MLlibSoccerKMeans private(
     val sc = n.context
     log.info("================================= starting A_inner =================================")
     val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
-    log.info(f"=================================    ended A_inner with ${inner_centers.length} centers =================================")
+    log.info(f"================================= ended A_inner with ${inner_centers.length} centers =================================")
     sc.parallelize(inner_centers)
   }
 
@@ -291,7 +291,7 @@ class MLlibSoccerKMeans private(
     log.info("================================= starting A_final =================================")
     val weighted_centers = centers.repartition(1).map(c => c.vector).zip(center_weights.repartition(1))
     val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
-    log.info("================================= finished A_final =================================")
+    log.info(f"================================= finished A_final with ${final_centers.length} centers =================================")
     final_centers
   }
 
