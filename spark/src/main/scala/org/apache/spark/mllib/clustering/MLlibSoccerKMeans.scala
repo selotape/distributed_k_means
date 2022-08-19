@@ -189,16 +189,13 @@ class MLlibSoccerKMeans private(
     // TODO - persist RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
     while (iteration < maxIterations && remaining_elements_count > max_subset_size) {
 
-
-      val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
-
+      val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha) \
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
-
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
-      remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
-
       unhandled_data_splits.foreach(s => logInfo(f"Iter $iteration: split has remaining ${s.count()} elems"))
+
+      remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
       logInfo(f"Total remaining: $remaining_elements_count")
       if (remaining_elements_count == 0) {
         log.info("remaining_elements_count == 0!!")
@@ -207,6 +204,7 @@ class MLlibSoccerKMeans private(
 
       alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
       centers ++= cTmp
+      logInfo(f"At end of iter $iteration there are ${centers.count()} centers")
       iteration += 1
     }
 
