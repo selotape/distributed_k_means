@@ -310,6 +310,14 @@ class MLlibSoccerKMeans private(
   }
 
 
+  private def pairwise_distances_argmin_min_squared(X: RDD[VectorWithNorm], Y: RDD[VectorWithNorm]): RDD[Double] = { // TODO - consider using Arrays here to be explicitly local
+    val ys = Y.collect()
+    X.map { point =>
+      val (_, cost) = distanceMeasureInstance.findClosest(ys, point)
+      Math.pow(cost, 2)
+    }
+  }
+
   private def removeHandled(s: RDD[VectorWithNorm], cTmp: RDD[VectorWithNorm], v: Double): RDD[VectorWithNorm] = {
     val centers = cTmp.collect()
     s.filter(p => distanceMeasureInstance.pointCost(centers, p) > v)
@@ -348,19 +356,11 @@ class MLlibSoccerKMeans private(
     sc.parallelize(weights)
   }
 
+
   def reduceCountsMap(m1: scala.collection.Map[Int, Long], m2: scala.collection.Map[Int, Long]): scala.collection.Map[Int, Long] = {
     val merged = m1.toSeq ++ m2.toSeq
     val grouped = merged.groupBy(_._1)
     val recounted = scala.collection.Map(grouped.view.mapValues(_.map(_._2).sum).toSeq: _*)
     recounted
-  }
-
-
-  private def pairwise_distances_argmin_min_squared(X: RDD[VectorWithNorm], Y: RDD[VectorWithNorm]): RDD[Double] = { // TODO - consider using Arrays here to be explicitly local
-    val ys = Y.collect()
-    X.map { point =>
-      val (_, cost) = distanceMeasureInstance.findClosest(ys, point)
-      Math.pow(cost, 2)
-    }
   }
 }
