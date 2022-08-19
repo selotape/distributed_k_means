@@ -283,7 +283,7 @@ class MLlibSoccerKMeans private(
     val sc = n.context
     log.info("================================= starting A_inner =================================")
     val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
-    log.info("=================================    ended A_inner =================================")
+    log.info(f"=================================    ended A_inner with ${inner_centers.length} centers =================================")
     sc.parallelize(inner_centers)
   }
 
