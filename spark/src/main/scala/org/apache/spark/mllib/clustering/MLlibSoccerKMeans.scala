@@ -275,9 +275,7 @@ class MLlibSoccerKMeans private(
   }
 
   private def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
-    val algo = new KMeans()
-      .setK(k)
-      .setSeed(seed)
+    val algo = createInnerKMeans()
 
     // TODO - optimize?
     val sc = n.context
@@ -288,15 +286,21 @@ class MLlibSoccerKMeans private(
   }
 
   private def A_final(centers: RDD[VectorWithNorm], k: Int, center_weights: RDD[Double]): Array[VectorWithNorm] = {
-    val algo = new KMeans()
-      .setK(k)
-      .setSeed(seed)
+    val algo = createInnerKMeans()
 
     log.info("================================= starting A_final =================================")
     val weighted_centers = centers.repartition(1).map(c => c.vector).zip(center_weights.repartition(1))
     val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
     log.info("================================= finished A_final =================================")
     final_centers
+  }
+
+  def createInnerKMeans(): KMeans = {
+    new KMeans()
+      .setK(k)
+      .setSeed(seed2)
+      .setInitializationMode(KMEANS_INIT_MODE)
+
   }
 
 
