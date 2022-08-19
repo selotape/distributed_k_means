@@ -5,6 +5,7 @@ import org.apache.spark.mllib.clustering.SoccerFormulae._
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.Utils
+import org.apache.spark.util.random.XORShiftRandom
 
 import scala.util.control.Breaks.break
 
@@ -25,6 +26,9 @@ class MLlibSoccerKMeans private(
                                  private var distanceMeasure: String,
                                  private var psi: Double = 0) extends Serializable with Logging {
 
+  val xorShiftRandom = new XORShiftRandom(this.seed)
+  val seed1: Long = xorShiftRandom.nextInt() // TODO - remove this.seed and keep only seed1 & 2
+  val seed2: Long = xorShiftRandom.nextInt()
 
   private def this(k: Int, m: Int, delta: Double, maxIterations: Int, epsilon: Double, seed: Long) =
     this(k, m, delta, maxIterations, epsilon, seed, DistanceMeasure.EUCLIDEAN)
@@ -200,7 +204,7 @@ class MLlibSoccerKMeans private(
     var centers = sc.emptyRDD[VectorWithNorm]
 
     // TODO - automatically detect the best number of splits
-    val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed)
+    val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed1)
     var unhandled_data_splits = splits
 
 
@@ -242,11 +246,11 @@ class MLlibSoccerKMeans private(
     // TODO - run these two ops together
     // Maybe take |p1+p2| elems and then shuffle them here on the coordinator
     val p1 = splits
-      .map(s => s.sample(withReplacement = false, alpha, seed))
+      .map(s => s.sample(withReplacement = false, alpha, seed1))
       .reduce((r1, r2) => r1.union(r2))
 
     val p2 = splits
-      .map(s => s.sample(withReplacement = false, alpha, seed + 1)) // TODO - discuss with Tom
+      .map(s => s.sample(withReplacement = false, alpha, seed2)) // TODO - discuss with Tom
       .reduce((r1, r2) => r1.union(r2))
 
     (p1, p2)
