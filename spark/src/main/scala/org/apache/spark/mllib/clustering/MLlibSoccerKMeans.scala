@@ -275,20 +275,16 @@ class MLlibSoccerKMeans private(
   }
 
   private def A_inner(n: RDD[VectorWithNorm], k: Int): RDD[VectorWithNorm] = {
-    val algo = createInnerKMeans()
-
-    // TODO - optimize?
-    val sc = n.context
     log.info("================================= starting A_inner =================================")
-    val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
+    val algo = createInnerKMeans()
+    val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0))) // TODO - optimize multiple mappings and object creations?
     log.info(f"================================= ended A_inner with ${inner_centers.length} centers =================================")
-    sc.parallelize(inner_centers)
+    n.context.parallelize(inner_centers)
   }
 
   private def A_final(centers: RDD[VectorWithNorm], k: Int, center_weights: RDD[Double]): Array[VectorWithNorm] = {
-    val algo = createInnerKMeans()
-
     log.info("================================= starting A_final =================================")
+    val algo = createInnerKMeans()
     val weighted_centers = centers.repartition(1).map(c => c.vector).zip(center_weights.repartition(1))
     val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
     log.info(f"================================= finished A_final with ${final_centers.length} centers =================================")
