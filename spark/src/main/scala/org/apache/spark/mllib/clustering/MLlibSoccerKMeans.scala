@@ -222,15 +222,12 @@ class MLlibSoccerKMeans private(
 
   private def sample_P1_P2(splits: ParArray[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
     // TODO - run these two ops together. Maybe take |p1+p2| elems and then shuffle them here on the coordinator
-    val p1 = splits
-      .map(s => s.sample(withReplacement = false, alpha, seed1))
-      .reduce((r1, r2) => r1.union(r2))
+    val p1p2 = splits
+      .map(s => s.sample(withReplacement = false, 2 * alpha, seed1))
+      .map(p12 => p12.randomSplit(Array(1, 1)))
+      .reduce((left, right) => Array(left(0).union(right(0)), left(1).union(right(1))))
 
-    val p2 = splits
-      .map(s => s.sample(withReplacement = false, alpha, seed2))
-      .reduce((r1, r2) => r1.union(r2))
-
-    (p1, p2)
+    (p1p2(0), p1p2(1))
   }
 
 
