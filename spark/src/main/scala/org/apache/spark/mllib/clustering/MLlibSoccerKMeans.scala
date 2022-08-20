@@ -200,11 +200,9 @@ class MLlibSoccerKMeans private(
 
       remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
       logInfo(f"remaining_elements_count: $remaining_elements_count")
-      if (remaining_elements_count == 0) {
-        log.info("remaining_elements_count == 0. Ending on")
-      } else {
+      centers ++= cTmp
+      if (remaining_elements_count != 0) {
         alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
-        centers ++= cTmp
         logInfo(f"At end of iter $iteration there are ${centers.count()} centers")
         iteration += 1
       }
@@ -257,7 +255,7 @@ class MLlibSoccerKMeans private(
   }
 
   private def A_final(centers: RDD[VectorWithNorm], center_weights: RDD[Double]) = {
-    log.info("================================= starting A_final =================================")
+    log.info(s"================================= starting A_final with ${centers.count()} centers and ${center_weights.count()} weights =================================") // TODO - clean up loglines
     val algo = createInnerKMeans(this.k)
     val weighted_centers = centers.repartition(1).map(c => c.vector).zip(center_weights.repartition(1))
     val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
