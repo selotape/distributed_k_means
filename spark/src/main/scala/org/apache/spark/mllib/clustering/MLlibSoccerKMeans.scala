@@ -189,7 +189,7 @@ class MLlibSoccerKMeans private(
     // TODO - persist RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
     while (iteration < maxIterations && remaining_elements_count > max_subset_size) {
 
-      val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha) \
+      val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
