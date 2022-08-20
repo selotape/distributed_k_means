@@ -7,7 +7,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.util.Utils
 import org.apache.spark.util.random.XORShiftRandom
 
-import scala.util.control.Breaks.break
+import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.mutable.ParArray
 
 /**
  * TODO - write this doc
@@ -178,11 +179,12 @@ class MLlibSoccerKMeans private(
     var remaining_elements_count = len_N
     var alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
+    require(max_subset_size > 0, s"max_subset_size must be nonnegative but got $max_subset_size")
     logInfo(f"max_subset_size:$max_subset_size")
     var iteration = 0
     val sc = data.sparkContext
     var centers = sc.emptyRDD[VectorWithNorm]
-    val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed1) // TODO - automatically detect the best number of splits instead of relying on m
+    val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed1).par // TODO - automatically detect the best number of splits instead of relying on m
     var unhandled_data_splits = splits
 
 
@@ -192,6 +194,7 @@ class MLlibSoccerKMeans private(
       val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
+      unhandled_data_splits.foreach(s => logInfo(f"Iter $iteration: split has remaining ${s.count()} elems"))
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
       unhandled_data_splits.foreach(s => logInfo(f"Iter $iteration: split has remaining ${s.count()} elems"))
 
@@ -201,11 +204,6 @@ class MLlibSoccerKMeans private(
         log.info("remaining_elements_count == 0!!")
         break
       }
-
-      alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
-      centers ++= cTmp
-      logInfo(f"At end of iter $iteration there are ${centers.count()} centers")
-      iteration += 1
     }
 
     val cTmp = last_iteration(unhandled_data_splits)
@@ -218,7 +216,7 @@ class MLlibSoccerKMeans private(
     new KMeansModel(C_final.map(_.vector), distanceMeasure, trainingCost, iteration)
   }
 
-  private def sample_P1_P2(splits: Array[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
+  private def sample_P1_P2(splits: ParArray[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
     // TODO - run these two ops together. Maybe take |p1+p2| elems and then shuffle them here on the coordinator
     val p1 = splits
       .map(s => s.sample(withReplacement = false, alpha, seed1))
@@ -298,7 +296,7 @@ class MLlibSoccerKMeans private(
     s.filter(p => distanceMeasureInstance.pointCost(centers, p) > v)
   }
 
-  private def last_iteration(splits: Array[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
+  private def last_iteration(splits: ParArray[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
     logInfo("Starting last iteration")
     val remaining_data = splits.reduce((s1, s2) => s1.union(s2))
     val cTmp =
@@ -310,7 +308,7 @@ class MLlibSoccerKMeans private(
     cTmp
   }
 
-  private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: Array[RDD[VectorWithNorm]]): RDD[Double] = {
+  private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: ParArray[RDD[VectorWithNorm]]): RDD[Double] = {
     val collected_centers = centers.collect()
     val final_center_counts =
       splits.map(
