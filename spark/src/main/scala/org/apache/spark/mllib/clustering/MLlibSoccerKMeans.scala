@@ -199,10 +199,14 @@ class MLlibSoccerKMeans private(
       unhandled_data_splits.foreach(s => logInfo(f"Iter $iteration: split has remaining ${s.count()} elems"))
 
       remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
-      logInfo(f"Total remaining: $remaining_elements_count")
+      logInfo(f"remaining_elements_count: $remaining_elements_count")
       if (remaining_elements_count == 0) {
-        log.info("remaining_elements_count == 0!!")
-        break
+        log.info("remaining_elements_count == 0. Ending on")
+      } else {
+        alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
+        centers ++= cTmp
+        logInfo(f"At end of iter $iteration there are ${centers.count()} centers")
+        iteration += 1
       }
     }
 
