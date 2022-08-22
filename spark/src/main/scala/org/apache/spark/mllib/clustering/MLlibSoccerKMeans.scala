@@ -191,10 +191,11 @@ class MLlibSoccerKMeans private(
     // TODO - persist RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
     while (iteration < maxIterations && remaining_elements_count > max_subset_size) {
 
+      unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Iter $iteration before: split ${s._2} has remaining ${s._1.count()} elems"))
       val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
+      logInfo(f"p1 size: ${p1.count()}")
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
-      unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Iter $iteration before: split ${s._2} has remaining ${s._1.count()} elems"))
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
       unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Iter $iteration  after: split ${s._2} has remaining ${s._1.count()} elems"))
 
@@ -249,7 +250,9 @@ class MLlibSoccerKMeans private(
   private def A_inner(n: RDD[VectorWithNorm]): RDD[VectorWithNorm] = {
     log.info("================================= starting A_inner =================================")
     val algo = createInnerKMeans(kplus)
-    val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0))) // TODO - optimize multiple mappings and object creations?
+    // TODO - optimize multiple mappings and object creations?
+    // TODO - make sure kmeans runs only once
+    val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
     log.info(f"================================= ended A_inner with ${inner_centers.length} centers =================================")
     n.context.parallelize(inner_centers)
   }
