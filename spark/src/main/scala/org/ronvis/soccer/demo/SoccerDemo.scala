@@ -19,8 +19,9 @@ object SoccerDemo {
       .appName("SOCCER example")
       .getOrCreate()
 
-    //    val dataset = getSampleKMeansDataset(spark)
-    val dataset = getCsvDataset(spark, "../datasets/kddcup99/kddcup.data").limit(10000)
+    //    val dataset = loadSampleKMeansDataset(spark)
+    //    val dataset = loadCsvDataset(spark, "../datasets/kddcup99/kddcup.data", limit = 10000)
+    val dataset = loadCsvDataset(spark, "../datasets/higgs/HIGGS.csv")
     val seed = 1L
     val k = 25
 
@@ -32,12 +33,12 @@ object SoccerDemo {
       .setDelta(0.1)
       .setSeed(seed)
       .setMaxIter(3)
-    //    fitAndEvaluate(soccerKmeans, dataset)
+    fitAndEvaluate(soccerKmeans, dataset)
     log.info("================== FINISHED SOCCER KMEANS ==================")
 
     log.info("================== STARTING LEGACY KMEANS ==================")
     val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
-    //    fitAndEvaluate(boringOldschoolKmeans, dataset)
+    fitAndEvaluate(boringOldschoolKmeans, dataset)
     log.info("================== FINISHED LEGACY KMEANS ==================")
   }
 
@@ -49,12 +50,12 @@ object SoccerDemo {
     log.info(s"Silhouette with squared euclidean distance = $silhouette")
   }
 
-  def getSampleKMeansDataset(spark: SparkSession): DataFrame = {
+  def loadSampleKMeansDataset(spark: SparkSession): DataFrame = {
     spark.read.format("libsvm").load("../datasets/sample_kmeans_data.txt")
   }
 
-  def getCsvDataset(spark: SparkSession, csvPath: String): DataFrame = {
-    val frame = spark.read.format("csv").option("inferSchema", "true").option("mode", "DROPMALFORMED").load(csvPath)
+  def loadCsvDataset(spark: SparkSession, csvPath: String, limit: Int = Int.MaxValue): DataFrame = {
+    val frame = spark.read.format("csv").option("inferSchema", "true").option("mode", "DROPMALFORMED").load(csvPath).limit(limit)
     val numericFrame = retainNumericColsDropNaAndLog(frame)
     val assembler = new VectorAssembler().setInputCols(numericFrame.columns).setOutputCol("features")
     assembler.transform(numericFrame)
