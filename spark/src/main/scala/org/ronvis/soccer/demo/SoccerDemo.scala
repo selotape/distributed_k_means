@@ -20,7 +20,7 @@ object SoccerDemo {
       .getOrCreate()
 
     //    val dataset = getSampleKMeansDataset(spark)
-    val dataset = getKddCup99Dataset(spark)
+    val dataset = getCsvDataset(spark, "../datasets/kddcup99/kddcup.data").limit(10000)
     val seed = 1L
     val k = 25
 
@@ -53,22 +53,20 @@ object SoccerDemo {
     spark.read.format("libsvm").load("../datasets/sample_kmeans_data.txt")
   }
 
-  def getKddCup99Dataset(spark: SparkSession): DataFrame = {
-    val frame = spark.read.format("csv").option("inferSchema", "true").load("../datasets/kddcup99/kddcup.data")
-    val numericFrame = retainNumericColumnsAndLog(frame)
+  def getCsvDataset(spark: SparkSession, csvPath: String): DataFrame = {
+    val frame = spark.read.format("csv").option("inferSchema", "true").option("mode", "DROPMALFORMED").load(csvPath)
+    val numericFrame = retainNumericColsDropNaAndLog(frame)
     val assembler = new VectorAssembler().setInputCols(numericFrame.columns).setOutputCol("features")
     assembler.transform(numericFrame)
   }
 
-  def getKddCup99DatasetTop10k(spark: SparkSession): DataFrame = {
-    getKddCup99Dataset(spark).limit(10000)
-  }
 
-  private def retainNumericColumnsAndLog(df: DataFrame): DataFrame = {
-    printColumnTypes("Before cleanup: ", df)
-    val cleanedDf = removeNonNumericColumns(df)
-    printColumnTypes(" After cleanup: ", cleanedDf)
-    cleanedDf
+  private def retainNumericColsDropNaAndLog(df: DataFrame): DataFrame = {
+    logDf("Before cleanup: ", df)
+    val numericDf = removeNonNumericColumns(df)
+    val dfWithoutNa = numericDf.na.drop()
+    logDf(" After cleanup: ", dfWithoutNa)
+    dfWithoutNa
   }
 
   private val NON_NUMERIC_COLUM_TYPES = Set("string", "boolean")
@@ -78,8 +76,8 @@ object SoccerDemo {
     df.select(numericColumns(0), numericColumns: _*)
   }
 
-  private def printColumnTypes(prefix: String, df: DataFrame): Unit = {
-    log.info(prefix + df.columns.map(c => df.schema(c).dataType.typeName).mkString("Array(", ", ", ")"))
+  private def logDf(prefix: String, df: DataFrame): Unit = {
+    log.info(prefix + f"count:${df.count()} " + df.columns.map(c => df.schema(c).dataType.typeName).mkString("Array(", ", ", ")"))
   }
 
 }
