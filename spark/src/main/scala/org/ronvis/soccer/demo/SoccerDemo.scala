@@ -1,8 +1,7 @@
 package org.ronvis.soccer.demo
 
 import org.apache.logging.log4j.{LogManager, Logger}
-import org.apache.spark.ml.clustering.{KMeans, SoccerKMeans}
-import org.apache.spark.ml.evaluation.ClusteringEvaluator
+import org.apache.spark.ml.clustering.{KMeans, KMeansModel, SoccerKMeans}
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.{Estimator, Model}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -21,7 +20,7 @@ object SoccerDemo {
 
     //    val dataset = loadSampleKMeansDataset(spark)
     //    val dataset = loadCsvDataset(spark, "../datasets/kddcup99/kddcup.data", limit = 10000)
-//    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv", limit = 20000)
+    //    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv", limit = 20000)
     val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv", limit = 20000)
     val seed = 1L
     val k = 25
@@ -44,11 +43,9 @@ object SoccerDemo {
   }
 
   def fitAndEvaluate(kmeans: Estimator[_ <: Model[_]], dataset: DataFrame): Unit = {
-    val model = kmeans.fit(dataset)
-    val predictions = model.transform(dataset)
-    val evaluator = new ClusteringEvaluator()
-    val silhouette = evaluator.evaluate(predictions)
-    log.info(s"Silhouette with squared euclidean distance = $silhouette")
+    val startTimeMillis = System.currentTimeMillis()
+    val model = kmeans.fit(dataset).asInstanceOf[KMeansModel]
+    log.info(f"Reached trainingCost ${model.summary.trainingCost} after ${model.summary.numIter} iterations and ${(System.currentTimeMillis() - startTimeMillis) / 1000.0} elapsed wallclock seconds")
   }
 
   def loadSampleKMeansDataset(spark: SparkSession): DataFrame = {

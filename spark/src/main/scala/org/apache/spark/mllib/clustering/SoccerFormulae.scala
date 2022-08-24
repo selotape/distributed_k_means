@@ -41,11 +41,13 @@ object SoccerFormulae {
    * The probability to draw a datum into P1/P2 samples
    */
   def alpha_formula(n: Long, k: Int, ep: Double, dt: Double, N_current_size: Long): Double = {
-    max_subset_size_formula(n, k, ep, dt) / N_current_size
+    val alpha = max_subset_size_formula(n, k, ep, dt) / N_current_size
+    require(alpha > 0 & alpha < 0.5, s"alpha must be in [0, 0.5)") // TODO - verify With hess this is fine.
+    alpha
   }
 
   def phi_alpha_formula(alpha: Double, k: Int, dt: Double, ep: Double): Double = {
-    (PHI_ALPHA_C / alpha) * math.log(1.1 * k / (dt * ep))
+    (PHI_ALPHA_C / alpha) * math.log(1.1 * k / (dt * ep)) // TODO - add assertions
   }
 
   def r_formula(alpha: Double, k: Int, phi_alpha: Double): Int = {

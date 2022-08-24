@@ -170,6 +170,10 @@ class MLlibSoccerKMeans private(
     model
   }
 
+  def measureTrainingCost(C_final: Array[VectorWithNorm], data: RDD[VectorWithNorm]): Double = {
+    data.map(v => distanceMeasureInstance.pointCost(C_final, v)).sum()
+  }
+
   /**
    * Implementation of SOCCER K-Means algorithm.
    */
@@ -209,7 +213,7 @@ class MLlibSoccerKMeans private(
     val C_weights = calculate_center_weights(centers, splits)
     val C_final = A_final(centers, C_weights)
 
-    val trainingCost = 1000.0 // TODO
+    val trainingCost = measureTrainingCost(C_final, data)
     new KMeansModel(C_final.map(_.vector), distanceMeasure, trainingCost, iteration)
   }
 
