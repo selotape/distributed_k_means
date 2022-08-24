@@ -5,6 +5,6 @@ __TODO__
 3. run 2 experiments just like python and make sure:
     * same cost
     * same iters
-4. get a VERY ROUGH cost estimate for running all_soccer_paper_experiments on 50 small spark workers
+4. ~~get a VERY ROUGH cost estimate for running all_soccer_paper_experiments on 50 small spark workers~~
 5. ... measure times ...
 6. ... rerun with coreset ...
