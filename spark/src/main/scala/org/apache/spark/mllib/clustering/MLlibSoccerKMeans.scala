@@ -196,15 +196,13 @@ class MLlibSoccerKMeans private(
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
-      unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Iter $iteration  after: split ${s._2} has remaining ${s._1.count()} elems"))
-
       remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
 
       logInfo(f"iter $iteration: cTmp.count=${cTmp.count()}. remaining_elements_count=$remaining_elements_count. alpha=$alpha. p1.count=${p1.count()}. v=$v")
       centers ++= cTmp
       iteration += 1
     }
-
+    unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Before lastiter: split ${s._2} has remaining ${s._1.count()} elems"))
     val cTmp = last_iteration(unhandled_data_splits)
     centers ++= cTmp
 
