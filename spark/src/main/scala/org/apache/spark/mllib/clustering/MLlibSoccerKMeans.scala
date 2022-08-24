@@ -177,7 +177,7 @@ class MLlibSoccerKMeans private(
 
     val len_N = data.count()
     var remaining_elements_count = len_N
-    var alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
+    var alpha: Double = -1.0
     val max_subset_size = max_subset_size_formula(len_N, k, epsilon, delta)
     require(max_subset_size > 0, s"max_subset_size must be nonnegative but got $max_subset_size")
     logInfo(f"max_subset_size:$max_subset_size")
@@ -188,25 +188,21 @@ class MLlibSoccerKMeans private(
     var unhandled_data_splits = splits
 
 
-    // TODO - persist RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
+    // TODO - consider persisting RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
     while (iteration < maxIterations && remaining_elements_count > max_subset_size) {
-
+      alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
       unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Iter $iteration before: split ${s._2} has remaining ${s._1.count()} elems"))
       val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
-      logInfo(f"p1 size: ${p1.count()}")
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
       unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Iter $iteration  after: split ${s._2} has remaining ${s._1.count()} elems"))
 
       remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
-      logInfo(f"remaining_elements_count: $remaining_elements_count")
+
+      logInfo(f"iter $iteration: cTmp.count=${cTmp.count()}. remaining_elements_count=$remaining_elements_count. alpha=$alpha. p1.count=${p1.count()}. v=$v")
       centers ++= cTmp
-      if (remaining_elements_count != 0) {
-        alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
-        logInfo(f"At end of iter $iteration there are ${centers.count()} centers")
-        iteration += 1
-      }
+      iteration += 1
     }
 
     val cTmp = last_iteration(unhandled_data_splits)

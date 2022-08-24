@@ -15,20 +15,21 @@ object SoccerDemo {
 
     val spark = SparkSession
       .builder()
-      .master("local[*]")
-      .appName("SOCCER example")
+      .master(master = "local[*]")
+      .appName(name = "SOCCER example")
       .getOrCreate()
 
     //    val dataset = loadSampleKMeansDataset(spark)
     //    val dataset = loadCsvDataset(spark, "../datasets/kddcup99/kddcup.data", limit = 10000)
-    val dataset = loadCsvDataset(spark, "../datasets/higgs/HIGGS.csv")
+//    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv", limit = 20000)
+    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv", limit = 20000)
     val seed = 1L
     val k = 25
 
     log.info("================== STARTING SOCCER KMEANS ==================")
     val soccerKmeans = new SoccerKMeans()
       .setK(k)
-      .setM(50)
+      .setM(4)
       .setTol(0.05) // aka - epsilon
       .setDelta(0.1)
       .setSeed(seed)
@@ -55,7 +56,7 @@ object SoccerDemo {
   }
 
   def loadCsvDataset(spark: SparkSession, csvPath: String, limit: Int = Int.MaxValue): DataFrame = {
-    val frame = spark.read.format("csv").option("inferSchema", "true").option("mode", "DROPMALFORMED").load(csvPath).limit(limit)
+    val frame = spark.read.format(source = "csv").option("inferSchema", "true").option("mode", "DROPMALFORMED").load(csvPath).limit(limit)
     val numericFrame = retainNumericColsDropNaAndLog(frame)
     val assembler = new VectorAssembler().setInputCols(numericFrame.columns).setOutputCol("features")
     assembler.transform(numericFrame)
