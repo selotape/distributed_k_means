@@ -27,6 +27,8 @@ def get_dataset(dataset, logger):
         N = read_and_prep_census1990()
     elif dataset == 'higgs':
         N = read_and_prep_higgs()
+    elif dataset == 'higgs_top20k':
+        N = read_and_prep_higgs_top20k()
     else:
         raise RuntimeError(f"bad dataset {dataset}")
     logger.info(f'len(N)={len(N)}')
@@ -78,13 +80,20 @@ def read_and_prep_census1990():
 def read_and_prep_mnist():
     from keras.datasets import mnist
     (train_X, train_y), (test_X, test_y) = mnist.load_data()
-    X = train_X.reshape(len(train_X),-1)
+    X = train_X.reshape(len(train_X), -1)
     X = X.astype(float) / 255.
     return pd.DataFrame(X)
 
 
 def read_and_prep_higgs():
     full_data: pd.DataFrame = pd.read_csv(HIGGS_DATASET_FILE, nrows=DATASET_SIZE)
+    N: pd.DataFrame = full_data.select_dtypes([np.number])
+    N = N.dropna()
+    return N
+
+
+def read_and_prep_higgs_top20k():
+    full_data: pd.DataFrame = pd.read_csv(HIGGS_TOP20K_DATASET_FILE, nrows=DATASET_SIZE)
     N: pd.DataFrame = full_data.select_dtypes([np.number])
     N = N.dropna()
     return N

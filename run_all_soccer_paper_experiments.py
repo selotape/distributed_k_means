@@ -66,7 +66,7 @@ def run_but_only_datasets(datasets, blackbox):
 def run_all_experiments(blackbox):
     for dataset, k in _GAUSSIAN_EXPERIMENTS:
         run_meta_experiment(dataset, k, blackbox)
-    other_experiments = product(("higgs", "kdd", "census1990", "bigcross", "mnist"),
+    other_experiments = product(("higgs", "kdd", "census1990", "bigcross", "mnist"), # "higgs_top20k"
                                 (25, 50, 100, 200))
     for dataset, k in other_experiments:
         run_meta_experiment(dataset, k, blackbox)

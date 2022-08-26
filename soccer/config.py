@@ -10,6 +10,7 @@ KDD_DATASET_FILE = "datasets/kddcup99/kddcup.data"
 CENSUS1990_DATASET_FILE = "datasets/census1990/USCensus1990.data.txt"
 BIGCROSS_DATASET_FILE = "datasets/bigcross/BigCross.data"
 HIGGS_DATASET_FILE = "datasets/higgs/HIGGS.csv"
+HIGGS_TOP20K_DATASET_FILE = "datasets/higgs/HIGGS_top20k.csv"
 NEW_DATASET_SKIP_HEADER = bool(os.getenv('NEW_DATASET_SKIP_HEADER', default=False))
 NEW_DATASET_CONVERT_CATEGORICAL_TO_DUMMIES = bool(os.getenv('NEW_DATASET_CONVERT_CATEGORICAL_TO_DUMMIES', default=False))
 NEW_DATASET_RETAIN_ONLY_NUMERIC_COLUMNS = bool(os.getenv('NEW_DATASET_RETAIN_ONLY_NUMERIC_COLUMNS', default=True))
