@@ -309,7 +309,7 @@ class MLlibSoccerKMeans private(
   }
 
   private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: ParArray[RDD[VectorWithNorm]]): RDD[Double] = {
-    val collected_centers = centers.collect()
+    val collected_centers = centers.collect() // TODO - broadcast collected_centers so it's sent to each worker only once and not once per task
     val final_center_counts =
       splits.map(
         s => {
