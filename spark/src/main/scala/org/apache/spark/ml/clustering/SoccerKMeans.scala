@@ -53,13 +53,11 @@ class SoccerKMeans(override val uid: String)
   def setK(value: Int): this.type = set(k, value)
 
   /**
-   * The number of clusters to create (k). Must be &gt; 1. Note that it is possible for fewer than
-   * k clusters to be returned, for example, if there are fewer than k distinct points to cluster.
-   * Default: 2.
+   * TODO
    *
    * @group param
    */
-  final val m = new IntParam(this, "k", "The number of available machines. " +
+  final val m = new IntParam(this, "m", "The number of available machines. " +
     "Must be >= 1.", ParamValidators.gt(0))
 
   /** @group getParam */
