@@ -4,7 +4,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.mllib.clustering.SoccerFormulae._
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.util.Utils
+import org.apache.spark.util.{DoubleAccumulator, Utils}
 import org.apache.spark.util.random.XORShiftRandom
 
 import scala.collection.parallel.CollectionConverters._
@@ -190,6 +190,7 @@ class MLlibSoccerKMeans private(
     var centers = sc.emptyRDD[VectorWithNorm]
     val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed1).par // TODO - automatically detect the best number of splits instead of relying on m
     var unhandled_data_splits = splits
+    val risk = sc.doubleAccumulator("Nonfinal Risk")
 
 
     // TODO - consider persisting RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
@@ -199,7 +200,7 @@ class MLlibSoccerKMeans private(
       val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
-      unhandled_data_splits = unhandled_data_splits.map(s => removeHandled(s, cTmp, v))
+      unhandled_data_splits = unhandled_data_splits.map(s => removeHandledAndCountHandledRisk(s, cTmp, v, risk))
       remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
 
       logInfo(f"iter $iteration: cTmp.count=${cTmp.count()}. remaining_elements_count=$remaining_elements_count. alpha=$alpha. p1.count=${p1.count()}. v=$v")
@@ -207,7 +208,8 @@ class MLlibSoccerKMeans private(
       iteration += 1
     }
     unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Before lastiter: split ${s._2} has remaining ${s._1.count()} elems"))
-    val cTmp = last_iteration(unhandled_data_splits)
+    val cTmp = last_iteration(unhandled_data_splits, risk)
+    logInfo(f"Nonfinal risk is ${risk.value}")
     centers ++= cTmp
 
     val C_weights = calculate_center_weights(centers, splits)
@@ -291,12 +293,18 @@ class MLlibSoccerKMeans private(
     }
   }
 
-  private def removeHandled(s: RDD[VectorWithNorm], cTmp: RDD[VectorWithNorm], v: Double): RDD[VectorWithNorm] = {
+  private def removeHandledAndCountHandledRisk(s: RDD[VectorWithNorm], cTmp: RDD[VectorWithNorm], v: Double, riskAccumulator: DoubleAccumulator): RDD[VectorWithNorm] = {
     val centers = cTmp.collect()
-    s.filter(p => distanceMeasureInstance.pointCost(centers, p) > v)
+    s.filter(p => {
+      val cost = distanceMeasureInstance.pointCost(centers, p)
+      if (cost <= v) {
+        riskAccumulator.add(cost) // TODO - go over this with Tom
+      }
+      cost > v
+    })
   }
 
-  private def last_iteration(splits: ParArray[RDD[VectorWithNorm]]): RDD[VectorWithNorm] = {
+  private def last_iteration(splits: ParArray[RDD[VectorWithNorm]], risk: DoubleAccumulator /*TODO - count risk*/): RDD[VectorWithNorm] = {
     logInfo("Starting last iteration")
     val remaining_data = splits.reduce((s1, s2) => s1.union(s2))
     val cTmp =
