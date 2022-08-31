@@ -45,7 +45,13 @@ object SoccerDemo {
   def fitAndEvaluate(kmeans: Estimator[_ <: Model[_]], dataset: DataFrame): Unit = {
     val startTimeMillis = System.currentTimeMillis()
     val model = kmeans.fit(dataset).asInstanceOf[KMeansModel]
-    log.info(f"Reached trainingCost ${model.summary.trainingCost} after ${model.summary.numIter} iterations and ${(System.currentTimeMillis() - startTimeMillis) / 1000.0} elapsed wallclock seconds")
+    val totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0
+    val C = model.clusterCenters
+    val risk_final = model.summary.trainingCost
+    val iterations = model.summary.numIter
+    log.info(f"Reached trainingCost ${model.summary.trainingCost} after ${model.summary.numIter} iterations and $totalSecs elapsed wallclock seconds")
+    log.info("test_name,k,dt,m,ep,l,len(C),iterations,risk,risk_final,reducers_time,total_time")
+    log.info(f"test_name,k,dt,m,ep,l,${C.length},$iterations,risk,$risk_final,reducers_time,$totalSecs")
   }
 
   def loadSampleKMeansDataset(spark: SparkSession): DataFrame = {
