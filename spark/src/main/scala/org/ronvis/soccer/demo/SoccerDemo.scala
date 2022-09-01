@@ -20,26 +20,36 @@ object SoccerDemo {
 
     //    val dataset = loadSampleKMeansDataset(spark)
     //    val dataset = loadCsvDataset(spark, "../datasets/kddcup99/kddcup.data", limit = 10000)
-//    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv")
+    //    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv")
     val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv", limit = 100000)
     val seed = 1L
     val k = 25
 
     log.info("================== STARTING SOCCER KMEANS ==================")
-    val soccerKmeans = new SoccerKMeans()
-      .setK(k)
-      .setM(4)
-      .setTol(0.05) // aka - epsilon
-      .setDelta(0.1)
-      .setSeed(seed)
-      .setMaxIter(3)
-    fitAndEvaluate(soccerKmeans, dataset)
+    for (i <- 1 to 3) {
+      val soccerKmeans = new SoccerKMeans()
+        .setK(k)
+        .setM(4)
+        .setTol(0.05) // aka - epsilon
+        .setDelta(0.1)
+        .setSeed(seed)
+        .setMaxIter(3)
+      fitAndEvaluate(soccerKmeans, dataset)
+    }
     log.info("================== FINISHED SOCCER KMEANS ==================")
-
+    log.info("============================================================")
+    log.info("============================================================")
+    log.info("============================================================")
+    log.info("============================================================")
+    log.info("============================================================")
     log.info("================== STARTING LEGACY KMEANS ==================")
-    val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
-    fitAndEvaluate(boringOldschoolKmeans, dataset)
+    for (i <- 1 to 3) {
+      val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
+      fitAndEvaluate(boringOldschoolKmeans, dataset)
+    }
     log.info("================== FINISHED LEGACY KMEANS ==================")
+
+
   }
 
   def fitAndEvaluate(kmeans: Estimator[_ <: Model[_]], dataset: DataFrame): Unit = {
