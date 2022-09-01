@@ -4,8 +4,8 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.mllib.clustering.SoccerFormulae._
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.util.{DoubleAccumulator, Utils}
 import org.apache.spark.util.random.XORShiftRandom
+import org.apache.spark.util.{DoubleAccumulator, Utils}
 
 import scala.collection.parallel.CollectionConverters._
 import scala.collection.parallel.mutable.ParArray
@@ -170,10 +170,6 @@ class MLlibSoccerKMeans private(
     model
   }
 
-  def measureTrainingCost(C_final: Array[VectorWithNorm], data: RDD[VectorWithNorm]): Double = {
-    data.map(v => distanceMeasureInstance.pointCost(C_final, v)).sum()
-  }
-
   /**
    * Implementation of SOCCER K-Means algorithm.
    */
@@ -200,8 +196,10 @@ class MLlibSoccerKMeans private(
       val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
+      val removeHandledStartTimeMillis = System.currentTimeMillis()
       unhandled_data_splits = unhandled_data_splits.map(s => removeHandledAndCountHandledRisk(s, cTmp, v, risk))
       remaining_elements_count = unhandled_data_splits.map(s => s.count()).sum
+      log.info(f"================================= removeHandledAndCountHandledRisk in iter $iteration took ${elapsedSecs(removeHandledStartTimeMillis)} seconds")
 
       logInfo(f"iter $iteration: cTmp.count=${cTmp.count()}. remaining_elements_count=$remaining_elements_count. alpha=$alpha. p1.count=${p1.count()}. v=$v")
       centers ++= cTmp
@@ -214,55 +212,59 @@ class MLlibSoccerKMeans private(
 
     val C_weights = calculate_center_weights(centers, splits)
     val C_final = A_final(centers, C_weights)
-
     val trainingCost = measureTrainingCost(C_final, data)
+
     new KMeansModel(C_final.map(_.vector), distanceMeasure, trainingCost, iteration)
   }
 
   private def sample_P1_P2(splits: ParArray[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
-    // TODO - run these two ops together. Maybe take |p1+p2| elems and then shuffle them here on the coordinator
+    val startTimeMillis = System.currentTimeMillis()
     val p1p2 = splits
       .map(s => s.sample(withReplacement = false, 2 * alpha, seed1))
       .map(p12 => p12.randomSplit(Array(1, 1)))
       .reduce((left, right) => Array(left(0).union(right(0)), left(1).union(right(1))))
 
+    log.info(f"================================= sample_P1_P2 took ${elapsedSecs(startTimeMillis)} seconds")
     (p1p2(0), p1p2(1))
   }
-
 
   /**
    * calculates a rough clustering on P1. Estimates the risk of the clusters on P2.
    * Emits the cluster and the ~risk.
    */
-  private def EstProc(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double) = {
+  private def EstProc(p1: RDD[VectorWithNorm], p2: RDD[VectorWithNorm], alpha: Double): (Double, RDD[VectorWithNorm]) = {
+    val startTimeMillis = System.currentTimeMillis()
     val cTmp = A_inner(p1)
 
     val phi_alpha = phi_alpha_formula(alpha, k, delta, epsilon)
     val r = r_formula(alpha, k, phi_alpha)
-    val Rr = risk_truncated(p2, cTmp, r)
+    val rTruncated = risk_truncated(p2, cTmp, r)
 
-    psi = Math.max((2 / (3 * alpha)) * Rr, psi)
+    psi = Math.max((2 / (3 * alpha)) * rTruncated, psi)
     val v = v_formula(psi, k, phi_alpha)
     if (v == 0.0) log.error("Bad! v == 0.0")
+    log.info(f"================================= EstProc took ${elapsedSecs(startTimeMillis)} seconds")
     (v, cTmp)
   }
 
+
   private def A_inner(n: RDD[VectorWithNorm]): RDD[VectorWithNorm] = {
-    log.info("================================= starting A_inner =================================")
+    log.info("================================= starting A_inner")
+    val startTimeMillis = System.currentTimeMillis()
     val algo = createInnerKMeans(kplus)
     // TODO - optimize multiple mappings and object creations?
     // TODO - make sure kmeans runs only once
     val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
-    log.info(f"================================= ended A_inner with ${inner_centers.length} centers =================================")
+    log.info(f"================================= ended A_inner with ${inner_centers.length} centers and took ${elapsedSecs(startTimeMillis)} seconds")
     n.context.parallelize(inner_centers)
   }
 
   private def A_final(centers: RDD[VectorWithNorm], center_weights: RDD[Double]) = {
-    log.info(s"================================= starting A_final with ${centers.count()} centers and ${center_weights.count()} weights =================================") // TODO - clean up loglines
+    log.info(s"================================= starting A_final with ${centers.count()} centers and ${center_weights.count()} weights") // TODO - clean up loglines
     val algo = createInnerKMeans(this.k)
     val weighted_centers = centers.repartition(1).map(c => c.vector).zip(center_weights.repartition(1))
     val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
-    log.info(f"================================= finished A_final with ${final_centers.length} centers =================================")
+    log.info(f"================================= finished A_final with ${final_centers.length} centers")
     final_centers
   }
 
@@ -274,16 +276,17 @@ class MLlibSoccerKMeans private(
 
   }
 
-
   private def risk_truncated(p2: RDD[VectorWithNorm], C: RDD[VectorWithNorm], r: Int): Double = {
+    val startTimeMillis = System.currentTimeMillis()
     if (r >= p2.count()) {
       return 0 // The "trivial risk"
     }
 
     val distances = pairwise_distances_argmin_min_squared(p2, C)
-    distances.takeOrdered(distances.count().toInt - r).sum
+    val the_sum = distances.takeOrdered(distances.count().toInt - r).sum
+    log.info(f"================================= risk_truncated took ${elapsedSecs(startTimeMillis)} seconds")
+    the_sum
   }
-
 
   private def pairwise_distances_argmin_min_squared(X: RDD[VectorWithNorm], Y: RDD[VectorWithNorm]): RDD[Double] = { // TODO - consider using Arrays here to be explicitly local
     val ys = Y.collect()
@@ -305,18 +308,20 @@ class MLlibSoccerKMeans private(
   }
 
   private def last_iteration(splits: ParArray[RDD[VectorWithNorm]], risk: DoubleAccumulator /*TODO - count risk*/): RDD[VectorWithNorm] = {
-    logInfo("Starting last iteration")
+    log.info("================================= Starting last iteration")
+    val startTimeMillis = System.currentTimeMillis()
     val remaining_data = splits.reduce((s1, s2) => s1.union(s2))
     val cTmp =
       if (remaining_data.count() <= k) // TODO - support this - or (self._blackbox == "ScalableKMeans" and len(N_remaining) <= l)):
         remaining_data
       else
         A_inner(remaining_data) // TODO - should this use kplus?
-    logInfo("Finished last iteration")
+    log.info(f"================================= Finished last iteration which took ${elapsedSecs(startTimeMillis)}")
     cTmp
   }
 
   private def calculate_center_weights(centers: RDD[VectorWithNorm], splits: ParArray[RDD[VectorWithNorm]]): RDD[Double] = {
+    val startTimeMillis = System.currentTimeMillis()
     val collected_centers = centers.collect() // TODO - broadcast collected_centers so it's sent to each worker only once and not once per task
     val final_center_counts =
       splits.map(
@@ -334,14 +339,27 @@ class MLlibSoccerKMeans private(
     if (weights.contains(0.0)) {
       logError("Bad! weights contain a 0.0")
     }
-    sc.parallelize(weights)
+    val weightsRdd = sc.parallelize(weights)
+    log.info(f"================================= calculate_center_weights took ${elapsedSecs(startTimeMillis)} seconds")
+    weightsRdd
   }
-
 
   private def reduceCountsMap(m1: scala.collection.Map[Int, Long], m2: scala.collection.Map[Int, Long]): scala.collection.Map[Int, Long] = {
     val merged = m1.toSeq ++ m2.toSeq
     val grouped = merged.groupBy(_._1)
     val recounted = scala.collection.Map(grouped.view.mapValues(_.map(_._2).sum).toSeq: _*)
     recounted
+  }
+
+
+  def measureTrainingCost(C_final: Array[VectorWithNorm], data: RDD[VectorWithNorm]): Double = {
+    val startTimeMillis = System.currentTimeMillis()
+    val theSum = data.map(v => distanceMeasureInstance.pointCost(C_final, v)).sum()
+    log.info(f"================================= measureTrainingCost took ${elapsedSecs(startTimeMillis)} seconds =================================")
+    theSum
+  }
+
+  private def elapsedSecs(startTimeMillis: Long): Double = {
+    (System.currentTimeMillis() - startTimeMillis) / 1000.0
   }
 }
