@@ -205,7 +205,7 @@ class MLlibSoccerKMeans private(
       centers ++= cTmp
       iteration += 1
     }
-    unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Before lastiter: split ${s._2} has remaining ${s._1.count()} elems"))
+
     val cTmp = last_iteration(unhandled_data_splits, risk)
     logInfo(f"Nonfinal risk is ${risk.value}")
     centers ++= cTmp
@@ -214,7 +214,10 @@ class MLlibSoccerKMeans private(
     val C_final = A_final(centers, C_weights)
     val trainingCost = measureTrainingCost(C_final, data)
 
-    new KMeansModel(C_final.map(_.vector), distanceMeasure, trainingCost, iteration)
+    val newKmeansModelStartTimeMillis = System.currentTimeMillis()
+    val kmeansModel = new KMeansModel(C_final.map(_.vector), distanceMeasure, trainingCost, iteration)
+    log.info(f"================================= new KMeansModel() took ${elapsedSecs(newKmeansModelStartTimeMillis)} seconds =================================")
+    kmeansModel
   }
 
   private def sample_P1_P2(splits: ParArray[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
@@ -309,6 +312,7 @@ class MLlibSoccerKMeans private(
 
   private def last_iteration(splits: ParArray[RDD[VectorWithNorm]], risk: DoubleAccumulator /*TODO - count risk*/): RDD[VectorWithNorm] = {
     log.info("================================= Starting last iteration")
+    splits.zip(0 until splits.length).foreach(s => logInfo(f"Before lastiter: split ${s._2} has remaining ${s._1.count()} elems"))
     val startTimeMillis = System.currentTimeMillis()
     val remaining_data = splits.reduce((s1, s2) => s1.union(s2))
     val cTmp =
