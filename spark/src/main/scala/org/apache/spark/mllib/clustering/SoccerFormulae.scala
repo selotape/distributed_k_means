@@ -66,22 +66,4 @@ object SoccerFormulae {
     4 * math.pow(n, ep) * math.log(n) / len_R
   }
 
-  //def Select(S, H, n):
-  //    dists: np.ndarray = pairwise_distances_argmin_min_squared(H, S)
-  //    dists.sort()
-  //
-  //    if len(dists) < 8 * log(n):
-  //        logging.warning("len(dists) < 8*log(n) ☹️💔")
-  //        return dists[0]
-  //
-  //    return dists[int(-8 * log(n))]
-  //
-  //
-  //def measure_weights(N, C):
-  //    chosen_centers = pairwise_distances_argmin(N, C)
-  //    center_weights = np.zeros((len(C),), dtype=np.intc)
-  //    for cc in chosen_centers:
-  //        center_weights[cc] += 1
-  //    return center_weights
-
 }
