@@ -133,7 +133,7 @@ class SoccerKMeans(override val uid: String)
     val instances = dataset.select(DatasetUtils.columnToVector(dataset, getFeaturesCol), w)
       .rdd.map { case Row(point: Vector, weight: Double) => (OldVectors.fromML(point), weight) }
 
-    val handlePersistence = dataset.storageLevel == StorageLevel.NONE
+    // TODO - revert handlePersistence `val handlePersistence = dataset.storageLevel == StorageLevel.NONE`
     val runWithWeightStartTimeMillis = System.currentTimeMillis()
     val parentModel = algo.runWithWeight(instances)
     log.info(f"================================= runWithWeight took ${elapsedSecs(runWithWeightStartTimeMillis)} seconds =================================")
@@ -142,9 +142,14 @@ class SoccerKMeans(override val uid: String)
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
     log.info(f"================================= copyKMeansModelValues took ${elapsedSecs(copyKMeansModelValuesStartTimeMillis)} seconds =================================")
 
+
+    val transformDatasetStartTimeMillis = System.currentTimeMillis()
+    val transformedDataset = model.transform(dataset)
+    log.info(f"================================= transformDataset took ${elapsedSecs(transformDatasetStartTimeMillis)} seconds =================================")
+
     val newKMeansSummaryStartTimeMillis = System.currentTimeMillis()
     val summary = new KMeansSummary(
-      model.transform(dataset),
+      transformedDataset,
       $(predictionCol),
       $(featuresCol),
       $(k),
