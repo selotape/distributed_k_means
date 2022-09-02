@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
 jobs:
-  test:
+  run_demo:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -13,5 +13,5 @@ jobs:
       with:
         distribution: temurin
         java-version: 8
-    - name: Build and Test and Run
-      run: sbt -v +run
+    - name: Run Soccer spark demo
+      run: sbt "run-main org.ronvis.soccer.demo.SoccerDemo"
