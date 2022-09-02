@@ -264,10 +264,11 @@ class MLlibSoccerKMeans private(
 
   private def A_final(centers: RDD[VectorWithNorm], center_weights: RDD[Double]) = {
     log.info(s"================================= starting A_final with ${centers.count()} centers and ${center_weights.count()} weights") // TODO - clean up loglines
+    val startTimeMillis = System.currentTimeMillis()
     val algo = createInnerKMeans(this.k)
     val weighted_centers = centers.repartition(1).map(c => c.vector).zip(center_weights.repartition(1))
     val final_centers = algo.runWithWeight(weighted_centers, handlePersistence = false, Option.empty).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
-    log.info(f"================================= finished A_final with ${final_centers.length} centers")
+    log.info(f"================================= finished A_final with ${final_centers.length} centers which took ${elapsedSecs(startTimeMillis)} seconds")
     final_centers
   }
 
@@ -320,7 +321,7 @@ class MLlibSoccerKMeans private(
         remaining_data
       else
         A_inner(remaining_data) // TODO - should this use kplus?
-    log.info(f"================================= Finished last iteration which took ${elapsedSecs(startTimeMillis)}")
+    log.info(f"================================= Finished last iteration which took ${elapsedSecs(startTimeMillis)} seconds")
     cTmp
   }
 
@@ -363,7 +364,4 @@ class MLlibSoccerKMeans private(
     theSum
   }
 
-  private def elapsedSecs(startTimeMillis: Long): Double = {
-    (System.currentTimeMillis() - startTimeMillis) / 1000.0
-  }
 }

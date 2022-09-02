@@ -24,6 +24,7 @@ import org.apache.spark.ml.param._
 import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.MLlibSoccerKMeans
+import org.apache.spark.mllib.clustering.SoccerFormulae.elapsedSecs
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DoubleType, StructType}
@@ -133,9 +134,15 @@ class SoccerKMeans(override val uid: String)
       .rdd.map { case Row(point: Vector, weight: Double) => (OldVectors.fromML(point), weight) }
 
     val handlePersistence = dataset.storageLevel == StorageLevel.NONE
+    val runWithWeightStartTimeMillis = System.currentTimeMillis()
     val parentModel = algo.runWithWeight(instances)
-    val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
+    log.info(f"================================= runWithWeight took ${elapsedSecs(runWithWeightStartTimeMillis)} seconds =================================")
 
+    val copyKMeansModelValuesStartTimeMillis = System.currentTimeMillis()
+    val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
+    log.info(f"================================= copyKMeansModelValues took ${elapsedSecs(copyKMeansModelValuesStartTimeMillis)} seconds =================================")
+
+    val newKMeansSummaryStartTimeMillis = System.currentTimeMillis()
     val summary = new KMeansSummary(
       model.transform(dataset),
       $(predictionCol),
@@ -143,6 +150,7 @@ class SoccerKMeans(override val uid: String)
       $(k),
       parentModel.numIter,
       parentModel.trainingCost)
+    log.info(f"================================= newKMeansSummary took ${elapsedSecs(newKMeansSummaryStartTimeMillis)} seconds =================================")
 
     model.setSummary(Some(summary))
     instr.logNamedValue("clusterSizes", summary.clusterSizes)

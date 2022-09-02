@@ -25,8 +25,8 @@ object SoccerDemo {
     val seed = 1L
     val k = 25
 
-    log.info("================== STARTING SOCCER KMEANS ==================")
     for (i <- 1 to 3) {
+      log.info(f"================== STARTING SOCCER KMEANS run $i ==================")
       val soccerKmeans = new SoccerKMeans()
         .setK(k)
         .setM(4)
@@ -35,19 +35,20 @@ object SoccerDemo {
         .setSeed(seed)
         .setMaxIter(3)
       fitAndEvaluate(soccerKmeans, dataset)
+      log.info(f"================== FINISHED SOCCER KMEANS run $i ==================")
     }
-    log.info("================== FINISHED SOCCER KMEANS ==================")
     log.info("============================================================")
     log.info("============================================================")
     log.info("============================================================")
     log.info("============================================================")
     log.info("============================================================")
-    log.info("================== STARTING LEGACY KMEANS ==================")
+
     for (i <- 1 to 3) {
+      log.info(f"================== STARTING LEGACY KMEANS run $i ==================")
       val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
       fitAndEvaluate(boringOldschoolKmeans, dataset)
+      log.info(f"================== FINISHED LEGACY KMEANS run $i ==================")
     }
-    log.info("================== FINISHED LEGACY KMEANS ==================")
 
 
   }

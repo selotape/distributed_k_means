@@ -66,4 +66,9 @@ object SoccerFormulae {
     4 * math.pow(n, ep) * math.log(n) / len_R
   }
 
+  def elapsedSecs(startTimeMillis: Long): Double = {
+    // TODO - move to a static utils companion object
+    (System.currentTimeMillis() - startTimeMillis) / 1000.0
+  }
+
 }
