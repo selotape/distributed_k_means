@@ -21,7 +21,6 @@ import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.functions.checkNonNegativeWeight
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.MLlibSoccerKMeans
 import org.apache.spark.mllib.clustering.SoccerFormulae.elapsedSecs
@@ -29,7 +28,6 @@ import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DoubleType, StructType}
 import org.apache.spark.sql.{Dataset, Row}
-import org.apache.spark.storage.StorageLevel
 
 
 /**
@@ -109,13 +107,9 @@ class SoccerKMeans(override val uid: String)
    */
   def setWeightCol(value: String): this.type = set(weightCol, value)
 
-  override def fit(dataset: Dataset[_]): KMeansModel = instrumented { instr =>
+  override def fit(dataset: Dataset[_]): KMeansModel = { // TODO - revert instrumentation: `instrumented { instr =>`
     transformSchema(dataset.schema, logging = true)
 
-    instr.logPipelineStage(this)
-    instr.logDataset(dataset)
-    instr.logParams(this, featuresCol, predictionCol, k, initMode, initSteps, distanceMeasure,
-      maxIter, seed, tol, weightCol, delta)
     val algo = new MLlibSoccerKMeans()
       .setK($(k))
       .setM($(m))
@@ -158,7 +152,6 @@ class SoccerKMeans(override val uid: String)
     log.info(f"================================= newKMeansSummary took ${elapsedSecs(newKMeansSummaryStartTimeMillis)} seconds =================================")
 
     model.setSummary(Some(summary))
-    instr.logNamedValue("clusterSizes", summary.clusterSizes)
     model
   }
 
