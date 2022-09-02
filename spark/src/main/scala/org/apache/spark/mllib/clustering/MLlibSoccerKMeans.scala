@@ -192,7 +192,6 @@ class MLlibSoccerKMeans private(
     // TODO - consider persisting RDDs between interations. This'll force spark to ""eagerly"" calculate the iterations
     while (iteration < maxIterations && remaining_elements_count > max_subset_size) {
       alpha = alpha_formula(len_N, k, epsilon, delta, remaining_elements_count)
-      unhandled_data_splits.zip(0 until unhandled_data_splits.length).foreach(s => logInfo(f"Iter $iteration before: split ${s._2} has remaining ${s._1.count()} elems"))
       val (p1, p2) = sample_P1_P2(unhandled_data_splits, alpha)
       val (v, cTmp) = EstProc(p1, p2, alpha)
 
@@ -206,9 +205,11 @@ class MLlibSoccerKMeans private(
       iteration += 1
     }
 
-    val cTmp = last_iteration(unhandled_data_splits, risk)
-    logInfo(f"Nonfinal risk is ${risk.value}")
-    centers ++= cTmp
+    if (remaining_elements_count > 0) {
+      val cTmp = last_iteration(unhandled_data_splits, risk)
+      centers ++= cTmp
+    }
+    logInfo(f"Non-final risk is ${risk.value}")
 
     val C_weights = calculate_center_weights(centers, splits)
     val C_final = A_final(centers, C_weights)
@@ -216,7 +217,7 @@ class MLlibSoccerKMeans private(
 
     val newKmeansModelStartTimeMillis = System.currentTimeMillis()
     val kmeansModel = new KMeansModel(C_final.map(_.vector), distanceMeasure, trainingCost, iteration)
-    log.info(f"================================= new KMeansModel() took ${elapsedSecs(newKmeansModelStartTimeMillis)} seconds =================================")
+    log.info(f"================================= new KMeansModel() took ${elapsedSecs(newKmeansModelStartTimeMillis)} seconds")
     kmeansModel
   }
 
@@ -252,8 +253,8 @@ class MLlibSoccerKMeans private(
 
 
   private def A_inner(n: RDD[VectorWithNorm]): RDD[VectorWithNorm] = {
-    log.info("================================= starting A_inner")
     val startTimeMillis = System.currentTimeMillis()
+    log.info(s"================================= starting A_inner on ${n.count()} elements")
     val algo = createInnerKMeans(kplus)
     // TODO - optimize multiple mappings and object creations?
     // TODO - make sure kmeans runs only once
@@ -313,7 +314,6 @@ class MLlibSoccerKMeans private(
 
   private def last_iteration(splits: ParArray[RDD[VectorWithNorm]], risk: DoubleAccumulator /*TODO - count risk*/): RDD[VectorWithNorm] = {
     log.info("================================= Starting last iteration")
-    splits.zip(0 until splits.length).foreach(s => logInfo(f"Before lastiter: split ${s._2} has remaining ${s._1.count()} elems"))
     val startTimeMillis = System.currentTimeMillis()
     val remaining_data = splits.reduce((s1, s2) => s1.union(s2))
     val cTmp =
@@ -360,7 +360,7 @@ class MLlibSoccerKMeans private(
   def measureTrainingCost(C_final: Array[VectorWithNorm], data: RDD[VectorWithNorm]): Double = {
     val startTimeMillis = System.currentTimeMillis()
     val theSum = data.map(v => distanceMeasureInstance.pointCost(C_final, v)).sum()
-    log.info(f"================================= measureTrainingCost took ${elapsedSecs(startTimeMillis)} seconds =================================")
+    log.info(f"================================= measureTrainingCost took ${elapsedSecs(startTimeMillis)} seconds")
     theSum
   }
 
