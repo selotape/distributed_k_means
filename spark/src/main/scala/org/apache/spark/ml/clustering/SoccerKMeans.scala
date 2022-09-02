@@ -130,16 +130,16 @@ class SoccerKMeans(override val uid: String)
     // TODO - revert handlePersistence `val handlePersistence = dataset.storageLevel == StorageLevel.NONE`
     val runWithWeightStartTimeMillis = System.currentTimeMillis()
     val parentModel = algo.runWithWeight(instances)
-    log.info(f"================================= runWithWeight took ${elapsedSecs(runWithWeightStartTimeMillis)} seconds =================================")
+    log.info(f"================================= runWithWeight took ${elapsedSecs(runWithWeightStartTimeMillis)} seconds")
 
     val copyKMeansModelValuesStartTimeMillis = System.currentTimeMillis()
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
-    log.info(f"================================= copyKMeansModelValues took ${elapsedSecs(copyKMeansModelValuesStartTimeMillis)} seconds =================================")
+    log.info(f"================================= copyKMeansModelValues took ${elapsedSecs(copyKMeansModelValuesStartTimeMillis)} seconds")
 
 
     val transformDatasetStartTimeMillis = System.currentTimeMillis()
     val transformedDataset = model.transform(dataset)
-    log.info(f"================================= transformDataset took ${elapsedSecs(transformDatasetStartTimeMillis)} seconds =================================")
+    log.info(f"================================= transformDataset took ${elapsedSecs(transformDatasetStartTimeMillis)} seconds")
 
     val newKMeansSummaryStartTimeMillis = System.currentTimeMillis()
     val summary = new KMeansSummary(
@@ -149,7 +149,7 @@ class SoccerKMeans(override val uid: String)
       $(k),
       parentModel.numIter,
       parentModel.trainingCost)
-    log.info(f"================================= newKMeansSummary took ${elapsedSecs(newKMeansSummaryStartTimeMillis)} seconds =================================")
+    log.info(f"================================= newKMeansSummary took ${elapsedSecs(newKMeansSummaryStartTimeMillis)} seconds")
 
     model.setSummary(Some(summary))
     model
