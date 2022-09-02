@@ -15,3 +15,4 @@ jobs:
         java-version: 8
     - name: Run Soccer spark demo
       run: sbt run
+      working-directory: spark
