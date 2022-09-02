@@ -36,21 +36,17 @@ object SoccerDemo {
         .setMaxIter(3)
       fitAndEvaluate(soccerKmeans, dataset)
       log.info(f"================== FINISHED SOCCER KMEANS run $i")
+      logalot()
     }
-    log.info("============================================================")
-    log.info("============================================================")
-    log.info("============================================================")
-    log.info("============================================================")
-    log.info("============================================================")
 
+    logalot()
     for (i <- 1 to 3) {
       log.info(f"================== STARTING LEGACY KMEANS run $i")
       val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
       fitAndEvaluate(boringOldschoolKmeans, dataset)
       log.info(f"================== FINISHED LEGACY KMEANS run $i")
+      logalot()
     }
-
-
   }
 
   def fitAndEvaluate(kmeans: Estimator[_ <: Model[_]], dataset: DataFrame): Unit = {
@@ -94,6 +90,14 @@ object SoccerDemo {
 
   private def logDf(prefix: String, df: DataFrame): Unit = {
     log.info(prefix + f"count:${df.count()} " + df.columns.map(c => df.schema(c).dataType.typeName).mkString("Array(", ", ", ")"))
+  }
+
+  def logalot() = {
+    log.info("============================================================")
+    log.info("============================================================")
+    log.info("============================================================")
+    log.info("============================================================")
+    log.info("============================================================")
   }
 
 }

@@ -7,12 +7,14 @@
     </Appenders>
 
     <Loggers>
-        <Root level="warn">
+        <Root level="off">
             <AppenderRef ref="stdout"/>
         </Root>
         <Logger name="org.ronvis" level="debug"/>
-        <Logger name="org.apache.spark.ml" level="debug"/>
-        <Logger name="org.apache.spark.mllib" level="debug"/>
+        <Logger name="org.apache.spark.mllib.clustering.MLlibSoccerKMeans" level="debug"/>
+        <Logger name="org.apache.spark.ml.clustering.SoccerKMeans" level="debug"/>
+<!--        <Logger name="org.apache.spark.ml.KMeansModel" level="info"/>-->
+<!--        <Logger name="org.apache.spark.mllib" level="debug"/>-->
     </Loggers>
 
 </Configuration>
