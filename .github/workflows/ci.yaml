@@ -13,6 +13,7 @@ jobs:
       with:
         distribution: temurin
         java-version: 11
+        cache: sbt
     - name: Run Soccer spark demo
       run: sbt run
       working-directory: spark
