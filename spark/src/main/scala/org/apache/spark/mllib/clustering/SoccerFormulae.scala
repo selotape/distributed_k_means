@@ -19,7 +19,7 @@ object SoccerFormulae {
 
   val L_TO_K_RATIO = 2.0
   val INNER_BLACKBOX_L_TO_K_RATIO = 2
-  val KMEANS_INIT_MODE = "RANDOM" // "K_MEANS_PARALLEL"
+  val KMEANS_INIT_MODE = KMeans.RANDOM // "K_MEANS_PARALLEL"
 
 
   /** *
