@@ -14,4 +14,4 @@ jobs:
         distribution: temurin
         java-version: 8
     - name: Run Soccer spark demo
-      run: sbt "run-main org.ronvis.soccer.demo.SoccerDemo"
+      run: sbt run-main org.ronvis.soccer.demo.SoccerDemo
