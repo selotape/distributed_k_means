@@ -20,8 +20,8 @@ object SoccerDemo {
 
     //    val dataset = loadSampleKMeansDataset(spark)
     //    val dataset = loadCsvDataset(spark, "../datasets/kddcup99/kddcup.data", limit = 10000)
-    //    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv")
-    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv", limit = 100000)
+    //    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv", limit = 100000)
+    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv")
     val seed = 1L
     val k = 25
 
