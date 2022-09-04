@@ -4,11 +4,17 @@
         <Console name="stdout" immediateFlush="false">
             <PatternLayout pattern="%d{ABSOLUTE} [%5p] [%c{1}] %m%n"/>
         </Console>
+        <File name="file" fileName="logs/run.log">
+            <PatternLayout>
+                <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+        </File>
     </Appenders>
 
     <Loggers>
         <Root level="off">
             <AppenderRef ref="stdout"/>
+            <AppenderRef ref="file"/>
         </Root>
         <Logger name="org.ronvis" level="debug"/>
         <Logger name="org.apache.spark.mllib.clustering.MLlibSoccerKMeans" level="debug"/>
