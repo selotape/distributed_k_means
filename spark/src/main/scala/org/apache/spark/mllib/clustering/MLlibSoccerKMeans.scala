@@ -277,8 +277,8 @@ class MLlibSoccerKMeans private(
     new KMeans()
       .setK(innerK)
       .setSeed(seed2)
-      .setInitializationMode(KMEANS_INIT_MODE)
-
+//      .setEpsilon(0.1) // TODO - go over with Hess
+//      .setInitializationMode(KMEANS_INIT_MODE)
   }
 
   private def risk_truncated(p2: RDD[VectorWithNorm], C: RDD[VectorWithNorm], r: Int): Double = {
