@@ -18,22 +18,22 @@ object SoccerDemo {
       .appName(name = "SOCCER example")
       .getOrCreate()
 
+    val expArgs = new ExperimentArgs(args)
+
     //    val dataset = loadSampleKMeansDataset(spark)
     //    val dataset = loadCsvDataset(spark, "../datasets/kddcup99/kddcup.data", limit = 10000)
-    //    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv", limit = 100000)
-    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv")
-    val seed = 1L
-    val k = 25
+    //    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv")
+    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv") // TODO decide dataset from args
 
     for (i <- 1 to 3) {
       log.info(f"================== STARTING SOCCER KMEANS run $i")
       val soccerKmeans = new SoccerKMeans()
-        .setK(k)
-        .setM(4)
-        .setTol(0.05) // aka - epsilon
-        .setDelta(0.1)
-        .setSeed(seed)
-        .setMaxIter(3)
+        .setK(expArgs.k())
+        .setM(expArgs.m())
+        .setTol(expArgs.epsilon()) // aka - epsilon
+        .setDelta(expArgs.delta())
+        .setSeed(expArgs.seed())
+        .setMaxIter(expArgs.maxIters())
       fitAndEvaluate(soccerKmeans, dataset)
       log.info(f"================== FINISHED SOCCER KMEANS run $i")
       logalot()
@@ -42,7 +42,7 @@ object SoccerDemo {
     logalot()
     for (i <- 1 to 3) {
       log.info(f"================== STARTING LEGACY KMEANS run $i")
-      val boringOldschoolKmeans = new KMeans().setK(k).setSeed(seed)
+      val boringOldschoolKmeans = new KMeans().setK(expArgs.k()).setSeed(expArgs.seed()).setTol(expArgs.delta())
       fitAndEvaluate(boringOldschoolKmeans, dataset)
       log.info(f"================== FINISHED LEGACY KMEANS run $i")
       logalot()
