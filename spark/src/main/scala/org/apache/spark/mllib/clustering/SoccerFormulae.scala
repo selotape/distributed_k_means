@@ -11,7 +11,6 @@ object SoccerFormulae {
   val MAX_ITERATIONS_DEFAULT = 123
 
   val DELTA_DEFAULT = 0.1
-  val EPSILON_DEFAULT = 0.1
   val PHI_ALPHA_C = 6.5
   val MAX_SS_SIZE_C = 36
   val KPLUS_C = 9

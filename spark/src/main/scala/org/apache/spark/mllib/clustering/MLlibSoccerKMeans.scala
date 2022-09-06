@@ -185,6 +185,7 @@ class MLlibSoccerKMeans private(
     val sc = data.sparkContext
     var centers = sc.emptyRDD[VectorWithNorm]
     val splits = data.randomSplit(Array.fill(m)(1.0 / m), seed1).par // TODO - automatically detect the best number of splits instead of relying on m
+    // Theres overhead for running many sparkjobs. TODO - run everything in one sparkjob
     var unhandled_data_splits = splits
     val risk = sc.doubleAccumulator("Nonfinal Risk")
 
@@ -212,7 +213,7 @@ class MLlibSoccerKMeans private(
     logInfo(f"Non-final risk is ${risk.value}")
 
     val C_weights = calculate_center_weights(centers, splits)
-    val C_final = A_final(centers, C_weights)
+    val C_final = A_final(centers, C_weights) // TODO - rename to pruning
     val trainingCost = measureTrainingCost(C_final, data)
 
     val newKmeansModelStartTimeMillis = System.currentTimeMillis()
@@ -222,6 +223,7 @@ class MLlibSoccerKMeans private(
   }
 
   private def sample_P1_P2(splits: ParArray[RDD[VectorWithNorm]], alpha: Double): (RDD[VectorWithNorm], RDD[VectorWithNorm]) = {
+    // TODO - instead of sample directly on all the data, sample indices
     val startTimeMillis = System.currentTimeMillis()
     val p1p2 = splits
       .map(s => s.sample(withReplacement = false, 2 * alpha, seed1))
@@ -255,7 +257,7 @@ class MLlibSoccerKMeans private(
   private def A_inner(n: RDD[VectorWithNorm]): RDD[VectorWithNorm] = {
     val startTimeMillis = System.currentTimeMillis()
     log.info(s"================================= starting A_inner on ${n.count()} elements")
-    val algo = createInnerKMeans(kplus)
+    val algo = createInnerKMeans(kplus) // TODO - run a scala kmeans!
     // TODO - optimize multiple mappings and object creations?
     // TODO - make sure kmeans runs only once
     val inner_centers = algo.run(n.map(v => v.vector)).clusterCenters.map(v => new VectorWithNorm(v, Vectors.norm(v, 2.0)))
@@ -274,10 +276,12 @@ class MLlibSoccerKMeans private(
   }
 
   private def createInnerKMeans(innerK: Int): KMeans = {
+    // TOTRY -
+    //  1. use new kmeans in stead of old
+    //  2. read kmeans logs to see where time/cpu is spent
     new KMeans()
       .setK(innerK)
       .setSeed(seed2)
-//      .setEpsilon(0.1) // TODO - go over with Hess
 //      .setInitializationMode(KMEANS_INIT_MODE)
   }
 
