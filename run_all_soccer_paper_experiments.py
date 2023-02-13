@@ -5,6 +5,7 @@ from itertools import product
 
 from soccer import run_a_soccer_experiment
 from soccer.black_box import DEFAULT_BLACKBOX
+from soccer.run_a_soccer_experiment import SKM, SOCCER, ENE
 
 
 def main():
@@ -86,6 +87,7 @@ def get_blackbox():
 
 def run_meta_experiment(dataset, k, blackbox):
     for epsilon in (0.01, 0.05, 0.1, 0.2,):
+        run_ene(k, dataset, epsilon, blackbox, )
         if (k, epsilon) == (200, 0.2):
             continue
         run_soccer(k, dataset, epsilon, blackbox)
@@ -96,12 +98,17 @@ def run_meta_experiment(dataset, k, blackbox):
 
 def run_soccer(k, dataset, epsilon, blackbox):
     run_name = f"{dataset}_{k}K_{epsilon}ep_soccer"
-    run_a_soccer_experiment.main(run_name, 'SOCCER', k, dataset, epsilon, blackbox)
+    run_a_soccer_experiment.main(run_name, SOCCER, k, dataset, epsilon, blackbox)
 
 
 def run_skm(k, dataset, epsilon, blackbox, skm_iters):
     run_name = f"{dataset}_{k}K_skm_{skm_iters}iters"
-    run_a_soccer_experiment.main(run_name, 'SKM', k, dataset, epsilon, blackbox, skm_iters)
+    run_a_soccer_experiment.main(run_name, SKM, k, dataset, epsilon, blackbox, skm_iters)
+
+
+def run_ene(k, dataset, epsilon, blackbox):
+    run_name = f"{dataset}_{k}K_ene"
+    run_a_soccer_experiment.main(run_name, ENE, k, dataset, epsilon, blackbox)
 
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ from typing import Tuple, List
 
 from soccer.algo import run_soccer
 from soccer.black_box import A_final
-from soccer.competitors.competitors import scalable_k_means
+from soccer.competitors.competitors import scalable_k_means, ene_clustering
 from soccer.config import *
 from soccer.datasets import get_dataset
 from soccer.math import risk
@@ -33,38 +33,62 @@ def main(run_name, algo, k, dataset, epsilon, blackbox, skm_iters=None):
     summary_f.close()
 
 
+SKM = 'SKM'
+SOCCER = 'SOCCER'
+ENE = 'ENE'
+
+
 def create_experiment_runner(algo, k, N, csv, epsilon, skm_iters, blackbox, logger):
-    if algo == 'SOCCER':
+    if algo == SOCCER:
         def run_exp(the_round):
             return run_soccer_exp(N, csv, DELTA, epsilon, k, M, the_round, blackbox, logger)
-    elif algo == 'SKM':
+    elif algo == SKM:
         def run_exp(the_round):
             return run_skm_exp(N, csv, DELTA, epsilon, k, L_TO_K_RATIO, M, skm_iters, the_round, logger)
+    elif algo == ENE:
+        def run_exp(the_round):
+            return run_ene_exp(N, csv, k, epsilon, M, the_round, logger)
     else:
         raise NotImplementedError(f"Algo {algo} is not implemented")
     return run_exp
 
 
 def run_soccer_exp(N, csv, dt, ep, k, m, the_round, blackbox, logger) -> Tuple[float, float, Measurement]:
-    logger.info(f"======== Starting round {the_round} of SOCCER with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
+    logger.info(
+        f"======== Starting round {the_round} of SOCCER with len(N)={len(N)} k={k} dt={dt} ep={ep} & m={m} ========")
     soccer_C, soccer_C_final, soccer_iters, measurement = run_soccer(N, k, ep, dt, m, blackbox, logger)
     logger.info(f'soccer_measurement:{measurement}')
     the_risk = risk(N, soccer_C)
     risk_final = risk(N, soccer_C_final)
-    write_csv_line(csv, logger, f'us_round_{the_round}', k, dt, m, ep, -1, len(soccer_C), soccer_iters, the_risk, risk_final, measurement.reducers_time(), measurement.total_time())
+    write_csv_line(csv, logger, f'us_round_{the_round}', k, dt, m, ep, -1, len(soccer_C), soccer_iters, the_risk,
+                   risk_final, measurement.reducers_time(), measurement.total_time())
     return the_risk, risk_final, measurement
 
 
 def run_skm_exp(N, csv, dt, ep, k, l_ratio, m, skm_iters, the_round, logger) -> Tuple[float, float, Measurement]:
     l = int(l_ratio * k)
-    logger.info(f'===========Starting round {the_round} of KMeans|| with {skm_iters} iterations and l=={l}==============')
+    logger.info(
+        f'===========Starting round {the_round} of KMeans|| with {skm_iters} iterations and l=={l}==============')
     skm_C, skm_C_final, measurement = scalable_k_means(N, skm_iters, l, k, m, A_final)
     skm_run_name = f'{skm_iters}-iter_skm_round_{the_round}'
     logger.info(f'{skm_run_name}_measurement:{measurement}')
     the_risk = risk(N, skm_C)
     risk_final = risk(N, skm_C_final)
     logger.info(f'The scalable_k_means risk is {the_risk:,} and size of C is {len(skm_C)}')
-    write_csv_line(csv, logger, f'skm_round_{the_round}', k, dt, m, ep, -1, len(skm_C), skm_iters, the_risk, risk_final, measurement.reducers_time(), measurement.total_time())
+    write_csv_line(csv, logger, f'skm_round_{the_round}', k, dt, m, ep, -1, len(skm_C), skm_iters, the_risk, risk_final,
+                   measurement.reducers_time(), measurement.total_time())
+    return the_risk, risk_final, measurement
+
+
+def run_ene_exp(N, csv, ep, k, m, the_round, logger) -> Tuple[float, float, Measurement]:
+    logger.info(
+        f"======== Starting round {the_round} of fast_clustering with len(N)={len(N)} k={k} ep={ep} & m={m} ========")
+    C, C_final, iterations, measurement = ene_clustering(N, k, ep, m, A_final)
+    logger.info(f'fast_measurement:{measurement}')
+    the_risk = risk(N, C)
+    risk_final = risk(N, C_final)
+    write_csv_line(csv, logger, f'fast_round_{the_round}', k, -1, m, ep, -1, len(C), iterations, the_risk, risk_final,
+                   measurement.reducers_time(), measurement.total_time())
     return the_risk, risk_final, measurement
 
 
@@ -79,8 +103,11 @@ def run_all_rounds(run_exp, logger):
     return risks, risks_final, measurements
 
 
-def write_csv_line(csv, the_logger: Logger, test_name: str, k: int, dt, m: int, ep, l, len_C: int, iterations: int, the_risk: float, risk_final: float, reducers_time, total_time):
-    test_summary = ','.join(str(s) for s in [test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_final, reducers_time, total_time])
+def write_csv_line(csv, the_logger: Logger, test_name: str, k: int, dt, m: int, ep, l, len_C: int, iterations: int,
+                   the_risk: float, risk_final: float, reducers_time, total_time):
+    test_summary = ','.join(str(s) for s in
+                            [test_name, k, dt, m, ep, l, len_C, iterations, the_risk, risk_final, reducers_time,
+                             total_time])
     the_logger.info('\n' + SINGLE_HEADER + '\n' + test_summary)
     csv.write(test_summary + '\n')
     csv.flush()
