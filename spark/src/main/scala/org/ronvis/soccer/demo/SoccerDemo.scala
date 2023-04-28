@@ -23,7 +23,7 @@ object SoccerDemo {
     //    val dataset = loadSampleKMeansDataset(spark)
     //    val dataset = loadCsvDataset(spark, "../datasets/kddcup99/kddcup.data", limit = 10000)
     //    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS.csv")
-    val dataset = loadCsvDataset(spark, csvPath = "../datasets/higgs/HIGGS_top20k.csv") // TODO decide dataset from args
+    val dataset = loadCsvDataset(spark, csvPath = "./datasets/higgs/HIGGS_top20k.csv") // TODO decide dataset from args
 
     for (i <- 1 to 3) {
       log.info(f"================== STARTING SOCCER KMEANS run $i")
